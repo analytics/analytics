@@ -1,7 +1,7 @@
-silo
+analytics
 ===
 
-[![Build Status](https://secure.travis-ci.org/ekmett/silo.png?branch=master)](http://travis-ci.org/ekmett/silo)
+[![Build Status](https://secure.travis-ci.org/ekmett/analytics.png?branch=master)](http://travis-ci.org/ekmett/analytics)
 
 Contact Information
 -------------------
