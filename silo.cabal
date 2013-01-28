@@ -1,0 +1,51 @@
+name:          silo
+category:      silo
+version:       0.1
+license:       BSD3
+cabal-version: >= 1.10
+license-file:  LICENSE
+author:        Edward A. Kmett
+maintainer:    Edward A. Kmett <ekmett@gmail.com>
+stability:     experimental
+homepage:      http://github.com/ekmett/silo/
+bug-reports:   http://github.com/ekmett/silo/issues
+copyright:     Copyright (C) 2013 Edward A. Kmett
+synopsis:      silo
+description:   silo
+build-type:    Custom
+
+extra-source-files:
+  .ghci
+  .gitignore
+  .travis.yml
+  .vim.custom
+  CHANGELOG.markdown
+  HLint.hs
+  README.markdown
+  travis/cabal-apt-install
+  travis/config
+
+source-repository head
+  type: git
+  location: git://github.com/ekmett/silo.git
+
+library
+  hs-source-dirs: src
+  default-language: Haskell2010
+  ghc-options: -Wall
+  build-depends:
+    base >= 4.4 && < 5
+
+test-suite doctests
+  type:    exitcode-stdio-1.0
+  main-is: doctests.hs
+  default-language: Haskell2010
+  build-depends:
+    base,
+    directory >= 1.0,
+    doctest >= 0.9.1,
+    filepath
+  ghc-options: -Wall -threaded
+  if impl(ghc<7.6.1)
+    ghc-options: -Werror
+  hs-source-dirs: tests
