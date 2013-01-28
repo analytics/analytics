@@ -12,8 +12,7 @@ install:
   - cabal build
 
 script:
-  - $script
-  - hlint src --cpp-define HLINT
+  - $script && hlint src --cpp-define HLINT
 
 notifications:
   irc:
@@ -21,7 +20,7 @@ notifications:
       - "irc.freenode.org#haskell-lens"
     skip_join: true
     template:
-      - "\x0313foo\x03/\x0306%{branch}\x03 \x0314%{commit}\x03 %{build_url} %{message}"
+      - "\x0313analytics\x03/\x0306%{branch}\x03 \x0314%{commit}\x03 %{build_url} %{message}"
 
 env:
   - mode="--enable-tests" script="cabal test"
