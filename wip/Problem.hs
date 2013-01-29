@@ -122,11 +122,7 @@ instance Show (t Int) => Show (EDB t) where
   showsPrec d (EDB xs) = showParen (d > 10) $
     showString "EDB " . showList (xs :: [t Int])
 
-class HasEDB h h' t t' | h -> t, h' -> t', h t' -> h', h' t -> h where
-  edb :: Lens h h' (EDB t) (EDB t')
-
-instance HasEDB (EDB t) (EDB t') t t' where
-  edb = id
+makeLensesWith ?? ''EDB $ classyRules & lensClass.mapped ?~ ("HasEDB","edb")
 
 instance Legal (EDB t) where
   legal _ = True
@@ -140,11 +136,7 @@ newtype IDB t = IDB { runIDB :: [[Rule t]] }
 
 deriving instance Show (t Int) => Show (IDB t)
 
-class HasIDB h h' t t' | h -> t, h' -> t', h t' -> h', h' t -> h where
-  idb :: Lens h h' (IDB t) (IDB t')
-
-instance HasIDB (IDB t) (IDB t') t t' where
-  idb = id
+makeLensesWith ?? ''IDB $ classyRules & lensClass.mapped ?~ ("HasIDB","idb")
 
 _IDB :: Iso (IDB s) (IDB t) [[Rule s]] [[Rule t]]
 _IDB = iso runIDB IDB
@@ -184,13 +176,7 @@ instance Show (t Int) => Show (Query t) where
 instance Foldable t => Legal (Query t) where
   legal (Query n xxs) = Set.size (setOf (folded.folded) xxs) == n
 
-makeLenses ''Query
-
-class HasQuery h h' t t' | h -> t, h' -> t', h t' -> h', h' t -> h where
-  query :: Lens h h' (Query t) (Query t')
-
-instance HasQuery (Query t) (Query t') t t' where
-  query = id
+makeClassy ''Query
 
 que :: (Traversable f, Ord a) => [f a] -> Query f
 que b = Query (snd mnl) b' where
@@ -213,13 +199,13 @@ deriving instance Show (t Int) => Show (Problem t)
 
 makeLenses ''Problem
 
-instance HasQuery (Problem t) (Problem t) t t where
+instance HasQuery (Problem t) t where
   query = problemQuery
 
-instance HasEDB (Problem t) (Problem t) t t where
+instance HasEDB (Problem t) t where
   edb = problemEDB
 
-instance HasIDB (Problem t) (Problem t) t t where
+instance HasIDB (Problem t) t where
   idb = problemIDB
 
 instance Foldable t => Legal (Problem t) where
@@ -251,7 +237,8 @@ data Test a
 toy :: Problem Test
 toy = problem
   [Edge A B, Edge B C, Edge B A, Edge C D, Edge D E, Edge E F]
-  [ TC "x" "y" .- [Edge "x" "y"]
-  , TC "x" "z" .- [TC "x" "y", Edge "y" "z"]
+  [ TC x y .- [Edge x y]
+  , TC x z .- [TC x y, Edge y z]
   ]
-  [ TC A "x" ]
+  [ TC A x ]
+  where x = "x"; y = "y"; z = "z"
