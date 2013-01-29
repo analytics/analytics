@@ -203,7 +203,7 @@ problem e i q = Problem (EDB e) (rules i) (que q)
 -- Testing
 ------------------------------------------------------------------------------
 
-data Node a = Node a | A | B | C
+data Node a = Node a | A | B | C | D | E | F | G
   deriving (Eq,Ord,Show,Read,Functor,Foldable,Traversable,Data,Typeable,Generic)
 
 instance a ~ String => IsString (Node a) where
@@ -221,8 +221,8 @@ data Test a
 
 toy :: Problem Test
 toy = problem
-  [Edge A B, Edge B C, Edge B A]
+  [Edge A B, Edge B C, Edge B A, Edge C D, Edge D E, Edge E F]
   [ TC "x" "y" |- [Edge "x" "y"]
   , TC "x" "z" |- [TC "x" "y", Edge "y" "z"]
   ]
-  [ Edge A "x" ]
+  [ TC A "x" ]
