@@ -6,87 +6,48 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveFoldable #-}
+{-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StandaloneDeriving #-}
--- {-# LANGUAGE PolyKinds #-}
 module Problem where
 
 import Control.Applicative
 import Control.Lens
-import Data.Foldable
+import Control.Monad
+import Data.Array
+import Data.Data
+import Data.Foldable as Foldable
+import Data.Graph hiding (Node)
+import Data.Ix
+import Data.Tree hiding (Node)
 import Data.Functor.Identity
+import GHC.Generics
+import Data.Map as Map
 import Data.Monoid
+import Data.Sequence as Seq
+import Data.String
+import Data.Traversable
 import Prelude.Extras
-
-------------------------------------------------------------------------------
--- Munging
-------------------------------------------------------------------------------
-
-infixl 1 >>-
-infixr 1 -<<
-infixr 0 :->
-
-type a :-> b  = forall x. a x -> b x
-type K m a b = forall x. a x -> m (b x)
-
-class Fun f where
-  hmap :: (a :-> b) -> f a :-> f b
-  default hmap :: Munge f => (a :-> b) -> f a :-> f b
-  hmap f m = runIdentity (munge (Identity . unit . f) m)
-
-class Fun f => Munge f where
-  unit  :: a :-> f a
-  munge :: Applicative m => K m a (f b) -> K m (f a) (f b)
-
-(>>-) :: Munge f => f a x -> (a :-> f b) -> f b x
-m >>- f = runIdentity (munge (Identity . f) m)
-{-# INLINE (>>-) #-}
-
-(-<<) :: Munge f => (a :-> f b) -> f a :-> f b
-f -<< m = m >>- f
-{-# INLINE (-<<) #-}
 
 ------------------------------------------------------------------------------
 -- Variable
 ------------------------------------------------------------------------------
 
 class Variable t where
-  var :: Prism' (t f a) (f a)
+  _Var :: Prism (t a) (t b) a b
 
 ------------------------------------------------------------------------------
--- Prop
+-- Bindings
 ------------------------------------------------------------------------------
-
-data Prop
-
-deriving instance Show Prop
-
-------------------------------------------------------------------------------
--- Bound
-------------------------------------------------------------------------------
-
-newtype Bound a = Bound { runBound :: Int }
-  deriving (Eq,Ord,Show,Read)
-
-instance Show1 Bound
-instance Eq1 Bound
-instance Ord1 Bound
-instance Read1 Bound
-
-instance Functor Bound where
-  fmap _ = Bound . runBound
-
-instance Foldable Bound where
-  foldMap _ _ = mempty
-
-instance Traversable Bound where
-  traverse _ = pure . Bound . runBound
-
-_Bound :: Iso (Bound a) (Bound b) Int Int
-_Bound = iso runBound Bound
 
 class HasBindings t where
   bindings :: Lens' t Int
@@ -95,17 +56,9 @@ class HasBindings t where
 -- Clause
 ------------------------------------------------------------------------------
 
-infix 0 :-
-data Clause f = (:-) { _clauseHead :: f Prop, _clauseBody :: [f Prop] }
-
-instance Show1 f => Show (Clause f) where
-  showsPrec d (h :- b) = showParen (d > 0) $
-     showsPrec1 d h . showString " :- " . showList1 b
-
--- instance Fun Clause where
---   hmap f (x :- xs) = f x :- map f xs
-
-makeLenses ''Clause
+infix 1 :-
+data Clause a = a :- [a]
+  deriving (Eq,Ord,Show,Read,Functor,Foldable,Traversable)
 
 class HasClause h h' f f' | h -> f, h' -> f', h f' -> h', h' f -> h where
   clause :: Lens h h' (Clause f) (Clause f')
@@ -114,35 +67,43 @@ instance HasClause (Clause f) (Clause f') f f' where
   clause = id
 
 ------------------------------------------------------------------------------
--- Schema
+-- Rule
 ------------------------------------------------------------------------------
 
-data Schema t = Schema
-  { _schemaBindings :: {-# UNPACK #-} !Int
-  , _schemaClause :: Clause (t Bound)
+data Rule t = Rule
+  { _ruleBindings :: {-# UNPACK #-} !Int
+  , _ruleClause   :: Clause (t Int)
   }
 
-instance Show1 (t Bound) => Show (Schema t) where
-  showsPrec d (Schema n hb) = showParen (d > 10) $
-    showString "Schema " . showsPrec 11 n . showChar ' ' . showsPrec 11 hb
+instance Show (t Int) => Show (Rule t) where
+  showsPrec d (Rule n hb) = showParen (d > 10) $
+    showString "Rule " . showsPrec 11 n . showChar ' ' . showsPrec 11 hb
 
-makeLenses ''Schema
+makeLenses ''Rule
 
-instance HasBindings (Schema t) where
-  bindings = schemaBindings
+instance HasBindings (Rule t) where
+  bindings = ruleBindings
 
-instance HasClause (Schema t) (Schema t') (t Bound) (t' Bound) where
-  clause = schemaClause
+instance HasClause (Rule t) (Rule t') (t Int) (t' Int) where
+  clause = ruleClause
+
+(|-) :: (Traversable f, Ord a) => f a -> [f a] -> Rule f
+h |- b = Rule (snd mnl) hb where
+ (mnl, hb) = mapAccumLOf (traverse.traverse) go (Map.empty, 0) (h :- b)
+ go mn@(m, n) k = case m^.at k of
+   Just c  -> (mn, c)
+   Nothing -> let n' = n + 1 in n' `seq` ((m & at k ?~ n, n'), n)
 
 ------------------------------------------------------------------------------
--- EDB
+-- EDB, the Extensional database
 ------------------------------------------------------------------------------
 
-newtype EDB t = EDB { runEDB :: forall (f :: * -> *). [t f Prop] } -- an EDB has no variables
+-- | Facts, stored as rule heads with no bound variables.
+newtype EDB t = EDB { runEDB :: forall a. [t a] } -- an EDB has no variables
 
-instance Show1 (t Bound) => Show (EDB t) where
+instance Show (t Int) => Show (EDB t) where
   showsPrec d (EDB xs) = showParen (d > 10) $
-    showString "EDB " . showList1 (xs :: [t Bound Prop])
+    showString "EDB " . showList (xs :: [t Int])
 
 class HasEDB h h' t t' | h -> t, h' -> t', h t' -> h', h' t -> h where
   edb :: Lens h h' (EDB t) (EDB t')
@@ -151,12 +112,13 @@ instance HasEDB (EDB t) (EDB t') t t' where
   edb = id
 
 ------------------------------------------------------------------------------
--- IDB
+-- IDB, the Intensional database
 ------------------------------------------------------------------------------
 
-newtype IDB t = IDB { runIDB :: [[Schema t]] }
+-- | Inference rules, broken into SCCs
+newtype IDB t = IDB { runIDB :: [[Rule t]] }
 
-deriving instance Show1 (t Bound) => Show (IDB t)
+deriving instance Show (t Int) => Show (IDB t)
 
 class HasIDB h h' t t' | h -> t, h' -> t', h t' -> h', h' t -> h where
   idb :: Lens h h' (IDB t) (IDB t')
@@ -164,21 +126,37 @@ class HasIDB h h' t t' | h -> t, h' -> t', h t' -> h', h' t -> h where
 instance HasIDB (IDB t) (IDB t') t t' where
   idb = id
 
-_IDB :: Iso (IDB s) (IDB t) [[Schema s]] [[Schema t]]
+_IDB :: Iso (IDB s) (IDB t) [[Rule s]] [[Rule t]]
 _IDB = iso runIDB IDB
+
+rules :: forall t. Data (t Int) => [Rule t] -> IDB t
+rules es = IDB $ case dataTypeRep (dataTypeOf (undefined :: t Int)) of
+  AlgRep cs | n <- Prelude.length cs
+            , arr <- accumArray (flip (:)) [] (0,n+m-1) $ Prelude.zip [n..] es >>= \(r,Rule _ (h :- bs)) -> do
+               (constrIndex (toConstr h) - 1,r) : Prelude.map (\b -> (r, (constrIndex (toConstr b) - 1))) bs
+            -> Prelude.filter (not . Prelude.null) $ do
+               t <- scc arr -- for each tree in the forest
+               return $ do
+                 r <- Foldable.toList t
+                 guard (r >= n)
+                 return $ Seq.index ess (r - n)
+  _ -> error "expected algebraic data type"
+  where m = Prelude.length es
+        ess = Seq.fromList es
 
 ------------------------------------------------------------------------------
 -- Query
 ------------------------------------------------------------------------------
 
+-- | A rule body with bound variables.
 data Query t = Query
   { _queryBindings :: {-# UNPACK #-} !Int
-  , _queryBody     :: [t Bound Prop]
+  , _queryBody     :: [t Int]
   }
 
-instance Show1 (t Bound) => Show (Query t) where
+instance Show (t Int) => Show (Query t) where
   showsPrec d (Query n xs) = showParen (d > 10) $
-     showString "Query " . showsPrec 11 n . showChar ' ' . showList1 xs
+     showString "Query " . showsPrec 11 n . showChar ' ' . showList xs
 
 makeLenses ''Query
 
@@ -187,6 +165,13 @@ class HasQuery h h' t t' | h -> t, h' -> t', h t' -> h', h' t -> h where
 
 instance HasQuery (Query t) (Query t') t t' where
   query = id
+
+que :: (Traversable f, Ord a) => [f a] -> Query f
+que b = Query (snd mnl) b' where
+ (mnl, b') = mapAccumLOf (traverse.traverse) go (Map.empty, 0) b
+ go mn@(m, n) k = case m^.at k of
+   Just c  -> (mn, c)
+   Nothing -> let n' = n + 1 in n' `seq` ((m & at k ?~ n, n'), n)
 
 ------------------------------------------------------------------------------
 -- Problem
@@ -198,7 +183,7 @@ data Problem t = Problem
   , _problemQuery :: Query t
   }
 
-deriving instance Show1 (t Bound) => Show (Problem t)
+deriving instance Show (t Int) => Show (Problem t)
 
 makeLenses ''Problem
 
@@ -211,62 +196,33 @@ instance HasEDB (Problem t) (Problem t) t t where
 instance HasIDB (Problem t) (Problem t) t t where
   idb = problemIDB
 
+problem :: (Data (t Int), Traversable t, Ord x) => (forall a. [t a]) -> [Rule t] -> [t x] -> Problem t
+problem e i q = Problem (EDB e) (rules i) (que q)
+
 ------------------------------------------------------------------------------
 -- Testing
 ------------------------------------------------------------------------------
 
-data Node
+data Node a = Node a | A | B | C | D | E | F | G
+  deriving (Eq,Ord,Show,Read,Functor,Foldable,Traversable,Data,Typeable,Generic)
 
-deriving instance Show Node
+instance a ~ String => IsString (Node a) where
+  fromString = Node
 
--- a test dialect
-data Transitive :: (* -> *) -> * -> * where
-  Var  :: f a -> Transitive f a
-  A    :: Transitive f Node
-  B    :: Transitive f Node
-  C    :: Transitive f Node
-  TC   :: Transitive f Node -> Transitive f Node -> Transitive f Prop
-  Edge :: Transitive f Node -> Transitive f Node -> Transitive f Prop
+makePrisms ''Node
 
-instance Fun Transitive
-instance Munge Transitive where
-  unit = Var
-  munge f (Var x)    = f x
-  munge _ A          = pure A
-  munge _ B          = pure B
-  munge _ C          = pure C
-  munge f (TC a b)   = TC   <$> munge f a <*> munge f b
-  munge f (Edge a b) = Edge <$> munge f a <*> munge f b
+instance Variable Node where
+  _Var = _Node
 
-instance Variable Transitive where
-  var = prism Var $ \t -> case t of
-    Var fa -> Right fa
-    _      -> Left t
+data Test a
+  = TC   (Node a) (Node a)
+  | Edge (Node a) (Node a)
+  deriving (Eq,Ord,Show,Read,Functor,Foldable,Traversable,Data,Typeable,Generic)
 
-instance f ~ Bound => Show1 (Transitive f)
-
-instance f ~ Bound => Num (Transitive f a) where
-  (+) = error "(+)"
-  (-) = error "(-)"
-  (*) = error "(*)"
-  abs = error "abs"
-  signum = error "signum"
-  fromInteger = Var . Bound . fromInteger
-
--- instance (Show1 f, Show a) => Show (Transitive f a) where
-instance (f ~ Bound, Show a) => Show (Transitive f a) where -- force decent defaulting for REPL use
-  showsPrec d (Var x) = showParen (d > 10) $
-    showString "Var " . showsPrec1 11 x
-  showsPrec _ A = showChar 'A'
-  showsPrec _ B = showChar 'B'
-  showsPrec _ C = showChar 'C'
-  showsPrec d (TC x y) = showParen (d > 10) $
-    showString "TC " . showsPrec 11 x . showChar ' ' . showsPrec 11 y
-  showsPrec d (Edge x y) = showParen (d > 10) $
-    showString "Edge " . showsPrec 11 x . showChar ' ' . showsPrec 11 y
-
-toy :: Problem Transitive
-toy = Problem
-  (EDB [Edge A B, Edge B C, Edge B A])
-  (IDB [])
-  (Query 1 [Edge A 0])
+toy :: Problem Test
+toy = problem
+  [Edge A B, Edge B C, Edge B A, Edge C D, Edge D E, Edge E F]
+  [ TC "x" "y" |- [Edge "x" "y"]
+  , TC "x" "z" |- [TC "x" "y", Edge "y" "z"]
+  ]
+  [ TC A "x" ]
