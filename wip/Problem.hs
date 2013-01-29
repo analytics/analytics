@@ -7,7 +7,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -28,14 +27,15 @@ import Data.Data
 import Data.Foldable as Foldable
 import Data.Graph hiding (Node)
 import Data.Ix
-import Data.Tree hiding (Node)
 import Data.Functor.Identity
-import GHC.Generics
 import Data.Map as Map
 import Data.Monoid
 import Data.Sequence as Seq
+import Data.Set as Set
+import Data.Set.Lens as Set
 import Data.String
 import Data.Traversable
+import Data.Tree hiding (Node)
 import Prelude.Extras
 
 ------------------------------------------------------------------------------
@@ -53,6 +53,16 @@ class HasBindings t where
   bindings :: Lens' t Int
 
 ------------------------------------------------------------------------------
+-- Legal
+------------------------------------------------------------------------------
+
+class Legal t where
+  legal :: t -> Bool
+
+instance Legal t => Legal [t] where
+  legal = Prelude.all legal
+
+------------------------------------------------------------------------------
 -- Clause
 ------------------------------------------------------------------------------
 
@@ -65,6 +75,9 @@ class HasClause h h' f f' | h -> f, h' -> f', h f' -> h', h' f -> h where
 
 instance HasClause (Clause f) (Clause f') f f' where
   clause = id
+
+instance (Foldable t, Ord a) => Legal (Clause (t a)) where
+  legal (h :- b) = setOf folded h `isSubsetOf` setOf (folded.folded) b
 
 ------------------------------------------------------------------------------
 -- Rule
@@ -87,8 +100,12 @@ instance HasBindings (Rule t) where
 instance HasClause (Rule t) (Rule t') (t Int) (t' Int) where
   clause = ruleClause
 
-(|-) :: (Traversable f, Ord a) => f a -> [f a] -> Rule f
-h |- b = Rule (snd mnl) hb where
+instance Foldable t => Legal (Rule t) where
+  legal (Rule n c) = legal c && Set.size (setOf (folded.folded) c) == n
+
+infix 1 .-
+(.-) :: (Traversable f, Ord a) => f a -> [f a] -> Rule f
+h .- b = Rule (snd mnl) hb where
  (mnl, hb) = mapAccumLOf (traverse.traverse) go (Map.empty, 0) (h :- b)
  go mn@(m, n) k = case m^.at k of
    Just c  -> (mn, c)
@@ -111,6 +128,9 @@ class HasEDB h h' t t' | h -> t, h' -> t', h t' -> h', h' t -> h where
 instance HasEDB (EDB t) (EDB t') t t' where
   edb = id
 
+instance Legal (EDB t) where
+  legal _ = True
+
 ------------------------------------------------------------------------------
 -- IDB, the Intensional database
 ------------------------------------------------------------------------------
@@ -128,6 +148,9 @@ instance HasIDB (IDB t) (IDB t') t t' where
 
 _IDB :: Iso (IDB s) (IDB t) [[Rule s]] [[Rule t]]
 _IDB = iso runIDB IDB
+
+instance Foldable t => Legal (IDB t) where
+  legal (IDB xxs) = legal xxs
 
 rules :: forall t. Data (t Int) => [Rule t] -> IDB t
 rules es = IDB $ case dataTypeRep (dataTypeOf (undefined :: t Int)) of
@@ -157,6 +180,9 @@ data Query t = Query
 instance Show (t Int) => Show (Query t) where
   showsPrec d (Query n xs) = showParen (d > 10) $
      showString "Query " . showsPrec 11 n . showChar ' ' . showList xs
+
+instance Foldable t => Legal (Query t) where
+  legal (Query n xxs) = Set.size (setOf (folded.folded) xxs) == n
 
 makeLenses ''Query
 
@@ -196,6 +222,9 @@ instance HasEDB (Problem t) (Problem t) t t where
 instance HasIDB (Problem t) (Problem t) t t where
   idb = problemIDB
 
+instance Foldable t => Legal (Problem t) where
+  legal (Problem e i q) = legal e && legal i && legal q
+
 problem :: (Data (t Int), Traversable t, Ord x) => (forall a. [t a]) -> [Rule t] -> [t x] -> Problem t
 problem e i q = Problem (EDB e) (rules i) (que q)
 
@@ -204,7 +233,7 @@ problem e i q = Problem (EDB e) (rules i) (que q)
 ------------------------------------------------------------------------------
 
 data Node a = Node a | A | B | C | D | E | F | G
-  deriving (Eq,Ord,Show,Read,Functor,Foldable,Traversable,Data,Typeable,Generic)
+  deriving (Eq,Ord,Show,Read,Functor,Foldable,Traversable,Data,Typeable)
 
 instance a ~ String => IsString (Node a) where
   fromString = Node
@@ -217,12 +246,12 @@ instance Variable Node where
 data Test a
   = TC   (Node a) (Node a)
   | Edge (Node a) (Node a)
-  deriving (Eq,Ord,Show,Read,Functor,Foldable,Traversable,Data,Typeable,Generic)
+  deriving (Eq,Ord,Show,Read,Functor,Foldable,Traversable,Data,Typeable)
 
 toy :: Problem Test
 toy = problem
   [Edge A B, Edge B C, Edge B A, Edge C D, Edge D E, Edge E F]
-  [ TC "x" "y" |- [Edge "x" "y"]
-  , TC "x" "z" |- [TC "x" "y", Edge "y" "z"]
+  [ TC "x" "y" .- [Edge "x" "y"]
+  , TC "x" "z" .- [TC "x" "y", Edge "y" "z"]
   ]
   [ TC A "x" ]
