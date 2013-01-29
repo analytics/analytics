@@ -75,37 +75,38 @@ instance HasClause (Clause f) (Clause f') f f' where
   clause = id
 
 ------------------------------------------------------------------------------
--- Schema
+-- Rule
 ------------------------------------------------------------------------------
 
-data Schema t = Schema
-  { _schemaBindings :: {-# UNPACK #-} !Int
-  , _schemaClause   :: Clause (t Int)
+data Rule t = Rule
+  { _ruleBindings :: {-# UNPACK #-} !Int
+  , _ruleClause   :: Clause (t Int)
   }
 
-instance Show (t Int) => Show (Schema t) where
-  showsPrec d (Schema n hb) = showParen (d > 10) $
-    showString "Schema " . showsPrec 11 n . showChar ' ' . showsPrec 11 hb
+instance Show (t Int) => Show (Rule t) where
+  showsPrec d (Rule n hb) = showParen (d > 10) $
+    showString "Rule " . showsPrec 11 n . showChar ' ' . showsPrec 11 hb
 
-makeLenses ''Schema
+makeLenses ''Rule
 
-instance HasBindings (Schema t) where
-  bindings = schemaBindings
+instance HasBindings (Rule t) where
+  bindings = ruleBindings
 
-instance HasClause (Schema t) (Schema t') (t Int) (t' Int) where
-  clause = schemaClause
+instance HasClause (Rule t) (Rule t') (t Int) (t' Int) where
+  clause = ruleClause
 
-(|-) :: (Traversable f, Ord a) => f a -> [f a] -> Schema f
-h |- b = Schema (snd mnl) hb where
+(|-) :: (Traversable f, Ord a) => f a -> [f a] -> Rule f
+h |- b = Rule (snd mnl) hb where
  (mnl, hb) = mapAccumLOf (traverse.traverse) go (Map.empty, 0) (h :- b)
  go mn@(m, n) k = case m^.at k of
    Just c  -> (mn, c)
    Nothing -> let n' = n + 1 in n' `seq` ((m & at k ?~ n, n'), n)
 
 ------------------------------------------------------------------------------
--- EDB
+-- EDB, the Extensional database
 ------------------------------------------------------------------------------
 
+-- | Facts, stored as rule heads with no bound variables.
 newtype EDB t = EDB { runEDB :: forall a. [t a] } -- an EDB has no variables
 
 instance Show (t Int) => Show (EDB t) where
@@ -119,10 +120,11 @@ instance HasEDB (EDB t) (EDB t') t t' where
   edb = id
 
 ------------------------------------------------------------------------------
--- IDB
+-- IDB, the Intensional database
 ------------------------------------------------------------------------------
 
-newtype IDB t = IDB { runIDB :: [[Schema t]] }
+-- | Inference rules, broken into SCCs
+newtype IDB t = IDB { runIDB :: [[Rule t]] }
 
 deriving instance Show (t Int) => Show (IDB t)
 
@@ -132,13 +134,13 @@ class HasIDB h h' t t' | h -> t, h' -> t', h t' -> h', h' t -> h where
 instance HasIDB (IDB t) (IDB t') t t' where
   idb = id
 
-_IDB :: Iso (IDB s) (IDB t) [[Schema s]] [[Schema t]]
+_IDB :: Iso (IDB s) (IDB t) [[Rule s]] [[Rule t]]
 _IDB = iso runIDB IDB
 
-comps :: forall t. Data (t Int) => [Schema t] -> [[Schema t]] -- IDB t
-comps es = case dataTypeRep (dataTypeOf (undefined :: t Int)) of
+rules :: forall t. Data (t Int) => [Rule t] -> IDB t
+rules es = IDB $ case dataTypeRep (dataTypeOf (undefined :: t Int)) of
   AlgRep cs | n <- Prelude.length cs
-            , arr <- accumArray (flip (:)) [] (0,n+m-1) $ Prelude.zip [n..] es >>= \(r,Schema _ (h :- bs)) -> do
+            , arr <- accumArray (flip (:)) [] (0,n+m-1) $ Prelude.zip [n..] es >>= \(r,Rule _ (h :- bs)) -> do
                (constrIndex (toConstr h) - 1,r) : Prelude.map (\b -> (r, (constrIndex (toConstr b) - 1))) bs
             -> Prelude.filter (not . Prelude.null) $ do
                t <- scc arr -- for each tree in the forest
@@ -154,6 +156,7 @@ comps es = case dataTypeRep (dataTypeOf (undefined :: t Int)) of
 -- Query
 ------------------------------------------------------------------------------
 
+-- | A rule body with bound variables.
 data Query t = Query
   { _queryBindings :: {-# UNPACK #-} !Int
   , _queryBody     :: [t Int]
@@ -201,8 +204,8 @@ instance HasEDB (Problem t) (Problem t) t t where
 instance HasIDB (Problem t) (Problem t) t t where
   idb = problemIDB
 
-problem :: (Data (t Int), Traversable t, Ord x) => (forall a. [t a]) -> [Schema t] -> [t x] -> Problem t
-problem e i q = Problem (EDB e) (IDB (comps i)) (que q)
+problem :: (Data (t Int), Traversable t, Ord x) => (forall a. [t a]) -> [Rule t] -> [t x] -> Problem t
+problem e i q = Problem (EDB e) (rules i) (que q)
 
 ------------------------------------------------------------------------------
 -- Testing
