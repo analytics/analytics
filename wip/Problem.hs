@@ -220,16 +220,16 @@ data Node
 deriving instance Show Node
 
 -- a test dialect
-data Foo :: (* -> *) -> * -> * where
-  Var  :: f a -> Foo f a
-  A    :: Foo f Node
-  B    :: Foo f Node
-  C    :: Foo f Node
-  TC   :: Foo f Node -> Foo f Node -> Foo f Prop
-  Edge :: Foo f Node -> Foo f Node -> Foo f Prop
+data Transitive :: (* -> *) -> * -> * where
+  Var  :: f a -> Transitive f a
+  A    :: Transitive f Node
+  B    :: Transitive f Node
+  C    :: Transitive f Node
+  TC   :: Transitive f Node -> Transitive f Node -> Transitive f Prop
+  Edge :: Transitive f Node -> Transitive f Node -> Transitive f Prop
 
-instance Fun Foo
-instance Munge Foo where
+instance Fun Transitive
+instance Munge Transitive where
   unit = Var
   munge f (Var x)    = f x
   munge _ A          = pure A
@@ -238,15 +238,23 @@ instance Munge Foo where
   munge f (TC a b)   = TC   <$> munge f a <*> munge f b
   munge f (Edge a b) = Edge <$> munge f a <*> munge f b
 
-instance Variable Foo where
+instance Variable Transitive where
   var = prism Var $ \t -> case t of
     Var fa -> Right fa
     _      -> Left t
 
-instance f ~ Bound => Show1 (Foo f)
+instance f ~ Bound => Show1 (Transitive f)
 
--- instance (Show1 f, Show a) => Show (Foo f a) where
-instance (f ~ Bound, Show a) => Show (Foo f a) where -- force decent defaulting for REPL use
+instance f ~ Bound => Num (Transitive f a) where
+  (+) = error "(+)"
+  (-) = error "(-)"
+  (*) = error "(*)"
+  abs = error "abs"
+  signum = error "signum"
+  fromInteger = Var . Bound . fromInteger
+
+-- instance (Show1 f, Show a) => Show (Transitive f a) where
+instance (f ~ Bound, Show a) => Show (Transitive f a) where -- force decent defaulting for REPL use
   showsPrec d (Var x) = showParen (d > 10) $
     showString "Var " . showsPrec1 11 x
   showsPrec _ A = showChar 'A'
@@ -256,3 +264,9 @@ instance (f ~ Bound, Show a) => Show (Foo f a) where -- force decent defaulting 
     showString "TC " . showsPrec 11 x . showChar ' ' . showsPrec 11 y
   showsPrec d (Edge x y) = showParen (d > 10) $
     showString "Edge " . showsPrec 11 x . showChar ' ' . showsPrec 11 y
+
+toy :: Problem Transitive
+toy = Problem
+  (EDB [Edge A B, Edge B C, Edge B A])
+  (IDB [])
+  (Query 1 [Edge A 0])
