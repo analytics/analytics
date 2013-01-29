@@ -16,7 +16,7 @@
 --------------------------------------------------------------------
 -- |
 -- Module    :  Analytics.Meta
--- Copyright :  (c) Edward Kmett 2011-2012
+-- Copyright :  (c) Edward Kmett 2011-2013
 -- License   :  BSD3
 -- Maintainer:  Edward Kmett <ekmett@gmail.com>
 -- Stability :  experimental
@@ -28,11 +28,9 @@ module Analytics.Meta
   (
   -- * Meta variables
     Meta(Meta,Skolem)
-  , metaId, metaValue, metaRef
+  , metaId, metaRef
   -- ** Meta Prisms
   , skolem
-  -- ** λ-Depth
-  , Depth, metaDepth, depthInf
   -- ** Union-By-Rank
   , Rank, metaRank, bumpRank
   -- ** Working with Meta
@@ -88,13 +86,6 @@ instance HasRendering (MetaEnv s) where
 -- Meta
 ------------------------------------------------------------------------------
 
--- | Kuan and MacQueen's notion of λ-ranking.
-type Depth = Int
-
--- | This plays the role of infinity.
-depthInf :: Depth
-depthInf = maxBound
-
 -- | Rank for union-by-rank viewing meta-variables as disjoint set forests
 type Rank = Word
 
@@ -109,52 +100,55 @@ bumpRank w = do
 #endif
 
 -- | A meta variable for skolemization and unification
-data Meta s f a
-  = Meta   { _metaValue :: a, _metaId :: !Int, _metaRef :: !(STRef s (Maybe (f (Meta s f a)))), _metaDepth :: !(STRef s Depth), _metaRank :: !(STRef s Rank) }
-  | Skolem { _metaValue :: a, _metaId :: !Int }
+data Meta s f
+  = Meta   { _metaId :: !Int
+           , _metaRef :: !(STRef s (Maybe (f (Meta s f))))
+           , _metaRank :: !(STRef s Rank)
+           }
+  | Skolem { _metaId :: !Int }
 
 makeLenses ''Meta
 
 -- | This 'Prism' matches 'Skolem' variables.
-skolem :: Prism' (Meta s f a) (a, Int)
-skolem = prism (uncurry Skolem) $ \t -> case t of
-  Skolem a i -> Right (a, i)
-  _ -> Left t
+skolem :: Prism' (Meta s f) Int
+skolem = prism Skolem $ \t -> case t of
+  Skolem i -> Right i
+  _        -> Left t
 
-instance Show a => Show (Meta s f a) where
-  showsPrec d (Meta a i _ _ _) = showParen (d > 10) $
-    showString "Meta " . showsPrec 11 a . showChar ' ' . showsPrec 11 i . showString " ..."
-  showsPrec d (Skolem a i) = showParen (d > 10) $
-    showString "Skolem " . showsPrec 11 a . showChar ' ' . showsPrec 11 i
+instance Show (Meta s f) where
+  showsPrec d (Meta i _ _) = showParen (d > 10) $
+    showString "Meta " . showsPrec 11 i . showString " ..."
+  showsPrec d (Skolem i) = showParen (d > 10) $
+    showString "Skolem " . showsPrec 11 i
 
-instance Eq (Meta s f a) where
+instance Eq (Meta s f) where
   (==) = (==) `on` view metaId
   {-# INLINE (==) #-}
 
-instance Ord (Meta s f a) where
+instance Ord (Meta s f) where
   compare = compare `on` view metaId
   {-# INLINE compare #-}
 
 -- | Construct a new meta variable
-newMeta :: MonadMeta s m => a -> m (Meta s f a)
-newMeta a = Meta a <$> fresh <*> liftST (newSTRef Nothing) <*> liftST (newSTRef depthInf) <*> liftST (newSTRef 0)
+newMeta :: MonadMeta s m => m (Meta s f)
+newMeta = Meta <$> fresh <*> liftST (newSTRef Nothing) <*> liftST (newSTRef 0)
 {-# INLINE newMeta #-}
 
 -- | Construct a new Skolem variable that unifies only with itself.
-newSkolem :: MonadMeta s m => a -> m (Meta s f a)
-newSkolem a = Skolem a <$> fresh
+newSkolem :: MonadMeta s m => m (Meta s f)
+newSkolem = Skolem <$> fresh
 {-# INLINE newSkolem #-}
 
 -- | Read a meta variable
-readMeta :: MonadMeta s m => Meta s f a -> m (Maybe (f (Meta s f a)))
-readMeta (Meta _ _ r _ _) = liftST $ readSTRef r
-readMeta (Skolem _ _)     = return Nothing
+readMeta :: MonadMeta s m => Meta s f -> m (Maybe (f (Meta s f)))
+readMeta (Meta _ r _) = liftST $ readSTRef r
+readMeta (Skolem _)     = return Nothing
 {-# INLINE readMeta #-}
 
 -- | Write to a meta variable
-writeMeta :: MonadMeta s m => Meta s f a -> f (Meta s f a) -> m ()
-writeMeta (Meta _ _ r _ _) a = liftST $ writeSTRef r (Just a)
-writeMeta (Skolem _ _) _     = fail "writeMeta: skolem"
+writeMeta :: MonadMeta s m => Meta s f -> f (Meta s f) -> m ()
+writeMeta (Meta _ r _) a = liftST $ writeSTRef r (Just a)
+writeMeta (Skolem _) _     = fail "writeMeta: skolem"
 {-# INLINE writeMeta #-}
 
 cc :: (Functor m, Functor n) => Iso (m a) (n b) (Compose m (Const a) x) (Compose n (Const b) y)
@@ -164,9 +158,9 @@ cc = iso (Compose . fmap Const) (fmap getConst . getCompose)
 --
 -- This matters because when reporting a cycle we may encounter other
 -- already formed cycles.
-cycles :: (Foldable f, MonadMeta s m) => IntSet -> f (Meta s f a) -> m (Set (Meta s f a))
+cycles :: (Foldable f, MonadMeta s m) => IntSet -> f (Meta s f) -> m (Set (Meta s f))
 cycles = auf cc traverse_ . go where
-  go is m@(Meta _ i r _ _)
+  go is m@(Meta i r _)
     | is^.contains i = return $ Set.singleton m
     | otherwise = liftST (readSTRef r) >>= \mb -> case mb of
       Just b  -> cycles (IntSet.insert i is) b
@@ -175,7 +169,7 @@ cycles = auf cc traverse_ . go where
 {-# INLINE cycles #-}
 
 -- | Path-compression
-semiprune :: (Variable f, Monad f, MonadMeta s m) => f (Meta s f a) -> m (f (Meta s f a))
+semiprune :: (Variable f, Monad f, MonadMeta s m) => f (Meta s f) -> m (f (Meta s f))
 semiprune t0 = case preview var t0 of
   Just v0 -> loop t0 v0
   Nothing -> return t0
@@ -183,7 +177,7 @@ semiprune t0 = case preview var t0 of
     loop t1 v1 = readMeta v1 >>= \mb -> case mb of
       Nothing -> return t1
       Just t  -> case preview var t of
-        Nothing -> return t -- t1?
+        Nothing -> return t
         Just v  -> do
           fv <- loop t v
           writeMeta v1 fv
@@ -191,13 +185,13 @@ semiprune t0 = case preview var t0 of
 {-# INLINE semiprune #-}
 
 -- | Expand meta variables recursively
-zonk :: (MonadMeta s m, Traversable f, Monad f) => IntSet -> f (Meta s f a) -> (Set (Meta s f a) -> m (f (Meta s f a))) -> m (f (Meta s f a))
-zonk is fs occurs = fmap join . for fs $ \m -> readMeta m >>= \mv -> case mv of
+zonk :: (MonadMeta s m, Traversable f, Monad f) => IntSet -> f (Meta s f) -> (Set (Meta s f) -> m (f (Meta s f))) -> m (f (Meta s f))
+zonk is fs occ = fmap join . for fs $ \m -> readMeta m >>= \mv -> case mv of
   Nothing  -> return (return m)
   Just fmf
-    | is^.contains (m^.metaId) -> cycles is fmf >>= occurs
+    | is^.contains (m^.metaId) -> cycles is fmf >>= occ
     | otherwise -> do
-    r <- zonk (is & contains (m^.metaId) .~ True) fmf occurs
+    r <- zonk (is & contains (m^.metaId) .~ True) fmf occ
     r <$ writeMeta m r
 
 ------------------------------------------------------------------------------
