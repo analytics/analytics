@@ -12,7 +12,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StandaloneDeriving #-}
 -- {-# LANGUAGE PolyKinds #-}
-module Toy where
+module Problem where
 
 import Control.Applicative
 import Control.Lens
@@ -50,6 +50,13 @@ f -<< m = m >>- f
 {-# INLINE (-<<) #-}
 
 ------------------------------------------------------------------------------
+-- Variable
+------------------------------------------------------------------------------
+
+class Variable t where
+  var :: Prism' (t f a) (f a)
+
+------------------------------------------------------------------------------
 -- Prop
 ------------------------------------------------------------------------------
 
@@ -57,13 +64,17 @@ data Prop
 
 deriving instance Show Prop
 
-
 ------------------------------------------------------------------------------
 -- Bound
 ------------------------------------------------------------------------------
 
 newtype Bound a = Bound { runBound :: Int }
-  deriving Show
+  deriving (Eq,Ord,Show,Read)
+
+instance Show1 Bound
+instance Eq1 Bound
+instance Ord1 Bound
+instance Read1 Bound
 
 instance Functor Bound where
   fmap _ = Bound . runBound
@@ -206,6 +217,8 @@ instance HasIDB (Problem t) (Problem t) t t where
 
 data Node
 
+deriving instance Show Node
+
 -- a test dialect
 data Foo :: (* -> *) -> * -> * where
   Var  :: f a -> Foo f a
@@ -222,5 +235,24 @@ instance Munge Foo where
   munge _ A          = pure A
   munge _ B          = pure B
   munge _ C          = pure C
-  munge f (TC a b)   = TC <$> munge f a <*> munge f b
+  munge f (TC a b)   = TC   <$> munge f a <*> munge f b
   munge f (Edge a b) = Edge <$> munge f a <*> munge f b
+
+instance Variable Foo where
+  var = prism Var $ \t -> case t of
+    Var fa -> Right fa
+    _      -> Left t
+
+instance f ~ Bound => Show1 (Foo f)
+
+-- instance (Show1 f, Show a) => Show (Foo f a) where
+instance (f ~ Bound, Show a) => Show (Foo f a) where -- force decent defaulting for REPL use
+  showsPrec d (Var x) = showParen (d > 10) $
+    showString "Var " . showsPrec1 11 x
+  showsPrec _ A = showChar 'A'
+  showsPrec _ B = showChar 'B'
+  showsPrec _ C = showChar 'C'
+  showsPrec d (TC x y) = showParen (d > 10) $
+    showString "TC " . showsPrec 11 x . showChar ' ' . showsPrec 11 y
+  showsPrec d (Edge x y) = showParen (d > 10) $
+    showString "Edge " . showsPrec 11 x . showChar ' ' . showsPrec 11 y
