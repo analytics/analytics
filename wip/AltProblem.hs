@@ -6,10 +6,13 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DeriveFoldable #-}
 {-# LANGUAGE DeriveTraversable #-}
@@ -21,8 +24,14 @@ module Problem where
 import Control.Applicative
 import Control.Lens
 import Control.Monad
+import Data.Array
+import Data.Data
 import Data.Foldable
+import Data.Graph hiding (Node)
+import Data.Ix
+import Data.Tree hiding (Node)
 import Data.Functor.Identity
+import GHC.Generics
 import Data.Map as Map
 import Data.Monoid
 import Data.String
@@ -127,6 +136,17 @@ instance HasIDB (IDB t) (IDB t') t t' where
 _IDB :: Iso (IDB s) (IDB t) [[Schema s]] [[Schema t]]
 _IDB = iso runIDB IDB
 
+-- | The wrong way to calculate strongly connected components between predicates
+comps :: forall t. Data (t Int) => [Schema t] -> Forest Vertex -- IDB t
+comps es = case dataTypeRep (dataTypeOf (undefined :: t Int)) of
+  AlgRep cs | n <- length cs
+            , arr <- accumArray (flip (:)) [] (0,n-1) $ es >>= \(Schema _ (h :- bs)) -> do
+                let hi = constrIndex (toConstr h) - 1
+                b <- bs
+                return (hi, constrIndex (toConstr b) - 1)
+            -> scc arr
+  _ -> error "expected algebraic data type"
+
 ------------------------------------------------------------------------------
 -- Query
 ------------------------------------------------------------------------------
@@ -186,7 +206,7 @@ problem e i q = Problem (EDB e) (IDB i) (que q)
 ------------------------------------------------------------------------------
 
 data Node a = Node a | A | B | C
-  deriving (Eq,Ord,Show,Read,Functor,Foldable,Traversable)
+  deriving (Eq,Ord,Show,Read,Functor,Foldable,Traversable,Data,Typeable,Generic)
 
 instance a ~ String => IsString (Node a) where
   fromString = Node
@@ -200,7 +220,7 @@ instance Variable Node where
 data Test a
   = TC   (Node a) (Node a)
   | Edge (Node a) (Node a)
-  deriving (Eq, Ord, Show, Read, Functor, Foldable, Traversable)
+  deriving (Eq,Ord,Show,Read,Functor,Foldable,Traversable,Data,Typeable,Generic)
 
 toy :: Problem Test
 toy = problem
@@ -209,17 +229,3 @@ toy = problem
    , TC "x" "z" |- [TC "x" "y", Edge "y" "z"]
   ]]
   [ Edge A "x" ]
-
-{-
-instance Applicative Node where
-  pure = Node
-  (<*>) = ap
-
-instance Monad Node where
-  return = Node
-  Node a >>= f = f a
-  A >>= _ = A
-  B >>= _ = B
-  C >>= _ = C
--}
-
