@@ -32,13 +32,14 @@ import Analytics.Syntax
 import Analytics.Pretty
 import Control.Applicative
 import Control.Lens
+import Data.Text.Lens hiding (text)
 import Control.Monad
 import Prelude.Extras
-import Data.ByteString
 import Data.IntMap
 import Data.Foldable
 import Data.Functor.Identity
 import Data.String
+import Data.Text
 import Data.Traversable
 import Data.Data
 import Data.Map as Map
@@ -53,7 +54,7 @@ import Data.Map as Map
 -- | Terms with kind variables of type @a@
 data Term a
   = Var a
-  | Struct ByteString [Term a]
+  | Struct Text [Term a]
   deriving (Eq, Ord, Show, Read, Data, Typeable)
 
 instance a ~ String => IsString (Term a) where
@@ -99,7 +100,7 @@ instance Read1 Term
 -- | Pretty print a 'Term', using a helper to print free variables
 prettyTerm :: Applicative f => Term a -> (a -> f Doc) -> f Doc
 prettyTerm (Var a)       k = k a
-prettyTerm (Struct x xs) k = (\ys -> text (x^.utf8) <> parens (fillSep (punctuate "," ys))) <$> traverse (`prettyTerm` k) xs
+prettyTerm (Struct x xs) k = fillSep . (text (x^.unpacked) :) <$> traverse (`prettyTerm` k) xs
 
 prettyTerm_  :: Term String -> Doc
 prettyTerm_ k = runIdentity $ prettyTerm k $ Identity . pretty

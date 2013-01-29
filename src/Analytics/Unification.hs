@@ -1,5 +1,5 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE TemplateHaskell #-}
@@ -25,8 +25,10 @@ module Analytics.Unification
   , unify
   , unifyVar
   , occurs
+  , generalize
   ) where
 
+import Bound
 import Control.Applicative
 import Control.Arrow hiding ((<+>))
 import Control.Lens
@@ -45,10 +47,10 @@ import Analytics.Term
 import Analytics.Meta
 
 -- $setup
--- >>> :set -XFlexibleContexts -XConstraintTerms -XTypeFamilies
+-- >>> :set -XFlexibleContexts -XConstraintKinds -XTypeFamilies -XRankNTypes -XOverloadedStrings
 -- >>> import Analytics.Syntax
 -- >>> import Text.Trifecta.Rendering
--- >>> let test :: (forall m s. (MonadWriter Any m, MonadMeta s m) => m (TermM s)) -> Schema b; test mk = fst $ runM_ emptyRendering (runWriterT (mk >>= generalize))
+-- >>> let test :: (forall m s. (MonadWriter Any m, MonadMeta s m) => m (TermM s)) -> Scope Int Term b; test mk = head $ snd $ fst $ runM_ emptyRendering (runWriterT (mk >>= generalize . return))
 
 -- | A term meta-variable
 type MetaT s = Meta s Term
@@ -62,7 +64,7 @@ makeLenses ''Occ
 -- | Die with an error message due to a cycle between the specified terms.
 --
 -- >>> test $ do k <- Var <$> newMeta; unify mempty k (Struct "Foo" [k])
--- *** Exception: (interactive):1:1: error: infinite term detected
+-- Scope *** Exception: (interactive):1:1: error: infinite term detected
 -- cyclic term: a = Foo a
 occurs :: MonadMeta s m => Set (MetaT s) -> m a
 occurs zs = evalStateT ?? Occ mempty names $ do
@@ -134,3 +136,15 @@ unifyVar :: (MonadMeta s m, MonadWriter Any m) => IntSet -> MetaT s -> TermM s -
 unifyVar is (Meta i r _) kv = unifyTV is True i r kv $ return ()
 unifyVar _  (Skolem _) _  = fail "unifyVar: Skolem"
 {-# INLINE unifyVar #-}
+
+-- | Generalize terms, checking for escaped Skolems.
+generalize :: MonadMeta s m => [TermM s] -> m (Int, [Scope Int Term a])
+generalize ks0 = do
+  ks <- traverse (zonk mempty ?? occurs) ks0
+  (rs,(_,n)) <- runStateT (traverse (traverse go) ks) (IntMap.empty, 0)
+  return (n , Scope <$> rs)
+  where
+   go (Skolem _)   = StateT $ \ _ -> fail "escaped skolem"
+   go (Meta i _ _) = StateT $ \imn@(im, n) -> case im^.at i of
+     Just b  -> return (B b, imn)
+     Nothing -> let n' = n + 1 in n' `seq` return (B n, (im & at i ?~ n, n'))
