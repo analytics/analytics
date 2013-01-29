@@ -18,7 +18,6 @@
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StandaloneDeriving #-}
--- {-# LANGUAGE PolyKinds #-}
 module Problem where
 
 import Control.Applicative
@@ -26,7 +25,7 @@ import Control.Lens
 import Control.Monad
 import Data.Array
 import Data.Data
-import Data.Foldable
+import Data.Foldable as Foldable
 import Data.Graph hiding (Node)
 import Data.Ix
 import Data.Tree hiding (Node)
@@ -34,6 +33,7 @@ import Data.Functor.Identity
 import GHC.Generics
 import Data.Map as Map
 import Data.Monoid
+import Data.Sequence as Seq
 import Data.String
 import Data.Traversable
 import Prelude.Extras
@@ -43,7 +43,7 @@ import Prelude.Extras
 ------------------------------------------------------------------------------
 
 class Variable t where
-  var :: Prism (t a) (t b) a b
+  _Var :: Prism (t a) (t b) a b
 
 ------------------------------------------------------------------------------
 -- Prop
@@ -102,7 +102,6 @@ h |- b = Schema (snd mnl) hb where
    Just c  -> (mn, c)
    Nothing -> let n' = n + 1 in n' `seq` ((m & at k ?~ n, n'), n)
 
-
 ------------------------------------------------------------------------------
 -- EDB
 ------------------------------------------------------------------------------
@@ -136,16 +135,20 @@ instance HasIDB (IDB t) (IDB t') t t' where
 _IDB :: Iso (IDB s) (IDB t) [[Schema s]] [[Schema t]]
 _IDB = iso runIDB IDB
 
--- | The wrong way to calculate strongly connected components between predicates
-comps :: forall t. Data (t Int) => [Schema t] -> Forest Vertex -- IDB t
+comps :: forall t. Data (t Int) => [Schema t] -> [[Schema t]] -- IDB t
 comps es = case dataTypeRep (dataTypeOf (undefined :: t Int)) of
-  AlgRep cs | n <- length cs
-            , arr <- accumArray (flip (:)) [] (0,n-1) $ es >>= \(Schema _ (h :- bs)) -> do
-                let hi = constrIndex (toConstr h) - 1
-                b <- bs
-                return (hi, constrIndex (toConstr b) - 1)
-            -> scc arr
+  AlgRep cs | n <- Prelude.length cs
+            , arr <- accumArray (flip (:)) [] (0,n+m-1) $ Prelude.zip [n..] es >>= \(r,Schema _ (h :- bs)) -> do
+               (constrIndex (toConstr h) - 1,r) : Prelude.map (\b -> (r, (constrIndex (toConstr b) - 1))) bs
+            -> Prelude.filter (not . Prelude.null) $ do
+               t <- scc arr -- for each tree in the forest
+               return $ do
+                 r <- Foldable.toList t
+                 guard (r >= n)
+                 return $ Seq.index ess (r - n)
   _ -> error "expected algebraic data type"
+  where m = Prelude.length es
+        ess = Seq.fromList es
 
 ------------------------------------------------------------------------------
 -- Query
@@ -198,8 +201,8 @@ instance HasEDB (Problem t) (Problem t) t t where
 instance HasIDB (Problem t) (Problem t) t t where
   idb = problemIDB
 
-problem :: (Traversable t, Ord x) => (forall a. [t a]) -> [[Schema t]] -> [t x] -> Problem t
-problem e i q = Problem (EDB e) (IDB i) (que q)
+problem :: (Data (t Int), Traversable t, Ord x) => (forall a. [t a]) -> [Schema t] -> [t x] -> Problem t
+problem e i q = Problem (EDB e) (IDB (comps i)) (que q)
 
 ------------------------------------------------------------------------------
 -- Testing
@@ -214,9 +217,8 @@ instance a ~ String => IsString (Node a) where
 makePrisms ''Node
 
 instance Variable Node where
-  var = _Node
+  _Var = _Node
 
--- a test dialect
 data Test a
   = TC   (Node a) (Node a)
   | Edge (Node a) (Node a)
@@ -225,7 +227,7 @@ data Test a
 toy :: Problem Test
 toy = problem
   [Edge A B, Edge B C, Edge B A]
-  [[ TC "x" "y" |- [Edge "x" "y"]
-   , TC "x" "z" |- [TC "x" "y", Edge "y" "z"]
-  ]]
+  [ TC "x" "y" |- [Edge "x" "y"]
+  , TC "x" "z" |- [TC "x" "y", Edge "y" "z"]
+  ]
   [ Edge A "x" ]
