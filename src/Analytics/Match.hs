@@ -1,6 +1,16 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE DefaultSignatures #-}
+--------------------------------------------------------------------
+-- |
+-- Module    :  Analytics.Match
+-- Copyright :  (c) Edward Kmett 2013
+-- License   :  BSD3
+-- Maintainer:  Edward Kmett <ekmett@gmail.com>
+-- Stability :  experimental
+-- Portability: non-portable
+--
+--------------------------------------------------------------------
 module Analytics.Match
   ( Match(..)
   ) where
@@ -9,6 +19,7 @@ import Control.Applicative
 import Data.Traversable as T
 import Generics.Deriving
 
+-- | Simple flat unification
 class Traversable t => Match t where
   match :: (a -> b -> c) -> t a -> t b -> Maybe (t c)
   default match :: (Generic1 t, GMatch (Rep1 t)) => (a -> b -> c) -> t a -> t b -> Maybe (t c)
@@ -43,4 +54,3 @@ instance (Match f, GMatch g) => GMatch (f :.: g) where
   gmatch f (Comp1 x) (Comp1 y) = do
     ms <- match (gmatch f) x y
     Comp1 <$> T.sequence ms
-
