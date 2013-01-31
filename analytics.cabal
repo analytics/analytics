@@ -11,7 +11,10 @@ homepage:      http://github.com/ekmett/analytics/
 bug-reports:   http://github.com/ekmett/analytics/issues
 copyright:     Copyright (C) 2013 Edward A. Kmett
 synopsis:      A work in progress analytics engine for Haskell
-description:   A work in progress analytics engine for Haskell
+description:
+  A work in progress analytics engine for Haskell
+  .
+  <https://github.com/ekmett/analytics/tree/master/examples>
 build-type:    Custom
 
 extra-source-files:

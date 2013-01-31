@@ -1,7 +1,8 @@
-analytics
-===
+# analytics
 
 [![Build Status](https://secure.travis-ci.org/ekmett/analytics.png?branch=master)](http://travis-ci.org/ekmett/analytics)
+
+Skim the [examples folder](https://github.com/ekmett/analytics/tree/master/examples) to get started for now.
 
 Contact Information
 -------------------
