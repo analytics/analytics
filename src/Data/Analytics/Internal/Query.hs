@@ -31,10 +31,10 @@ import Data.Typeable
 -- Query
 ------------------------------------------------------------------------------
 
--- | This models a strongly typed query or the right hand side of a 'Datalog' rule.
+-- | This models a strongly typed query or the right hand side of a 'Data.Analytics.Datalog.Datalog' rule.
 --
--- The 'Query' itself forms an 'Alternative', letting you combine them to make a robust 
--- 'query' language.
+-- The 'Query' itself forms an 'Alternative', letting you combine them to make a robust
+-- 'Data.Analytics.Datalog.query' language.
 data Query v a where
   Ap     :: Query v (a -> b) -> Query v a -> Query v b
   Map    :: (a -> b) -> Query v a -> Query v b
