@@ -9,7 +9,7 @@
 --
 --------------------------------------------------------------------
 module Data.Analytics.Datalog
-  ( Datalog, query
+  ( Datalog((:-)), query
   ) where
 
 import Data.Analytics.Internal.Datalog
