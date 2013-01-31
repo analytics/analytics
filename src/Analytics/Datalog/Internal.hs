@@ -36,7 +36,6 @@ module Analytics.Datalog.Internal
 
 import Control.Applicative
 import Control.Lens
-import Control.Monad
 import Control.Monad.Trans.Class
 import Data.Foldable
 import Data.Functor.Bind
@@ -166,7 +165,7 @@ no = No
 -- Datalog
 ------------------------------------------------------------------------------
 
--- | An @operational@ encoding of a datalog program.
+-- | An @operational@ encoding of a 'Datalog' program.
 data Datalog :: (* -> *) -> * -> * where
   Fact   :: (Typeable1 t, Match t) => (forall a. t a) -> Datalog m ()
   (:-)   :: Ord a => Relation a -> Body a t -> Datalog m ()
@@ -176,28 +175,30 @@ data Datalog :: (* -> *) -> * -> * where
   Lift   :: m a -> Datalog m a
 
 instance Functor (Datalog m) where
-  fmap = liftM
+  fmap f m = Bind m (Return . f)
   {-# INLINE fmap #-}
 
 instance Apply (Datalog m) where
-  (<.>) = ap
+  mf <.> ma = Bind mf $ \f -> fmap f ma
   {-# INLINE (<.>) #-}
 
 instance Applicative (Datalog m) where
   pure = Return
   {-# INLINE pure #-}
-  (<*>) = ap
+  mf <*> ma = Bind mf $ \f -> fmap f ma
   {-# INLINE (<*>) #-}
 
 instance Bind (Datalog m) where
   (>>-) = Bind
   {-# INLINE (>>-) #-}
 
-instance Monad (Datalog m) where
+instance Monad m => Monad (Datalog m) where
   return = Return
   {-# INLINE return #-}
   (>>=) = Bind
   {-# INLINE (>>=) #-}
+  fail = Lift . fail
+  {-# INLINE fail #-}
 
 instance MonadTrans Datalog where
   lift = Lift
