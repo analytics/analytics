@@ -34,18 +34,10 @@ import Analytics.Match
 import Analytics.Query
 import Analytics.Relation
 import Control.Applicative
-import Control.Lens
 import Control.Monad.Trans.Class
-import Data.Foldable
 import Data.Functor.Bind
-import Data.Functor.Identity
-import Data.Functor.Plus
-import Data.Semigroup
-import Data.Traversable as T
 import Data.Typeable
 import Data.Void
-import Generics.Deriving
-import Prelude.Extras
 
 infixr 1 :-
 

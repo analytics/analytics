@@ -22,7 +22,6 @@ module Analytics.Variable
 import Analytics.Match
 import Control.Applicative
 import Control.Lens
-import Data.Foldable
 import Data.Void
 import Prelude.Extras
 
