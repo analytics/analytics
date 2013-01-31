@@ -40,10 +40,10 @@
 <a name="line-31"></a><span class='hs-comment'>-- Query</span>
 <a name="line-32"></a><span class='hs-comment'>------------------------------------------------------------------------------</span>
 <a name="line-33"></a>
-<a name="line-34"></a><span class='hs-comment'>-- | This models a strongly typed query or the right hand side of a 'Datalog' rule.</span>
+<a name="line-34"></a><span class='hs-comment'>-- | This models a strongly typed query or the right hand side of a 'Data.Analytics.Datalog.Datalog' rule.</span>
 <a name="line-35"></a><span class='hs-comment'>--</span>
-<a name="line-36"></a><span class='hs-comment'>-- The 'Query' itself forms an 'Alternative', letting you combine them to make a robust </span>
-<a name="line-37"></a><span class='hs-comment'>-- 'query' language.</span>
+<a name="line-36"></a><span class='hs-comment'>-- The 'Query' itself forms an 'Alternative', letting you combine them to make a robust</span>
+<a name="line-37"></a><span class='hs-comment'>-- 'Data.Analytics.Datalog.query' language.</span>
 <a name="line-38"></a><span class='hs-keyword'>data</span> <span class='hs-conid'>Query</span> <span class='hs-varid'>v</span> <span class='hs-varid'>a</span> <span class='hs-keyword'>where</span>
 <a name="line-39"></a>  <span class='hs-conid'>Ap</span>     <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Query</span> <span class='hs-varid'>v</span> <span class='hs-layout'>(</span><span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>b</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Query</span> <span class='hs-varid'>v</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Query</span> <span class='hs-varid'>v</span> <span class='hs-varid'>b</span>
 <a name="line-40"></a>  <span class='hs-conid'>Map</span>    <span class='hs-keyglyph'>::</span> <span class='hs-layout'>(</span><span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>b</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Query</span> <span class='hs-varid'>v</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Query</span> <span class='hs-varid'>v</span> <span class='hs-varid'>b</span>
