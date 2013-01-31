@@ -72,12 +72,15 @@ data Relation v = forall t. (Typeable1 t, Match t) => Relation (t v)
 
 instance Functor Relation where
   fmap f (Relation tv) = Relation (fmap f tv)
+  {-# INLINE fmap #-}
 
 instance Foldable Relation where
   foldMap f (Relation tv) = foldMap f tv
+  {-# INLINE foldMap #-}
 
 instance Traversable Relation where
   traverse f (Relation tv) = Relation <$> traverse f tv
+  {-# INLINE traverse #-}
 
 cast1 :: (Typeable1 t, Typeable1 t') => t a -> Maybe (t' a)
 cast1 = fmap runIdentity . gcast1 . Identity
@@ -87,9 +90,11 @@ instance Match Relation where
   match f (Relation x) (Relation y) = do
     y' <- cast1 y
     Relation <$> match f x y'
+  {-# INLINE match #-}
 
 instance (Typeable1 t, Match t) => Rel t v (Relation v) where
   rel ta = Relation ta
+  {-# INLINE rel #-}
 
 ------------------------------------------------------------------------------
 -- Body
@@ -97,8 +102,8 @@ instance (Typeable1 t, Match t) => Rel t v (Relation v) where
 
 -- | This models a strongly typed query or the right hand side of a 'Datalog' rule.
 --
--- The 'Body' itself forms an 'Applicative', letting you combine them for a 'query'
--- language.
+-- The 'Body' itself forms an 'Alternative', letting you combine them to make a robust 
+-- 'query' language.
 data Body v a where
   Ap    :: Body v (a -> b) -> Body v a -> Body v b
   Map   :: (a -> b) -> Body v a -> Body v b
