@@ -41,6 +41,7 @@ import Control.Monad.Trans.Class
 import Data.Foldable
 import Data.Functor.Bind
 import Data.Functor.Identity
+import Data.Functor.Plus
 import Data.Semigroup
 import Data.Traversable as T
 import Data.Typeable
@@ -99,11 +100,13 @@ instance (Typeable1 t, Match t) => Rel t v (Relation v) where
 -- The 'Body' itself forms an 'Applicative', letting you combine them for a 'query'
 -- language.
 data Body v a where
-  Ap   :: Body v (a -> b) -> Body v a -> Body v b
-  Map  :: (a -> b) -> Body v a -> Body v b
-  Pure :: a -> Body v a
-  Body :: (Typeable1 t, Match t) => t v -> Body v (t a)
-  No   :: Relation v -> Body v ()
+  Ap    :: Body v (a -> b) -> Body v a -> Body v b
+  Map   :: (a -> b) -> Body v a -> Body v b
+  Pure  :: a -> Body v a
+  Alt   :: Body v a -> Body v a -> Body v a
+  Empty :: Body v a
+  Body  :: (Typeable1 t, Match t) => t v -> Body v (t a)
+  No    :: Relation v -> Body v ()
   -- TODO: aggregations
 
 instance Functor (Body v) where
@@ -120,6 +123,20 @@ instance Applicative (Body v) where
   (<*>) = Ap
   {-# INLINE (<*>) #-}
 
+instance Alt (Body v) where
+  (<!>) = Alt
+  {-# INLINE (<!>) #-}
+
+instance Plus (Body v) where
+  zero = Empty
+  {-# INLINE zero #-}
+
+instance Alternative (Body v) where
+  empty = Empty
+  {-# INLINE empty #-}
+  (<|>) = Alt
+  {-# INLINE (<|>) #-}
+
 instance Semigroup a => Semigroup (Body v a) where
   (<>) = liftA2 (<>)
   {-# INLINE (<>) #-}
@@ -133,6 +150,7 @@ instance Monoid a => Monoid (Body v a) where
 -- | Anything you can 'Match' can be used directly as a 'Body', too.
 instance (Typeable1 t, Match t, ta ~ t a) => Rel t v (Body v ta) where
   rel ta = Body ta
+  {-# INLINE rel #-}
 
 -- | Stratified negation.
 no :: Relation a -> Body a ()
@@ -189,7 +207,7 @@ query = Query
 {-# INLINE query #-}
 
 ------------------------------------------------------------------------------
--- Match
+-- Matching
 ------------------------------------------------------------------------------
 
 -- | Simple flat unification
@@ -202,7 +220,11 @@ class Traversable t => Match t where
   match abc ta tb = to1 <$> gmatch abc (from1 ta) (from1 tb)
   {-# INLINE match #-}
 
--- | Enable matching via generic programming.
+------------------------------------------------------------------------------
+-- Generic Matching
+------------------------------------------------------------------------------
+
+-- | Enable matching via 'Generic' programming.
 class GMatch t where
   gmatch :: (a -> b -> c) -> t a -> t b -> Maybe (t c)
 
