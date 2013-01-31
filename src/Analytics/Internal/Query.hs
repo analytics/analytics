@@ -45,6 +45,7 @@ data Query v a where
   Select :: (Typeable1 t, Match t) => t v -> Query v (t a)
   No     :: Relation v -> Query v ()
   -- TODO: aggregations
+  deriving Typeable
 
 instance Functor (Query v) where
   fmap = Map
