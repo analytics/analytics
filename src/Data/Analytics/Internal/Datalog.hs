@@ -37,7 +37,7 @@ import Data.Functor.Bind
 import Data.Typeable
 import Data.Void
 
-infixr 1 :-
+infixr 2 :-
 
 ------------------------------------------------------------------------------
 -- Datalog
