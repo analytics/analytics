@@ -22,6 +22,7 @@
 -- syntax because of haddock bug #43. <http://trac.haskell.org/haddock/ticket/43>
 --
 -- Otherwise it would be written as:
+--
 -- @
 -- data 'Datalog' :: (* -> *) -> * -> * where
 --   'Fact'   :: ('Typeable1' t, 'Match' t) => (forall a. t a) -> 'Datalog' m ()
