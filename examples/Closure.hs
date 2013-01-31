@@ -1,9 +1,9 @@
 {-# LANGUAGE OverloadedStrings, TypeFamilies, TemplateHaskell, DeriveFunctor, DeriveFoldable, DeriveTraversable, DeriveDataTypeable, DeriveGeneric, FlexibleContexts #-}
 module Examples.Closure where
 
-import Analytics.Datalog
 import Control.Applicative
 import Control.Lens
+import Data.Analytics
 import Data.Foldable
 import Data.String
 import Data.Typeable
@@ -28,7 +28,7 @@ instance Match TC where match f (TC a b) (TC c d) = TC <$> match f a c <*> match
 tc :: Rel TC a r => Node a -> Node a -> r
 tc x y = rel (TC x y)
 
-test :: Datalog m [TC Void]
+test :: Monad m => Datalog m [TC Void]
 test = do
   edge A B
   edge B C

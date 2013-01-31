@@ -1,9 +1,9 @@
 {-# LANGUAGE OverloadedStrings, TypeFamilies, TemplateHaskell, DeriveFunctor, DeriveFoldable, DeriveTraversable, DeriveDataTypeable, DeriveGeneric, FlexibleContexts #-}
 module Examples.Open where
 
-import Analytics.Datalog
 import Control.Applicative
 import Control.Lens
+import Data.Analytics
 import Data.Char
 import Data.Foldable
 import Data.String
@@ -15,7 +15,7 @@ import Prelude.Extras
 data Atom a = Var a | Atom String deriving (Eq,Ord,Show,Read,Functor,Foldable,Traversable,Typeable,Generic)
 makePrisms ''Atom
 instance Variable Atom where var = _Var
-instnace Eq1 Atom
+instance Eq1 Atom
 instance Match Atom where match = matchVar
 instance IsString (Atom a) where
   fromString = Atom
@@ -30,14 +30,14 @@ instance Match Struct where
     go [] [] = Just []
     go _ _   = Nothing
 
-struct :: Relative Struct a r => String -> [Atom a] -> r
+struct :: Rel Struct a r => String -> [Atom a] -> r
 struct n xs = rel (Struct n xs)
 
-edge, tc :: Relative Struct a r => Atom a -> Atom a -> r
+edge, tc :: Rel Struct a r => Atom a -> Atom a -> r
 edge x y = struct "edge" [x,y]
 tc x y   = struct "tc" [x,y]
 
-test :: Datalog m [Struct Void]
+test :: Monad m => Datalog m [Struct Void]
 test = do
   edge "A" "B"
   edge "B" "C"
