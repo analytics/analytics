@@ -35,14 +35,7 @@ library
   ghc-options:      -Wall
   exposed-modules:
     Analytics.Datalog
-    Analytics.Diagnostic
-    Analytics.Pretty
-    Analytics.Match
-    Analytics.Meta
-    Analytics.Syntax
-    Analytics.Term
-    Analytics.Variable
-    Analytics.Unification
+    Analytics.Datalog.Internal
   build-depends:
     ansi-terminal             >= 0.6     && < 0.7,
     ansi-wl-pprint            >= 0.6.6   && < 0.7,
@@ -61,6 +54,7 @@ library
     parsers                   >= 0.5     && < 1,
     prelude-extras            >= 0.3     && < 1,
     lens                      >= 3.8.4   && < 4,
+    semigroupoids             == 3.*,
     semigroups                >= 0.9     && < 1,
     text                      >= 0.9     && < 0.12,
     transformers              >= 0.2     && < 0.4,

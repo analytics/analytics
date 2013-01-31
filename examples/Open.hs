@@ -2,8 +2,6 @@
 module Examples.Open where
 
 import Analytics.Datalog
-import Analytics.Match
-import Analytics.Variable
 import Control.Applicative
 import Control.Lens
 import Data.Char
@@ -12,10 +10,12 @@ import Data.String
 import Data.Typeable
 import Data.Void
 import Generics.Deriving
+import Prelude.Extras
 
 data Atom a = Var a | Atom String deriving (Eq,Ord,Show,Read,Functor,Foldable,Traversable,Typeable,Generic)
 makePrisms ''Atom
 instance Variable Atom where var = _Var
+instnace Eq1 Atom
 instance Match Atom where match = matchVar
 instance IsString (Atom a) where
   fromString = Atom
@@ -44,7 +44,6 @@ test = do
   edge "B" "A"
   struct "waffles" []
   tc x y :- edge x y
-  tc x z :- tc x y :& edge y z
-  es <- query $ tc "A" x :& no (edge x "C")
-  return $ fst <$> es -- ignore the no
+  tc x z :- tc x y <* edge y z
+  query $ tc "A" x <* no (edge x "C")
   where x = Var "x"; y = Var "y"; z = Var "z"
