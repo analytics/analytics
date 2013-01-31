@@ -4,6 +4,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
 --------------------------------------------------------------------
 -- |
 -- Module    :  Data.Analytics.Internal.Datalog
@@ -29,6 +30,8 @@ import Data.Analytics.Query
 import Data.Analytics.Relation
 import Control.Applicative
 import Control.Monad.Trans.Class
+import Control.Monad.State.Class
+import Control.Monad.Reader.Class
 import Data.Functor.Bind
 import Data.Typeable
 import Data.Void
@@ -59,6 +62,7 @@ instance Apply (Datalog m) where
 instance Applicative (Datalog m) where
   pure = Return
   {-# INLINE pure #-}
+
   mf <*> ma = Bind mf $ \f -> fmap f ma
   {-# INLINE (<*>) #-}
 
@@ -69,10 +73,34 @@ instance Bind (Datalog m) where
 instance Monad m => Monad (Datalog m) where
   return = Return
   {-# INLINE return #-}
+
   (>>=) = Bind
   {-# INLINE (>>=) #-}
+
   fail = Lift . fail
   {-# INLINE fail #-}
+
+instance MonadState s m => MonadState s (Datalog m) where
+  get = lift get
+  {-# INLINE get #-}
+
+  put = lift . put
+  {-# INLINE put #-}
+
+  state = lift . state
+  {-# INLINE state #-}
+
+instance MonadReader e m => MonadReader e (Datalog m) where
+  reader = lift . reader
+  {-# INLINE reader #-}
+
+  ask = lift ask
+  {-# INLINE ask #-}
+
+  local f (Bind m k) = Bind (local f m) (local f . k)
+  local f (Lift m)   = Lift (local f m)
+  local _ m = m
+  {-# INLINE local #-}
 
 instance MonadTrans Datalog where
   lift = Lift
