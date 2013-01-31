@@ -48,6 +48,7 @@ library
     Analytics.Variable
   build-depends:
     base                      >= 4.4     && < 5,
+    bifunctors                >= 3.2     && < 4,
     generic-deriving          >= 1.4     && < 1.5,
     mtl                       >= 2.1.1   && < 2.2,
     prelude-extras            >= 0.3     && < 1,

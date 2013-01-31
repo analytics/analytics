@@ -23,6 +23,7 @@ module Analytics.Internal.Query
 import Analytics.Match
 import Analytics.Relation
 import Control.Applicative
+import Data.Bifunctor
 import Data.Functor.Bind
 import Data.Functor.Plus
 import Data.Semigroup
@@ -46,6 +47,19 @@ data Query v a where
   No     :: Relation v -> Query v ()
   -- TODO: aggregations
   deriving Typeable
+
+instance Bifunctor Query where
+  first f (Ap x y)    = Ap (first f x) (first f y)
+  first f (Map k x)   = Map k (first f x)
+  first _ (Pure a)    = Pure a
+  first f (Alt x y)   = Alt (first f x) (first f y)
+  first _ Empty       = Empty
+  first f (Select vs) = Select (fmap f vs)
+  first f (No xs)     = No (fmap f xs)
+  {-# INLINE first #-}
+  second = Map
+  {-# INLINE second #-}
+  bimap f g = Map g . first f
 
 instance Functor (Query v) where
   fmap = Map
