@@ -129,6 +129,7 @@ instance (Typeable1 t, Match t, u ~ ()) => Rel t Void (Datalog m u) where
   rel tv = Fact (vacuous tv)
   {-# INLINE rel #-}
 
+-- | Perform a 'Query'.
 query :: Ord a => Query a t -> Datalog m [t]
 query = Query
 {-# INLINE query #-}
