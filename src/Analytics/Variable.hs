@@ -13,16 +13,16 @@ module Analytics.Variable where
 import Analytics.Match
 import Control.Applicative
 import Control.Lens
-import Data.Data
+import Data.Void
 
-class (Data (v Int), Match v) => Variable v where
+class (Match v, Functor v) => Variable v where
   var :: Prism (v a) (v b) a b
 
 -- | Default definition of 'match' for a 'Var'
-matchVar :: (Variable t, Eq (t c)) => (a -> b -> c) -> t a -> t b -> Maybe (t c)
+matchVar :: (Variable t, Eq (t Void)) => (a -> b -> c) -> t a -> t b -> Maybe (t c)
 matchVar f va vb = case var Left va of
   Left a -> Just (f a <$> vb)
   Right a' -> case var Left vb of
     Left b -> Just ((`f` b) <$> va)
-    Right b' | a' == b'  -> Just a'
+    Right b' | a' == b'  -> Just (vacuous a')
              | otherwise -> Nothing

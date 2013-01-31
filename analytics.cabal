@@ -34,6 +34,7 @@ library
   default-language: Haskell2010
   ghc-options:      -Wall
   exposed-modules:
+    Analytics.Datalog
     Analytics.Diagnostic
     Analytics.Pretty
     Analytics.Match
