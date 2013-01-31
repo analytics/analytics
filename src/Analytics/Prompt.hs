@@ -1,20 +1,33 @@
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE GADTs #-}
-module Analytics.Datalog.Prompt
+--------------------------------------------------------------------
+-- |
+-- Module    :  Analytics.Prompt
+-- Copyright :  (c) Edward Kmett 2013
+-- License   :  BSD3
+-- Maintainer:  Edward Kmett <ekmett@gmail.com>
+-- Stability :  experimental
+-- Portability: non-portable
+--
+--------------------------------------------------------------------
+module Analytics.Prompt
   ( Step(..)
   , Prompt(..)
   , prompt
   ) where
 
-import qualified Analytics.Datalog.Internal as Datalog
-import Analytics.Datalog.Internal hiding (Fact, Query, (:-))
+import qualified Analytics.Internal.Datalog as Datalog
+import Analytics.Internal.Datalog hiding (Fact, Query, (:-))
+import Analytics.Internal.Query
+import Analytics.Match
+import Analytics.Relation
 import Data.Typeable
 
 data Step :: (* -> *) -> * -> * where
   Fact  :: (Typeable1 t, Match t) => (forall v. t v) -> Step m ()
-  (:-)  :: Ord v => Relation v -> Body v t -> Step m ()
-  Query :: Ord v => Body v t -> Step m [t]
+  (:-)  :: Ord v => Relation v -> Query v t          -> Step m ()
+  Query :: Ord v => Query v t                        -> Step m [t]
 
 data Prompt :: (* -> *) -> * -> * where
   Done :: a -> Prompt m a
