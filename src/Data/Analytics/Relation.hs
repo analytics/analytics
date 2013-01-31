@@ -6,7 +6,7 @@
 {-# LANGUAGE TypeFamilies #-}
 --------------------------------------------------------------------
 -- |
--- Module    :  Analytics.Relation
+-- Module    :  Data.Analytics.Relation
 -- Copyright :  (c) Edward Kmett 2013
 -- License   :  BSD3
 -- Maintainer:  Edward Kmett <ekmett@gmail.com>
@@ -14,14 +14,14 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Analytics.Relation
+module Data.Analytics.Relation
   ( Relation(..)
   , Rel(..)
   ) where
 
-import Analytics.Match
 import Control.Applicative
 import Control.Lens
+import Data.Analytics.Match
 import Data.Foldable
 import Data.Functor.Identity
 import Data.Typeable

@@ -7,7 +7,7 @@
 {-# LANGUAGE TypeOperators #-}
 --------------------------------------------------------------------
 -- |
--- Module    :  Analytics.Variable
+-- Module    :  Data.Analytics.Variable
 -- Copyright :  (c) Edward Kmett 2013
 -- License   :  BSD3
 -- Maintainer:  Edward Kmett <ekmett@gmail.com>
@@ -15,11 +15,11 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Analytics.Variable
+module Data.Analytics.Variable
   ( Variable(..), matchVar
   ) where
 
-import Analytics.Match
+import Data.Analytics.Match
 import Control.Applicative
 import Control.Lens
 import Data.Void

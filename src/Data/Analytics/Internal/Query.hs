@@ -6,7 +6,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 --------------------------------------------------------------------
 -- |
--- Module    :  Analytics.Internal.Query
+-- Module    :  Data.Analytics.Internal.Query
 -- Copyright :  (c) Edward Kmett 2013
 -- License   :  BSD3
 -- Maintainer:  Edward Kmett <ekmett@gmail.com>
@@ -14,14 +14,14 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Analytics.Internal.Query
+module Data.Analytics.Internal.Query
   (
   -- * Datalog
     Query(..), no
   ) where
 
-import Analytics.Match
-import Analytics.Relation
+import Data.Analytics.Match
+import Data.Analytics.Relation
 import Control.Applicative
 import Data.Bifunctor
 import Data.Functor.Bind

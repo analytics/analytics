@@ -1,6 +1,6 @@
 --------------------------------------------------------------------
 -- |
--- Module    :  Analytics.Datalog
+-- Module    :  Data.Analytics.Datalog
 -- Copyright :  (c) Edward Kmett 2013
 -- License   :  BSD3
 -- Maintainer:  Edward Kmett <ekmett@gmail.com>
@@ -8,10 +8,10 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Analytics.Datalog
+module Data.Analytics.Datalog
   ( Datalog, query
   ) where
 
-import Analytics.Internal.Datalog
+import Data.Analytics.Internal.Datalog
 
 {-# ANN module "HLint: ignore Use import/export shortcut" #-}

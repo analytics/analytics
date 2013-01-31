@@ -11,7 +11,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 --------------------------------------------------------------------
 -- |
--- Module    :  Analytics.Match
+-- Module    :  Data.Analytics.Match
 -- Copyright :  (c) Edward Kmett 2013
 -- License   :  BSD3
 -- Maintainer:  Edward Kmett <ekmett@gmail.com>
@@ -19,7 +19,7 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Analytics.Match
+module Data.Analytics.Match
   ( Match(..)
   ) where
 

@@ -6,7 +6,7 @@
 {-# LANGUAGE TypeFamilies #-}
 --------------------------------------------------------------------
 -- |
--- Module    :  Analytics.Internal.Datalog
+-- Module    :  Data.Analytics.Internal.Datalog
 -- Copyright :  (c) Edward Kmett 2013
 -- License   :  BSD3
 -- Maintainer:  Edward Kmett <ekmett@gmail.com>
@@ -17,16 +17,16 @@
 -- policy. Any direct dependency upon it is likely to break even
 -- between minor versions.
 --------------------------------------------------------------------
-module Analytics.Internal.Datalog
+module Data.Analytics.Internal.Datalog
   (
   -- * Datalog
     Datalog(..)
   , query
   ) where
 
-import Analytics.Match
-import Analytics.Query
-import Analytics.Relation
+import Data.Analytics.Match
+import Data.Analytics.Query
+import Data.Analytics.Relation
 import Control.Applicative
 import Control.Monad.Trans.Class
 import Data.Functor.Bind

@@ -3,7 +3,7 @@
 {-# LANGUAGE GADTs #-}
 --------------------------------------------------------------------
 -- |
--- Module    :  Analytics.Prompt
+-- Module    :  Data.Analytics.Prompt
 -- Copyright :  (c) Edward Kmett 2013
 -- License   :  BSD3
 -- Maintainer:  Edward Kmett <ekmett@gmail.com>
@@ -11,17 +11,17 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Analytics.Prompt
+module Data.Analytics.Prompt
   ( Step(..)
   , Prompt(..)
   , prompt
   ) where
 
-import qualified Analytics.Internal.Datalog as Datalog
-import Analytics.Internal.Datalog hiding (Fact, Query, (:-))
-import Analytics.Internal.Query
-import Analytics.Match
-import Analytics.Relation
+import qualified Data.Analytics.Internal.Datalog as Datalog
+import Data.Analytics.Internal.Datalog hiding (Fact, Query, (:-))
+import Data.Analytics.Internal.Query
+import Data.Analytics.Match
+import Data.Analytics.Relation
 import Data.Typeable
 
 data Step :: (* -> *) -> * -> * where
