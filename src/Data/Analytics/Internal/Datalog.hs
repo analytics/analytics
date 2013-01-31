@@ -17,6 +17,20 @@
 -- This module is not considered packaged under the package versioning
 -- policy. Any direct dependency upon it is likely to break even
 -- between minor versions.
+--
+-- The definition for 'Datalog' is forced into @ExistentialQuantification@
+-- syntax because of haddock bug #43. <http://trac.haskell.org/haddock/ticket/43>
+--
+-- Otherwise it would be written as:
+-- @
+-- data 'Datalog' :: (* -> *) -> * -> * where
+--   'Fact'   :: ('Typeable1' t, 'Match' t) => (forall a. t a) -> 'Datalog' m ()
+--   (':-')   :: 'Ord' a => 'Relation' a -> Query a t -> 'Datalog' m ()
+--   'Query'  :: 'Ord' a => 'Query' a t -> 'Datalog' m [t]
+--   'Bind'   :: 'Datalog' m a -> (a -> 'Datalog' m b) -> 'Datalog' m b
+--   'Return' :: a -> 'Datalog' m a
+--   'Lift'   :: m a -> 'Datalog' m a
+-- @
 --------------------------------------------------------------------
 module Data.Analytics.Internal.Datalog
   (
@@ -44,13 +58,13 @@ infixr 2 :-
 ------------------------------------------------------------------------------
 
 -- | An @operational@ encoding of a 'Datalog' program.
-data Datalog :: (* -> *) -> * -> * where
-  Fact   :: (Typeable1 t, Match t) => (forall a. t a) -> Datalog m ()
-  (:-)   :: Ord a => Relation a -> Query a t -> Datalog m ()
-  Query  :: Ord a => Query a t -> Datalog m [t]
-  Bind   :: Datalog m a -> (a -> Datalog m b) -> Datalog m b
-  Return :: a -> Datalog m a
-  Lift   :: m a -> Datalog m a
+data Datalog m r
+  = forall t. (Typeable1 t, Match t, r ~ ()) => Fact (forall x. t x) -- ^ Add a fact to the EDB
+  | forall t a. (Ord a, r ~ ())  => Relation a :- Query a t          -- ^ Add an inference rule to the IDB
+  | forall t a. (Ord a, r ~ [t]) => Query (Query a t)                -- ^ Perform a query
+  | forall a. Bind (Datalog m a) (a -> Datalog m r)
+  | Return r
+  | Lift (m r)
 
 instance Functor (Datalog m) where
   fmap f m = Bind m (Return . f)

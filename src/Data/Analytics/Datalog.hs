@@ -7,9 +7,11 @@
 -- Stability :  experimental
 -- Portability: non-portable
 --
+-- This module provides the 'Datalog' monad transformer.
 --------------------------------------------------------------------
 module Data.Analytics.Datalog
-  ( Datalog((:-)), query
+  ( Datalog((:-))
+  , query
   ) where
 
 import Data.Analytics.Internal.Datalog
