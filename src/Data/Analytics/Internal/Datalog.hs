@@ -29,6 +29,7 @@ import Data.Analytics.Match
 import Data.Analytics.Query
 import Data.Analytics.Relation
 import Control.Applicative
+import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 import Control.Monad.State.Class
 import Control.Monad.Reader.Class
@@ -79,6 +80,10 @@ instance Monad m => Monad (Datalog m) where
 
   fail = Lift . fail
   {-# INLINE fail #-}
+
+instance MonadIO m => MonadIO (Datalog m) where
+  liftIO = Lift . liftIO
+  {-# INLINE liftIO #-}
 
 instance MonadState s m => MonadState s (Datalog m) where
   get = lift get
