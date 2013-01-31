@@ -31,8 +31,8 @@ import Data.Typeable
 ------------------------------------------------------------------------------
 
 -- | This provides overloading of predicates so they can be used directly
--- as facts in the 'Datalog' 'Monad' or as the head or 'Body' of a rule or as a
--- 'query'.
+-- as facts in the 'Data.Analytics.Datalog.Datalog' 'Monad' or as the head or body of a rule or as a
+-- 'Data.Analytics.Query.Query'.
 class (Typeable1 t, Match t) => Rel t a r | r -> a where
   rel :: t a -> r
 
