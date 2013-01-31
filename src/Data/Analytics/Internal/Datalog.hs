@@ -26,9 +26,9 @@
 -- @
 -- data 'Datalog' :: (* -> *) -> * -> * where
 --   'Fact'   :: ('Typeable1' t, 'Match' t) => (forall a. t a) -> 'Datalog' m ()
---   (':-')   :: 'Ord' a => 'Relation' a -> Query a t -> 'Datalog' m ()
+--   (':-')   :: 'Ord' a => 'Relation' a -> 'Query' a t -> 'Datalog' m ()
 --   'Query'  :: 'Ord' a => 'Query' a t -> 'Datalog' m [t]
---   'Bind'   :: 'Datalog' m a -> (a -> 'Datalog' m b) -> 'Datalog' m b
+--   'Data.Analytics.Internal.Datalog.Bind'   :: 'Datalog' m a -> (a -> 'Datalog' m b) -> 'Datalog' m b
 --   'Return' :: a -> 'Datalog' m a
 --   'Lift'   :: m a -> 'Datalog' m a
 -- @
@@ -60,9 +60,9 @@ infixr 2 :-
 
 -- | An @operational@ encoding of a 'Datalog' program.
 data Datalog m r
-  = forall t. (Typeable1 t, Match t, r ~ ()) => Fact (forall x. t x) -- ^ Add a fact to the EDB
+  = forall t. (Typeable1 t, Match t, r ~ ()) => Fact (forall x. t x) -- ^ Add a 'Fact' to the EDB
   | forall t a. (Ord a, r ~ ())  => Relation a :- Query a t          -- ^ Add an inference rule to the IDB
-  | forall t a. (Ord a, r ~ [t]) => Query (Query a t)                -- ^ Perform a query
+  | forall t a. (Ord a, r ~ [t]) => Query (Query a t)                -- ^ Perform a 'query'
   | forall a. Bind (Datalog m a) (a -> Datalog m r)
   | Return r
   | Lift (m r)
