@@ -4,6 +4,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 --------------------------------------------------------------------
 -- |
 -- Module    :  Data.Analytics.Internal.Query
@@ -101,6 +102,13 @@ instance Monoid a => Monoid (Query v a) where
 instance (Typeable1 t, Match t, ta ~ t a) => Rel t v (Query v ta) where
   rel ta = Select ta
   {-# INLINE rel #-}
+
+-- | Magic overloading for ('&').
+instance (Typeable1 t, Match t, p ~ Query v (s a), q ~ Query v (s a, t a)) => Rel t v (p -> q) where
+  rel ta p = (,) <$> p <*> Select ta
+  {-# INLINE rel #-}
+
+-- TODO: magic negation
 
 -- | Stratified negation.
 no :: Relation a -> Query a ()

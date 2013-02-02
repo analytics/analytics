@@ -52,7 +52,7 @@ import Data.Functor.Bind
 import Data.Typeable
 import Data.Void
 
-infixr 2 :-
+infixr 0 :-
 
 ------------------------------------------------------------------------------
 -- Datalog
