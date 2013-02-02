@@ -17,7 +17,7 @@
 --
 --------------------------------------------------------------------
 module Data.Analytics.Internal.Query
-  ( Query(..), no
+  ( Query(..), No(..)
   ) where
 
 import Data.Analytics.Match

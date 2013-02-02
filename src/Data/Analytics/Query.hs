@@ -11,7 +11,7 @@
 module Data.Analytics.Query
   (
   -- * Datalog
-    Query, no
+    Query, No(..)
   ) where
 
 import Data.Analytics.Internal.Query
