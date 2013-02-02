@@ -36,19 +36,21 @@
 module Data.Analytics.Internal.Datalog
   (
   -- * Datalog
-    Datalog(..)
+    Datalog
+  , DatalogT(..)
   , query
   ) where
 
-import Data.Analytics.Match
-import Data.Analytics.Query
-import Data.Analytics.Relation
 import Control.Applicative
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 import Control.Monad.State.Class
 import Control.Monad.Reader.Class
+import Data.Analytics.Match
+import Data.Analytics.Query
+import Data.Analytics.Relation
 import Data.Functor.Bind
+import Data.Functor.Identity
 import Data.Typeable
 import Data.Void
 
@@ -59,34 +61,37 @@ infixr 0 :-
 ------------------------------------------------------------------------------
 
 -- | An @operational@ encoding of a 'Datalog' program.
-data Datalog m r
+type Datalog = DatalogT Identity
+
+-- | An @operational@ encoding of a 'Datalog' program with extra effects in @m@.
+data DatalogT m r
   = forall t. (Typeable1 t, Match t, r ~ ()) => Fact (forall x. t x) -- ^ Add a 'Fact' to the EDB
   | forall t a. (Ord a, r ~ ())  => Relation a :- Query a t          -- ^ Add an inference rule to the IDB
   | forall t a. (Ord a, r ~ [t]) => Query (Query a t)                -- ^ Perform a 'query'
-  | forall a. Bind (Datalog m a) (a -> Datalog m r)
+  | forall a. Bind (DatalogT m a) (a -> DatalogT m r)
   | Return r
   | Lift (m r)
 
-instance Functor (Datalog m) where
+instance Functor (DatalogT m) where
   fmap f m = Bind m (Return . f)
   {-# INLINE fmap #-}
 
-instance Apply (Datalog m) where
+instance Apply (DatalogT m) where
   mf <.> ma = Bind mf $ \f -> fmap f ma
   {-# INLINE (<.>) #-}
 
-instance Applicative (Datalog m) where
+instance Applicative (DatalogT m) where
   pure = Return
   {-# INLINE pure #-}
 
   mf <*> ma = Bind mf $ \f -> fmap f ma
   {-# INLINE (<*>) #-}
 
-instance Bind (Datalog m) where
+instance Bind (DatalogT m) where
   (>>-) = Bind
   {-# INLINE (>>-) #-}
 
-instance Monad m => Monad (Datalog m) where
+instance Monad m => Monad (DatalogT m) where
   return = Return
   {-# INLINE return #-}
 
@@ -96,11 +101,11 @@ instance Monad m => Monad (Datalog m) where
   fail = Lift . fail
   {-# INLINE fail #-}
 
-instance MonadIO m => MonadIO (Datalog m) where
+instance MonadIO m => MonadIO (DatalogT m) where
   liftIO = Lift . liftIO
   {-# INLINE liftIO #-}
 
-instance MonadState s m => MonadState s (Datalog m) where
+instance MonadState s m => MonadState s (DatalogT m) where
   get = lift get
   {-# INLINE get #-}
 
@@ -110,7 +115,7 @@ instance MonadState s m => MonadState s (Datalog m) where
   state = lift . state
   {-# INLINE state #-}
 
-instance MonadReader e m => MonadReader e (Datalog m) where
+instance MonadReader e m => MonadReader e (DatalogT m) where
   reader = lift . reader
   {-# INLINE reader #-}
 
@@ -122,15 +127,15 @@ instance MonadReader e m => MonadReader e (Datalog m) where
   local _ m = m
   {-# INLINE local #-}
 
-instance MonadTrans Datalog where
+instance MonadTrans DatalogT where
   lift = Lift
   {-# INLINE lift #-}
 
-instance (Typeable1 t, Match t, u ~ ()) => Rel t Void (Datalog m u) where
+instance (Typeable1 t, Match t, u ~ ()) => Rel t Void (DatalogT m u) where
   rel tv = Fact (vacuous tv)
   {-# INLINE rel #-}
 
 -- | Perform a 'Query'.
-query :: Ord a => Query a t -> Datalog m [t]
+query :: Ord a => Query a t -> DatalogT m [t]
 query = Query
 {-# INLINE query #-}

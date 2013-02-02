@@ -10,7 +10,8 @@
 -- This module provides the 'Datalog' monad transformer.
 --------------------------------------------------------------------
 module Data.Analytics.Datalog
-  ( Datalog((:-))
+  ( Datalog
+  , DatalogT((:-))
   , query
   ) where
 

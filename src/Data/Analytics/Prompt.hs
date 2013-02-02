@@ -19,44 +19,74 @@
 -- @Data.Analytics@.
 --------------------------------------------------------------------
 module Data.Analytics.Prompt
-  ( Step(..)
-  , Prompt(..)
-  , prompt
+  (
+  -- * Each Step
+    Step, StepT(..)
+  -- * Prompting for Steps
+  , Prompt, PromptT(..)
+  , prompt, promptT
+  , unprompt, unpromptT
+  -- * Prompt isomorphisms
+  , _Prompt, _PromptT
   ) where
 
+import Control.Lens
 import Control.Monad
 import qualified Data.Analytics.Internal.Datalog as Datalog
 import Data.Analytics.Internal.Datalog hiding (Fact, Query, (:-))
 import Data.Analytics.Internal.Query
 import Data.Analytics.Match
 import Data.Analytics.Relation
+import Data.Functor.Identity
 import Data.Typeable
 
 infixr 0 :-
 infixl 1 :>>=
 
+type Step = StepT Identity
+
 -- | A single 'Datalog' 'Fact', rule or 'Query'.
-data Step :: (* -> *) -> * -> * where
-  Fact  :: (Typeable1 t, Match t) => (forall v. t v) -> Step m ()
-  (:-)  :: Ord v => Relation v -> Query v t          -> Step m ()
-  Query :: Ord v => Query v t                        -> Step m [t]
+data StepT :: (* -> *) -> * -> * where
+  Fact  :: (Typeable1 t, Match t) => (forall v. t v) -> StepT m ()
+  (:-)  :: Ord v => Relation v -> Query v t          -> StepT m ()
+  Query :: Ord v => Query v t                        -> StepT m [t]
+
+type Prompt = PromptT Identity
 
 -- | The result of prompting, after monadic effects.
-data Prompt :: (* -> *) -> * -> * where
-  Done :: a -> Prompt m a
-  (:>>=) :: Step m a -> (a -> Datalog m b) -> Prompt m b
+data PromptT :: (* -> *) -> * -> * where
+  Done :: a -> PromptT m a
+  (:>>=) :: StepT m a -> (a -> DatalogT m b) -> PromptT m b
+
+prompt :: Datalog a -> Prompt a
+prompt = runIdentity . promptT
+
+unprompt :: PromptT m a -> DatalogT m a
+unprompt (Fact xs :>>= k)  = Bind (Datalog.Fact xs) k
+unprompt (Query q :>>= k)  = Bind (Datalog.Query q) k
+unprompt ((h :- b) :>>= k) = Bind (h Datalog.:- b) k
+unprompt (Done a)          = Return a
 
 -- | Quotient out operational details of the Datalog program and get to the
 -- next 'Step'.
-prompt :: Monad m => Datalog m a -> m (Prompt m a)
-prompt (Datalog.Fact xs)          = return $ Fact xs :>>= return
-prompt (Datalog.Query q)          = return $ Query q :>>= return
-prompt (h Datalog.:- b)           = return $ (h :- b) :>>= return
-prompt (Return a)                 = return $ Done a
-prompt (Lift m)                   = liftM Done m
-prompt (Bind (Datalog.Fact xs) g) = return $ Fact xs :>>= g
-prompt (Bind (Datalog.Query q) g) = return $ Query q :>>= g
-prompt (Bind (h Datalog.:- b) g)  = return $ (h :- b) :>>= g
-prompt (Bind (Lift m) g)          = m >>= prompt . g
-prompt (Bind (Return a) g)        = prompt (g a)
-prompt (Bind m g `Bind` h)        = prompt $ m `Bind` \x -> g x `Bind` h
+promptT :: Monad m => DatalogT m a -> m (PromptT m a)
+promptT (Datalog.Fact xs)          = return $ Fact xs :>>= return
+promptT (Datalog.Query q)          = return $ Query q :>>= return
+promptT (h Datalog.:- b)           = return $ (h :- b) :>>= return
+promptT (Return a)                 = return $ Done a
+promptT (Lift m)                   = liftM Done m
+promptT (Bind (Datalog.Fact xs) g) = return $ Fact xs :>>= g
+promptT (Bind (Datalog.Query q) g) = return $ Query q :>>= g
+promptT (Bind (h Datalog.:- b) g)  = return $ (h :- b) :>>= g
+promptT (Bind (Lift m) g)          = m >>= promptT . g
+promptT (Bind (Return a) g)        = promptT (g a)
+promptT (Bind m g `Bind` h)        = promptT $ m `Bind` \x -> g x `Bind` h
+
+unpromptT :: m (PromptT m a) -> DatalogT m a
+unpromptT mp = Bind (Lift mp) unprompt
+
+_PromptT :: Monad m => Iso (DatalogT m a) (DatalogT n b) (m (PromptT m a)) (n (PromptT n b))
+_PromptT = iso promptT unpromptT
+
+_Prompt :: Iso (Datalog a) (Datalog b) (Prompt a) (Prompt b)
+_Prompt = iso prompt unprompt
