@@ -46,6 +46,7 @@ library
     Data.Analytics.Prompt
     Data.Analytics.Query
     Data.Analytics.Relation
+    Data.Analytics.Term
     Data.Analytics.Variable
 
   build-depends:
