@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -38,8 +39,10 @@ class Traversable t => Match t where
   --
   -- @default 'match' :: ('Generic1' t, 'GMatch' ('Rep1' t)) => (a -> b -> c) -> t a -> t b -> 'Maybe' (t c)@
   match :: (a -> b -> c) -> t a -> t b -> Maybe (t c)
+#ifndef HLINT
   default match :: (Generic1 t, GMatch (Rep1 t)) => (a -> b -> c) -> t a -> t b -> Maybe (t c)
   match abc ta tb = to1 <$> gmatch abc (from1 ta) (from1 tb)
+#endif
   {-# INLINE match #-}
 
 ------------------------------------------------------------------------------
