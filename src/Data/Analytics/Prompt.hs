@@ -24,6 +24,7 @@ module Data.Analytics.Prompt
   , prompt
   ) where
 
+import Control.Monad
 import qualified Data.Analytics.Internal.Datalog as Datalog
 import Data.Analytics.Internal.Datalog hiding (Fact, Query, (:-))
 import Data.Analytics.Internal.Query
@@ -52,7 +53,7 @@ prompt (Datalog.Fact xs)          = return $ Fact xs :>>= return
 prompt (Datalog.Query q)          = return $ Query q :>>= return
 prompt (h Datalog.:- b)           = return $ (h :- b) :>>= return
 prompt (Return a)                 = return $ Done a
-prompt (Lift m)                   = m >>= return . Done
+prompt (Lift m)                   = liftM Done m
 prompt (Bind (Datalog.Fact xs) g) = return $ Fact xs :>>= g
 prompt (Bind (Datalog.Query q) g) = return $ Query q :>>= g
 prompt (Bind (h Datalog.:- b) g)  = return $ (h :- b) :>>= g
