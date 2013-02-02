@@ -24,7 +24,6 @@ import Control.Lens
 import Data.Analytics.Internal.Typeable (cast1)
 import Data.Analytics.Match
 import Data.Foldable
-import Data.Functor.Identity
 import Data.Typeable
 
 ------------------------------------------------------------------------------

@@ -5,6 +5,9 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE UndecidableInstances #-}
 --------------------------------------------------------------------
 -- |
 -- Module    :  Data.Analytics.Variable
@@ -23,6 +26,9 @@ module Data.Analytics.Variable
 import Data.Analytics.Match
 import Control.Applicative
 import Control.Lens
+import Data.IntMap
+import Data.HashMap.Strict
+import Data.Map
 import Data.Void
 import Prelude.Extras
 
@@ -55,6 +61,10 @@ instance HasVars s t a b => HasVars (Map x s) (Map x t) a b where
   {-# INLINE vars #-}
 
 instance HasVars s t a b => HasVars (IntMap s) (IntMap t) a b where
+  vars = traverse.vars
+  {-# INLINE vars #-}
+
+instance HasVars s t a b => HasVars (HashMap x s) (HashMap x t) a b where
   vars = traverse.vars
   {-# INLINE vars #-}
 
