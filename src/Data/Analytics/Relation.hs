@@ -21,6 +21,7 @@ module Data.Analytics.Relation
 
 import Control.Applicative
 import Control.Lens
+import Data.Analytics.Internal.Typeable (cast1)
 import Data.Analytics.Match
 import Data.Foldable
 import Data.Functor.Identity
@@ -56,10 +57,6 @@ instance Foldable Relation where
 instance Traversable Relation where
   traverse f (Relation tv) = Relation <$> traverse f tv
   {-# INLINE traverse #-}
-
-cast1 :: (Typeable1 t, Typeable1 t') => t a -> Maybe (t' a)
-cast1 = fmap runIdentity . gcast1 . Identity
-{-# INLINE cast1 #-}
 
 instance Match Relation where
   match f (Relation x) (Relation y) = do

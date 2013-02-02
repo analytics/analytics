@@ -41,11 +41,13 @@ library
     Data.Analytics.Datalog
     Data.Analytics.Internal.Datalog
     Data.Analytics.Internal.Query
+    Data.Analytics.Internal.Typeable
     Data.Analytics.Match
     Data.Analytics.Prompt
     Data.Analytics.Query
     Data.Analytics.Relation
     Data.Analytics.Variable
+
   build-depends:
     base                      >= 4.4     && < 5,
     bifunctors                >= 3.2     && < 4,

@@ -17,6 +17,7 @@
 --------------------------------------------------------------------
 module Data.Analytics.Variable
   ( Variable(..), matchVar
+  , HasVars(..)
   ) where
 
 import Data.Analytics.Match
@@ -41,3 +42,23 @@ matchVar f va vb = case var Left va of
     Left b -> Just ((`f` b) <$> va)
     Right b' | a' ==# b' -> Just (vacuous a')
              | otherwise -> Nothing
+
+------------------------------------------------------------------------------
+-- Variable
+------------------------------------------------------------------------------
+
+class HasVars s t a b | s -> a, t -> b, s b -> t, t a -> s where
+  vars :: Traversal s t a b
+
+instance HasVars s t a b => HasVars (Map x s) (Map x t) a b where
+  vars = traverse.vars
+  {-# INLINE vars #-}
+
+instance HasVars s t a b => HasVars (IntMap s) (IntMap t) a b where
+  vars = traverse.vars
+  {-# INLINE vars #-}
+
+instance HasVars s t a b => HasVars [s] [t] a b where
+  vars = traverse.vars
+  {-# INLINE vars #-}
+
