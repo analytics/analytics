@@ -44,6 +44,6 @@ test = do
   edge "B" "A"
   struct "waffles" []
   tc x y :- edge x y
-  tc x z :- tc x y <* edge y z
-  query $ tc "A" x <* no (edge x "C")
+  tc x z :- tc x y & edge y z
+  query $ tc "A" x & no (edge x "C")
   where x = Var "x"; y = Var "y"; z = Var "z"

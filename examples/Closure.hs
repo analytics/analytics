@@ -37,5 +37,5 @@ test = do
   edge B A
   tc x y :- edge x y
   tc x z :- tc x y & edge y z
-  query $ tc A x <* no (edge x C)
+  query $ tc A x & no (edge x C)
   where x = "x"; y = "y"; z = "z"

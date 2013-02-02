@@ -4,6 +4,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE FunctionalDependencies #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 --------------------------------------------------------------------
 -- |
@@ -108,9 +109,16 @@ instance (Typeable1 t, Match t, p ~ Query v (s a), q ~ Query v (s a, t a)) => Re
   rel ta p = (,) <$> p <*> Select ta
   {-# INLINE rel #-}
 
--- TODO: magic negation
 
 -- | Stratified negation.
-no :: Relation a -> Query a ()
-no = No
-{-# INLINE no #-}
+class No t a | t -> a where
+  no :: Relation a -> t
+
+-- Note: this makes the (,()) from the No query disappear, perhaps more magic than we want to be, but its convenient!
+instance (p ~ Query a r, q ~ Query a r) => No (p -> q) a where
+  no r p = p <* No r
+  {-# INLINE no #-}
+
+instance No (Query a ()) a where
+  no = No
+  {-# INLINE no #-}
