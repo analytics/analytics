@@ -1,6 +1,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE FunctionalDependencies #-}
 --------------------------------------------------------------------
 -- |
 -- Module    :  Data.Analytics.Internal.Atomic
@@ -19,15 +20,15 @@ import Data.Analytics.Internal.Datalog
 import Data.Analytics.Internal.Query
 import Data.Analytics.Internal.Atom
 
-class Atomic r a where
-  atom :: Atom a -> r
+class Atomic r t a | r -> t where
+  atom :: Atom t a -> r
 
 -- All Terms are forced to be Entities
-instance u ~ () => Atomic (DatalogT m u) b where
+instance u ~ () => Atomic (DatalogT t m u) t b where
   atom = Fact . atom
 
-instance a ~ b => Atomic (Query a) b where
+instance a ~ b => Atomic (Query t a) t b where
   atom = Select . atom
 
-instance a ~ b => Atomic (Atom a) b where
+instance a ~ b => Atomic (Atom t a) t b where
   atom = id

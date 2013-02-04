@@ -45,37 +45,37 @@ infixr 0 :-
 ------------------------------------------------------------------------------
 
 -- | An @operational@ encoding of a 'Datalog' program.
-type Datalog = DatalogT Identity
+type Datalog t = DatalogT t Identity
 
 -- | An @operational@ encoding of a 'Datalog' program with extra effects in @m@.
-data DatalogT :: (* -> *) -> * -> * where
-  Fact   :: Atom a -> DatalogT m ()
-  (:-)   :: Atom a -> Query b -> DatalogT m ()
-  Query  :: Query a -> DatalogT m [a]
-  Bind   :: DatalogT m a -> (a -> DatalogT m b) -> DatalogT m b
-  Return :: a -> DatalogT m a
-  Lift   :: m a -> DatalogT m a
+data DatalogT :: (* -> *) -> (* -> *) -> * -> * where
+  Fact   :: Atom t a -> DatalogT t m ()
+  (:-)   :: Atom t a -> Query t b -> DatalogT t m ()
+  Query  :: Query t a -> DatalogT t m [a]
+  Bind   :: DatalogT t m a -> (a -> DatalogT t m b) -> DatalogT t m b
+  Return :: a -> DatalogT t m a
+  Lift   :: m a -> DatalogT t m a
 
-instance Functor (DatalogT m) where
+instance Functor (DatalogT t m) where
   fmap f m = Bind m (Return . f)
   {-# INLINE fmap #-}
 
-instance Apply (DatalogT m) where
+instance Apply (DatalogT t m) where
   mf <.> ma = Bind mf $ \f -> fmap f ma
   {-# INLINE (<.>) #-}
 
-instance Applicative (DatalogT m) where
+instance Applicative (DatalogT t m) where
   pure = Return
   {-# INLINE pure #-}
 
   mf <*> ma = Bind mf $ \f -> fmap f ma
   {-# INLINE (<*>) #-}
 
-instance Bind (DatalogT m) where
+instance Bind (DatalogT t m) where
   (>>-) = Bind
   {-# INLINE (>>-) #-}
 
-instance Monad m => Monad (DatalogT m) where
+instance Monad m => Monad (DatalogT t m) where
   return = Return
   {-# INLINE return #-}
 
@@ -85,11 +85,11 @@ instance Monad m => Monad (DatalogT m) where
   fail = Lift . fail
   {-# INLINE fail #-}
 
-instance MonadIO m => MonadIO (DatalogT m) where
+instance MonadIO m => MonadIO (DatalogT t m) where
   liftIO = Lift . liftIO
   {-# INLINE liftIO #-}
 
-instance MonadState s m => MonadState s (DatalogT m) where
+instance MonadState s m => MonadState s (DatalogT t m) where
   get = lift get
   {-# INLINE get #-}
 
@@ -99,7 +99,7 @@ instance MonadState s m => MonadState s (DatalogT m) where
   state = lift . state
   {-# INLINE state #-}
 
-instance MonadReader e m => MonadReader e (DatalogT m) where
+instance MonadReader e m => MonadReader e (DatalogT t m) where
   reader = lift . reader
   {-# INLINE reader #-}
 
@@ -111,13 +111,13 @@ instance MonadReader e m => MonadReader e (DatalogT m) where
   local _ m = m
   {-# INLINE local #-}
 
-instance MonadTrans DatalogT where
+instance MonadTrans (DatalogT t) where
   lift = Lift
   {-# INLINE lift #-}
 
-instance (Term a, Entity a ~ a, u ~ ()) => TermOf (DatalogT m u) a
+instance (Term a, Entity a ~ a, u ~ ()) => TermOf (DatalogT t m u) a
 
 -- | Perform a 'Query'.
-query :: Ord a => Query a -> DatalogT m [a]
+query :: Ord a => Query t a -> DatalogT t m [a]
 query = Query
 {-# INLINE query #-}

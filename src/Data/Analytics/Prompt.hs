@@ -41,25 +41,25 @@ import Data.Functor.Identity
 infixr 0 :-
 infixl 1 :>>=
 
-type Step = StepT Identity
+type Step t = StepT t Identity
 
 -- | A single 'Datalog' 'Fact', rule or 'Query'.
-data StepT :: (* -> *) -> * -> * where
-  Fact  :: Atom a -> StepT m ()
-  (:-)  :: Atom a -> Query b -> StepT m ()
-  Query :: Query a -> StepT m [a]
+data StepT :: (* -> *) -> (* -> *) -> * -> * where
+  Fact  :: Atom t a -> StepT t m ()
+  (:-)  :: Atom t a -> Query t b -> StepT t m ()
+  Query :: Query t a -> StepT t m [a]
 
-type Prompt = PromptT Identity
+type Prompt t = PromptT t Identity
 
 -- | The result of prompting, after monadic effects.
-data PromptT :: (* -> *) -> * -> * where
-  Done :: a -> PromptT m a
-  (:>>=) :: StepT m a -> (a -> DatalogT m b) -> PromptT m b
+data PromptT :: (* -> *) -> (* -> *) -> * -> * where
+  Done :: a -> PromptT t m a
+  (:>>=) :: StepT t m a -> (a -> DatalogT t m b) -> PromptT t m b
 
-prompt :: Datalog a -> Prompt a
+prompt :: Datalog t a -> Prompt t a
 prompt = runIdentity . promptT
 
-unprompt :: PromptT m a -> DatalogT m a
+unprompt :: PromptT t m a -> DatalogT t m a
 unprompt (Fact xs :>>= k)  = Bind (Datalog.Fact xs) k
 unprompt (Query q :>>= k)  = Bind (Datalog.Query q) k
 unprompt ((h :- b) :>>= k) = Bind (h Datalog.:- b) k
@@ -67,7 +67,7 @@ unprompt (Done a)          = Return a
 
 -- | Quotient out operational details of the Datalog program and get to the
 -- next 'Step'.
-promptT :: Monad m => DatalogT m a -> m (PromptT m a)
+promptT :: Monad m => DatalogT t m a -> m (PromptT t m a)
 promptT (Datalog.Fact xs)          = return $ Fact xs :>>= return
 promptT (Datalog.Query q)          = return $ Query q :>>= return
 promptT (h Datalog.:- b)           = return $ (h :- b) :>>= return
@@ -80,11 +80,11 @@ promptT (Bind (Lift m) g)          = m >>= promptT . g
 promptT (Bind (Return a) g)        = promptT (g a)
 promptT (Bind m g `Bind` h)        = promptT $ m `Bind` \x -> g x `Bind` h
 
-unpromptT :: m (PromptT m a) -> DatalogT m a
+unpromptT :: m (PromptT t m a) -> DatalogT t m a
 unpromptT mp = Bind (Lift mp) unprompt
 
-_PromptT :: Monad m => Iso (DatalogT m a) (DatalogT n b) (m (PromptT m a)) (n (PromptT n b))
+_PromptT :: Monad m => Iso (DatalogT t m a) (DatalogT t n b) (m (PromptT t m a)) (n (PromptT t n b))
 _PromptT = iso promptT unpromptT
 
-_Prompt :: Iso (Datalog a) (Datalog b) (Prompt a) (Prompt b)
+_Prompt :: Iso (Datalog t a) (Datalog t b) (Prompt t a) (Prompt t b)
 _Prompt = iso prompt unprompt

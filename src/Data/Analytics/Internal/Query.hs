@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
@@ -6,6 +7,9 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+#ifndef MIN_VERSION_base
+#define MIN_VERSION_base(x,y,z) 1
+#endif
 --------------------------------------------------------------------
 -- |
 -- Module    :  Data.Analytics.Internal.Query
@@ -37,58 +41,69 @@ import Data.Typeable
 --
 -- The 'Query' itself forms an 'Alternative', letting you combine them to make a robust
 -- 'Data.Analytics.Datalog.query' language.
-data Query a where
-  Ap     :: Query (a -> b) -> Query a -> Query b
-  Map    :: (a -> b) -> Query a -> Query b
-  Pure   :: a -> Query a
-  Alt    :: Query a -> Query a -> Query a
-  Empty  :: Query a
-  Select :: Atom a -> Query a
-  No     :: Atom a -> Query ()
-  deriving Typeable
+data Query :: (* -> *) -> * -> * where
+  Ap     :: Query t (a -> b) -> Query t a -> Query t b
+  Map    :: (a -> b) -> Query t a -> Query t b
+  Pure   :: a -> Query t a
+  Alt    :: Query t a -> Query t a -> Query t a
+  Empty  :: Query t a
+  Select :: Atom t a -> Query t a
+  No     :: Atom t a -> Query t ()
 
-instance Functor Query where
+instance Typeable1 t => Typeable1 (Query t) where
+    typeOf1 tfa = mkTyConApp queryTyCon [typeOf1 (fa tfa)]
+        where fa :: t f a -> f a
+              fa = undefined
+
+queryTyCon :: TyCon
+#if MIN_VERSION_base(4,4,0)
+queryTyCon = mkTyCon3 "analytics" "Data.Analytics.Internal" "Query"
+#else
+queryTyCon = mkTyCon "Data.Analytics.Internal.Query"
+#endif
+
+instance Functor (Query t) where
   fmap = Map
   {-# INLINE fmap #-}
 
-instance Apply Query where
+instance Apply (Query t) where
   (<.>) = Ap
   {-# INLINE (<.>) #-}
 
-instance Applicative Query where
+instance Applicative (Query t) where
   pure = Pure
   {-# INLINE pure #-}
   (<*>) = Ap
   {-# INLINE (<*>) #-}
 
-instance Alt Query where
+instance Alt (Query t) where
   (<!>) = Alt
   {-# INLINE (<!>) #-}
 
-instance Plus Query where
+instance Plus (Query t) where
   zero = Empty
   {-# INLINE zero #-}
 
-instance Alternative Query where
+instance Alternative (Query t) where
   empty = Empty
   {-# INLINE empty #-}
   (<|>) = Alt
   {-# INLINE (<|>) #-}
 
-instance Semigroup a => Semigroup (Query a) where
+instance Semigroup a => Semigroup (Query t a) where
   (<>) = liftA2 (<>)
   {-# INLINE (<>) #-}
 
-instance Monoid a => Monoid (Query a) where
+instance Monoid a => Monoid (Query t a) where
   mempty = pure mempty
   {-# INLINE mempty #-}
   mappend = liftA2 mappend
   {-# INLINE mappend #-}
 
-instance Term x => TermOf (Query a) x
+instance Term x => TermOf (Query t a) x
 
 -- | Stratified negation.
-no :: Atom a -> Query ()
+no :: Atom t a -> Query t ()
 no = No
 {-# INLINE no #-}
 

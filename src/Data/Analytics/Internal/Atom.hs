@@ -23,9 +23,13 @@ module Data.Analytics.Internal.Atom
 import Control.Applicative
 import Data.Analytics.Internal.Term
 
-data Atom a = Atom !Int !(Heart a)
+data Atom :: (* -> *) -> * -> * where
+  Atom :: (b -> a) -> t b -> Heart b -> Atom t a
 
-instance Term x => TermOf (Atom a) x
+instance Functor (Atom t) where
+  fmap f (Atom k t h) = Atom (f . k) t h
+
+instance Term x => TermOf (Atom t a) x
 
 ------------------------------------------------------------------------------
 -- Heart
