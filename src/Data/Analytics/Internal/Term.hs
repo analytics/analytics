@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GADTs #-}
@@ -37,6 +38,7 @@ var = IsVar
 entity :: Entity a ~ a => Handler a
 entity = IsEntity
 
+#ifndef HLINT
 class (Typeable (Entity a), Ord (Entity a), Typeable a, Ord a) => Term a where
   type Entity a :: *
   type Entity a = a
@@ -44,5 +46,6 @@ class (Typeable (Entity a), Ord (Entity a), Typeable a, Ord a) => Term a where
   term :: Handler a
   default term :: Entity a ~ a => Handler a
   term = entity
+#endif
 
 class Term a => TermOf r a
