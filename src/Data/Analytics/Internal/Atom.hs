@@ -18,6 +18,7 @@
 module Data.Analytics.Internal.Atom
   ( Atom(..)
   , Heart(..)
+  , arg
   ) where
 
 import Control.Applicative
@@ -41,7 +42,10 @@ data Heart a where
   ApH   :: Heart (a -> b) -> Heart a -> Heart b
   MapH  :: (a -> b) -> Heart a -> Heart b
   PureH :: a -> Heart a
-  ArgH  :: Term x => x -> Heart (Entity x)
+  ArgH  :: Term a => a -> Heart (Entity a)
+
+arg :: Term a => a -> Heart (Entity a)
+arg = ArgH
 
 instance Functor Heart where
   fmap = MapH

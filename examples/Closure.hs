@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, TypeFamilies, TemplateHaskell, DeriveFunctor, DeriveFoldable, DeriveTraversable, DeriveDataTypeable, DeriveGeneric, FlexibleContexts #-}
+{-# LANGUAGE TypeFamilies, TemplateHaskell, DeriveDataTypeable, FlexibleContexts, GADTs, Rank2Types #-}
 module Examples.Closure where
 
 import Control.Applicative
@@ -11,31 +11,25 @@ import Data.Void
 import Generics.Deriving
 import Prelude.Extras
 
-data Node a = Node a | A | B | C deriving (Eq,Ord,Show,Read,Functor,Foldable,Traversable,Typeable,Generic)
-makePrisms ''Node
-instance a ~ String => IsString (Node a) where fromString = Node
-instance Eq1 Node
-instance Variable Node where var = _Node
-instance Match Node where match = matchVar
+data Node = A | B | C deriving (Eq,Ord,Show,Typeable)
+instance Term Node
 
-data Edge a = Edge (Node a) (Node a) deriving (Eq,Ord,Show,Read,Functor,Foldable,Traversable,Typeable,Generic)
-instance Match Edge where
-  match f (Edge a b) (Edge c d) = Edge <$> match f a c <*> match f b d
-edge :: Rel Edge a r => Node a -> Node a -> r
-edge x y = rel (Edge x y)
+data NV = X | Y | Z deriving (Eq,Ord,Show,Typeable)
+instance Term NV where type Entity NV = Node; term = var
 
-data TC a = TC (Node a) (Node a) deriving (Eq,Ord,Show,Read,Functor,Foldable,Traversable,Typeable,Generic)
-instance Match TC where
-  match f (TC a b) (TC c d) = TC <$> match f a c <*> match f b d
-tc :: Rel TC a r => Node a -> Node a -> r
-tc x y = rel (TC x y)
+data Edge = Edge Node Node deriving (Eq,Ord)
 
-test :: Datalog [TC a]
+data Schema = EDGE | TC deriving (Eq,Ord,Show)
+
+edge, tc :: T2 Schema Edge Node Node
+edge = t2 EDGE Edge
+tc   = t2 TC   Edge
+
+test :: Datalog Schema [Edge]
 test = do
   edge A B
   edge B C
   edge B A
-  tc x y :- edge x y
-  tc x z :- tc x y & edge y z
-  query $ tc A x & no (edge x C)
-  where x = "x"; y = "y"; z = "z"
+  tc X Y :- edge X Y
+  tc X Z :- tc X Y <* edge Y Z
+  query $ tc A X <* no (edge X C)

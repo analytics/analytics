@@ -41,6 +41,7 @@ library
     Data.Analytics.Datalog
     Data.Analytics.Prompt
     Data.Analytics.Query
+    Data.Analytics.Table
     Data.Analytics.Term
     Data.Analytics.Internal.Atom
     Data.Analytics.Internal.Atomic

@@ -11,11 +11,13 @@
 module Data.Analytics
   ( module Data.Analytics.Datalog
   , module Data.Analytics.Query
+  , module Data.Analytics.Table
   , module Data.Analytics.Term
   ) where
 
 import Data.Analytics.Datalog
 import Data.Analytics.Query
+import Data.Analytics.Table
 import Data.Analytics.Term
 
 {-# ANN module "HLint: ignore Use import/export shortcut" #-}

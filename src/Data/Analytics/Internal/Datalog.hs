@@ -118,6 +118,6 @@ instance MonadTrans (DatalogT t) where
 instance (Term a, Entity a ~ a, u ~ ()) => TermOf (DatalogT t m u) a
 
 -- | Perform a 'Query'.
-query :: Ord a => Query t a -> DatalogT t m [a]
+query :: Query t a -> DatalogT t m [a]
 query = Query
 {-# INLINE query #-}
