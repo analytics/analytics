@@ -39,13 +39,13 @@ library
   exposed-modules:
     Data.Analytics
     Data.Analytics.Datalog
-    Data.Analytics.Prompt
     Data.Analytics.Query
     Data.Analytics.Table
     Data.Analytics.Term
     Data.Analytics.Internal.Atom
     Data.Analytics.Internal.Atomic
     Data.Analytics.Internal.Datalog
+    Data.Analytics.Internal.Prompt
     Data.Analytics.Internal.Query
     Data.Analytics.Internal.Subst
     Data.Analytics.Internal.Term

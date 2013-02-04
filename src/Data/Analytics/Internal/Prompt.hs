@@ -3,7 +3,7 @@
 {-# LANGUAGE GADTs #-}
 --------------------------------------------------------------------
 -- |
--- Module    :  Data.Analytics.Prompt
+-- Module    :  Data.Analytics.Internal.Prompt
 -- Copyright :  (c) Edward Kmett 2013
 -- License   :  BSD3
 -- Maintainer:  Edward Kmett <ekmett@gmail.com>
@@ -18,7 +18,7 @@
 -- to query engine providers, so it is not re-exported through
 -- @Data.Analytics@.
 --------------------------------------------------------------------
-module Data.Analytics.Prompt
+module Data.Analytics.Internal.Prompt
   (
   -- * Each Step
     Step, StepT(..)
