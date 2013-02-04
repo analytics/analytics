@@ -2,6 +2,9 @@
 module Data.Analytics.Table
   ( T0, T1, T2, T3, T4
   , t0, t1, t2, t3, t4
+  -- * Implementation Details
+  , Atom
+  , Atomic(..)
   ) where
 
 import Control.Applicative
@@ -20,17 +23,17 @@ type T3 t o x y z   = forall r a b c.   (Atomic r t o, TermOf r a, Entity a ~ x,
 type T4 t o w x y z = forall r a b c d. (Atomic r t o, TermOf r a, Entity a ~ w, TermOf r b, Entity b ~ x, TermOf r c, Entity c ~ y, TermOf r d, Entity d ~ z)
                     => a -> b -> c -> d -> r
 
-t0 :: t o -> o -> T0 t o
+t0 :: t -> o -> T0 t o
 t0 t o = atom t $ pure o
 
-t1 :: t o -> (x -> o) -> T1 t o x
+t1 :: t -> (x -> o) -> T1 t o x
 t1 t f a = atom t $ f <$> arg a
 
-t2 :: t o -> (x -> y -> o) -> T2 t o x y
+t2 :: t -> (x -> y -> o) -> T2 t o x y
 t2 t f a b = atom t $ f <$> arg a <*> arg b
 
-t3 :: t o -> (x -> y -> z -> o) -> T3 t o x y z
+t3 :: t -> (x -> y -> z -> o) -> T3 t o x y z
 t3 t f a b c = atom t $ f <$> arg a <*> arg b <*> arg c
 
-t4 :: t o -> (w -> x -> y -> z -> o) -> T4 t o w x y z
+t4 :: t -> (w -> x -> y -> z -> o) -> T4 t o w x y z
 t4 t f a b c d = atom t $ f <$> arg a <*> arg b <*> arg c <*> arg d

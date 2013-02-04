@@ -44,7 +44,7 @@ infixl 1 :>>=
 type Step t = StepT t Identity
 
 -- | A single 'Datalog' 'Fact', rule or 'Query'.
-data StepT :: (* -> *) -> (* -> *) -> * -> * where
+data StepT :: * -> (* -> *) -> * -> * where
   Fact  :: Atom t a -> StepT t m ()
   (:-)  :: Atom t a -> Query t b -> StepT t m ()
   Query :: Query t a -> StepT t m [a]
@@ -52,7 +52,7 @@ data StepT :: (* -> *) -> (* -> *) -> * -> * where
 type Prompt t = PromptT t Identity
 
 -- | The result of prompting, after monadic effects.
-data PromptT :: (* -> *) -> (* -> *) -> * -> * where
+data PromptT :: * -> (* -> *) -> * -> * where
   Done :: a -> PromptT t m a
   (:>>=) :: StepT t m a -> (a -> DatalogT t m b) -> PromptT t m b
 

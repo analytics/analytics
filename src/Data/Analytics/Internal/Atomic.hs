@@ -21,7 +21,7 @@ import Data.Analytics.Internal.Query
 import Data.Analytics.Internal.Atom
 
 class Atomic r t a | r -> t where
-  atom :: t a -> Heart a -> r
+  atom :: t -> Heart a -> r
 
 -- All Terms are forced to be Entities
 instance u ~ () => Atomic (DatalogT t m u) t b where

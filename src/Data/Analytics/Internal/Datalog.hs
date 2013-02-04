@@ -48,7 +48,7 @@ infixr 0 :-
 type Datalog t = DatalogT t Identity
 
 -- | An @operational@ encoding of a 'Datalog' program with extra effects in @m@.
-data DatalogT :: (* -> *) -> (* -> *) -> * -> * where
+data DatalogT :: * -> (* -> *) -> * -> * where
   Fact   :: Atom t a -> DatalogT t m ()
   (:-)   :: Atom t a -> Query t b -> DatalogT t m ()
   Query  :: Query t a -> DatalogT t m [a]

@@ -23,9 +23,11 @@ module Data.Analytics.Internal.Atom
 
 import Control.Applicative
 import Data.Analytics.Internal.Term
+import Data.Typeable
 
-data Atom :: (* -> *) -> * -> * where
-  Atom :: (b -> a) -> t b -> Heart b -> Atom t a
+data Atom :: * -> * -> * where
+  Atom :: (b -> a) -> t -> Heart b -> Atom t a
+  deriving Typeable
 
 instance Functor (Atom t) where
   fmap f (Atom k t h) = Atom (f . k) t h
@@ -43,6 +45,7 @@ data Heart a where
   MapH  :: (a -> b) -> Heart a -> Heart b
   PureH :: a -> Heart a
   ArgH  :: Term a => a -> Heart (Entity a)
+  deriving Typeable
 
 arg :: Term a => a -> Heart (Entity a)
 arg = ArgH

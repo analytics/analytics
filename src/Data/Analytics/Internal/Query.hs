@@ -41,7 +41,7 @@ import Data.Typeable
 --
 -- The 'Query' itself forms an 'Alternative', letting you combine them to make a robust
 -- 'Data.Analytics.Datalog.query' language.
-data Query :: (* -> *) -> * -> * where
+data Query :: * -> * -> * where
   Ap     :: Query t (a -> b) -> Query t a -> Query t b
   Map    :: (a -> b) -> Query t a -> Query t b
   Pure   :: a -> Query t a
@@ -49,18 +49,7 @@ data Query :: (* -> *) -> * -> * where
   Empty  :: Query t a
   Select :: Atom t a -> Query t a
   No     :: Atom t a -> Query t ()
-
-instance Typeable1 t => Typeable1 (Query t) where
-    typeOf1 tfa = mkTyConApp queryTyCon [typeOf1 (fa tfa)]
-        where fa :: t f a -> f a
-              fa = undefined
-
-queryTyCon :: TyCon
-#if MIN_VERSION_base(4,4,0)
-queryTyCon = mkTyCon3 "analytics" "Data.Analytics.Internal" "Query"
-#else
-queryTyCon = mkTyCon "Data.Analytics.Internal.Query"
-#endif
+  deriving Typeable
 
 instance Functor (Query t) where
   fmap = Map
