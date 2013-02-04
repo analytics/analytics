@@ -18,20 +18,6 @@
 -- policy. Any direct dependency upon it is likely to break even
 -- between minor versions.
 --
--- The definition for 'Datalog' is forced into @ExistentialQuantification@
--- syntax because of haddock bug #43. <http://trac.haskell.org/haddock/ticket/43>
---
--- Otherwise it would be written as:
---
--- @
--- data 'Datalog' :: (* -> *) -> * -> * where
---   'Fact'   :: ('Typeable1' t, 'Match' t) => (forall a. t a) -> 'Datalog' m ()
---   (':-')   :: 'Ord' a => 'Relation' a -> 'Query' a t -> 'Datalog' m ()
---   'Query'  :: 'Ord' a => 'Query' a t -> 'Datalog' m [t]
---   'Data.Analytics.Internal.Datalog.Bind'   :: 'Datalog' m a -> (a -> 'Datalog' m b) -> 'Datalog' m b
---   'Return' :: a -> 'Datalog' m a
---   'Lift'   :: m a -> 'Datalog' m a
--- @
 --------------------------------------------------------------------
 module Data.Analytics.Internal.Datalog
   (
@@ -46,13 +32,11 @@ import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 import Control.Monad.State.Class
 import Control.Monad.Reader.Class
-import Data.Analytics.Match
+import Data.Analytics.Internal.Atom
+import Data.Analytics.Internal.Term
 import Data.Analytics.Query
-import Data.Analytics.Relation
 import Data.Functor.Bind
 import Data.Functor.Identity
-import Data.Typeable
-import Data.Void
 
 infixr 0 :-
 
@@ -64,13 +48,13 @@ infixr 0 :-
 type Datalog = DatalogT Identity
 
 -- | An @operational@ encoding of a 'Datalog' program with extra effects in @m@.
-data DatalogT m r
-  = forall t. (Typeable1 t, Match t, r ~ ()) => Fact (forall x. t x) -- ^ Add a 'Fact' to the EDB
-  | forall t a. (Ord a, r ~ ())  => Relation a :- Query a t          -- ^ Add an inference rule to the IDB
-  | forall t a. (Ord a, r ~ [t]) => Query (Query a t)                -- ^ Perform a 'query'
-  | forall a. Bind (DatalogT m a) (a -> DatalogT m r)
-  | Return r
-  | Lift (m r)
+data DatalogT :: (* -> *) -> * -> * where
+  Fact   :: Atom a -> DatalogT m ()
+  (:-)   :: Atom a -> Query b -> DatalogT m ()
+  Query  :: Query a -> DatalogT m [a]
+  Bind   :: DatalogT m a -> (a -> DatalogT m b) -> DatalogT m b
+  Return :: a -> DatalogT m a
+  Lift   :: m a -> DatalogT m a
 
 instance Functor (DatalogT m) where
   fmap f m = Bind m (Return . f)
@@ -131,11 +115,9 @@ instance MonadTrans DatalogT where
   lift = Lift
   {-# INLINE lift #-}
 
-instance (Typeable1 t, Match t, u ~ ()) => Rel t Void (DatalogT m u) where
-  rel tv = Fact (vacuous tv)
-  {-# INLINE rel #-}
+instance (Term a, Entity a ~ a, u ~ ()) => TermOf (DatalogT m u) a
 
 -- | Perform a 'Query'.
-query :: Ord a => Query a t -> DatalogT m [t]
+query :: Ord a => Query a -> DatalogT m [a]
 query = Query
 {-# INLINE query #-}

@@ -37,7 +37,7 @@ edge, tc :: Rel Struct a r => Atom a -> Atom a -> r
 edge x y = struct "edge" [x,y]
 tc x y   = struct "tc" [x,y]
 
-test :: Monad m => Datalog m [Struct Void]
+test :: Datalog [Struct Void]
 test = do
   edge "A" "B"
   edge "B" "C"

@@ -30,7 +30,7 @@ instance Match TC where
 tc :: Rel TC a r => Node a -> Node a -> r
 tc x y = rel (TC x y)
 
-test :: Monad m => Datalog m [TC a]
+test :: Datalog [TC a]
 test = do
   edge A B
   edge B C

@@ -9,17 +9,13 @@
 --
 --------------------------------------------------------------------
 module Data.Analytics
-  ( module Data.Analytics.Match
-  , module Data.Analytics.Datalog
+  ( module Data.Analytics.Datalog
   , module Data.Analytics.Query
-  , module Data.Analytics.Relation
-  , module Data.Analytics.Variable
+  , module Data.Analytics.Term
   ) where
 
 import Data.Analytics.Datalog
-import Data.Analytics.Match
 import Data.Analytics.Query
-import Data.Analytics.Relation
-import Data.Analytics.Variable
+import Data.Analytics.Term
 
 {-# ANN module "HLint: ignore Use import/export shortcut" #-}

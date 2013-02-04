@@ -32,13 +32,11 @@ module Data.Analytics.Prompt
 
 import Control.Lens
 import Control.Monad
+import Data.Analytics.Internal.Atom
 import qualified Data.Analytics.Internal.Datalog as Datalog
 import Data.Analytics.Internal.Datalog hiding (Fact, Query, (:-))
 import Data.Analytics.Internal.Query
-import Data.Analytics.Match
-import Data.Analytics.Relation
 import Data.Functor.Identity
-import Data.Typeable
 
 infixr 0 :-
 infixl 1 :>>=
@@ -47,9 +45,9 @@ type Step = StepT Identity
 
 -- | A single 'Datalog' 'Fact', rule or 'Query'.
 data StepT :: (* -> *) -> * -> * where
-  Fact  :: (Typeable1 t, Match t) => (forall v. t v) -> StepT m ()
-  (:-)  :: Ord v => Relation v -> Query v t          -> StepT m ()
-  Query :: Ord v => Query v t                        -> StepT m [t]
+  Fact  :: Atom a -> StepT m ()
+  (:-)  :: Atom a -> Query b -> StepT m ()
+  Query :: Query a -> StepT m [a]
 
 type Prompt = PromptT Identity
 

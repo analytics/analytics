@@ -17,13 +17,13 @@
 --
 --------------------------------------------------------------------
 module Data.Analytics.Internal.Query
-  ( Query(..), No(..)
+  ( Query(..)
+  , no
   ) where
 
-import Data.Analytics.Match
-import Data.Analytics.Relation
+import Data.Analytics.Internal.Atom
+import Data.Analytics.Internal.Term
 import Control.Applicative
-import Data.Bifunctor
 import Data.Functor.Bind
 import Data.Functor.Plus
 import Data.Semigroup
@@ -37,88 +37,59 @@ import Data.Typeable
 --
 -- The 'Query' itself forms an 'Alternative', letting you combine them to make a robust
 -- 'Data.Analytics.Datalog.query' language.
-data Query v a where
-  Ap     :: Query v (a -> b) -> Query v a -> Query v b
-  Map    :: (a -> b) -> Query v a -> Query v b
-  Pure   :: a -> Query v a
-  Alt    :: Query v a -> Query v a -> Query v a
-  Empty  :: Query v a
-  Select :: (Typeable1 t, Match t) => t v -> Query v (t a)
-  No     :: Relation v -> Query v ()
-  -- TODO: aggregations
+data Query a where
+  Ap     :: Query (a -> b) -> Query a -> Query b
+  Map    :: (a -> b) -> Query a -> Query b
+  Pure   :: a -> Query a
+  Alt    :: Query a -> Query a -> Query a
+  Empty  :: Query a
+  Select :: Atom a -> Query a
+  No     :: Atom a -> Query ()
   deriving Typeable
 
-instance Bifunctor Query where
-  first f (Ap x y)    = Ap (first f x) (first f y)
-  first f (Map k x)   = Map k (first f x)
-  first _ (Pure a)    = Pure a
-  first f (Alt x y)   = Alt (first f x) (first f y)
-  first _ Empty       = Empty
-  first f (Select vs) = Select (fmap f vs)
-  first f (No xs)     = No (fmap f xs)
-  {-# INLINE first #-}
-  second = Map
-  {-# INLINE second #-}
-  bimap f g = Map g . first f
-
-instance Functor (Query v) where
+instance Functor Query where
   fmap = Map
   {-# INLINE fmap #-}
 
-instance Apply (Query v) where
+instance Apply Query where
   (<.>) = Ap
   {-# INLINE (<.>) #-}
 
-instance Applicative (Query v) where
+instance Applicative Query where
   pure = Pure
   {-# INLINE pure #-}
   (<*>) = Ap
   {-# INLINE (<*>) #-}
 
-instance Alt (Query v) where
+instance Alt Query where
   (<!>) = Alt
   {-# INLINE (<!>) #-}
 
-instance Plus (Query v) where
+instance Plus Query where
   zero = Empty
   {-# INLINE zero #-}
 
-instance Alternative (Query v) where
+instance Alternative Query where
   empty = Empty
   {-# INLINE empty #-}
   (<|>) = Alt
   {-# INLINE (<|>) #-}
 
-instance Semigroup a => Semigroup (Query v a) where
+instance Semigroup a => Semigroup (Query a) where
   (<>) = liftA2 (<>)
   {-# INLINE (<>) #-}
 
-instance Monoid a => Monoid (Query v a) where
+instance Monoid a => Monoid (Query a) where
   mempty = pure mempty
   {-# INLINE mempty #-}
   mappend = liftA2 mappend
   {-# INLINE mappend #-}
 
--- | Anything you can 'Match' can be used directly as a 'Query', too.
-instance (Typeable1 t, Match t, ta ~ t a) => Rel t v (Query v ta) where
-  rel ta = Select ta
-  {-# INLINE rel #-}
-
--- | Magic overloading for ('&').
-instance (Typeable1 t, Match t, p ~ Query v (s a), q ~ Query v (s a, t a)) => Rel t v (p -> q) where
-  rel ta p = (,) <$> p <*> Select ta
-  {-# INLINE rel #-}
-
+instance Term x => TermOf (Query a) x
 
 -- | Stratified negation.
-class No t a | t -> a where
-  no :: Relation a -> t
+no :: Atom a -> Query ()
+no = No
+{-# INLINE no #-}
 
--- Note: this makes the (,()) from the No query disappear, perhaps more magic than we want to be, but its convenient!
-instance (p ~ Query a r, q ~ Query a r) => No (p -> q) a where
-  no r p = p <* No r
-  {-# INLINE no #-}
 
-instance No (Query a ()) a where
-  no = No
-  {-# INLINE no #-}
