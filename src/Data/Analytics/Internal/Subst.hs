@@ -14,7 +14,9 @@
 module Data.Analytics.Internal.Subst
   ( Var(..)
   , ATerm(..)
-  , Subst
+  , HasVars(..)
+  , Subst(..)
+  , apply
   ) where
 
 import Control.Applicative
