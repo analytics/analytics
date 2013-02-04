@@ -2,14 +2,8 @@
 module Examples.Closure where
 
 import Control.Applicative
-import Control.Lens
 import Data.Analytics
-import Data.Foldable
-import Data.String
 import Data.Typeable
-import Data.Void
-import Generics.Deriving
-import Prelude.Extras
 
 data Node = A | B | C deriving (Eq,Ord,Show,Typeable)
 instance Term Node
