@@ -16,6 +16,7 @@ module Data.Analytics.Internal.Subst
   , ATerm(..)
   , HasVars(..)
   , Subst(..)
+  , HasSubst(..)
   , apply
   ) where
 
