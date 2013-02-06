@@ -86,7 +86,7 @@ instance (p ~ (->), Applicative f, Contravariant f, Functor g, Functor h) => Sno
   {-# INLINE _Snoc #-}
 
 morton :: Schedule a -> f Int64 -> Morton f
-morton (Schedule p w c _ _) fa
+morton (Schedule p w c _ _ _) fa
   = Morton c 1 (MinHeap (Node p         0 w c 0 fa) [])
                (MaxHeap (Node (p + w*c) 0 w c 0 fa) [])
 {-# INLINE morton #-}
