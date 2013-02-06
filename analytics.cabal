@@ -47,6 +47,7 @@ library
     Data.Analytics.Datalog.Table
     Data.Analytics.Datalog.Term
     Data.Analytics.Storage.List
+    Data.Analytics.Storage.Morton
     Data.Analytics.Storage.Schedule
 
   build-depends:
