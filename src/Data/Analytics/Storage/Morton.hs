@@ -11,6 +11,7 @@
 module Data.Analytics.Storage.Morton
   ( Morton(..)
   , morton
+  , morton64
   ) where
 
 import Control.Applicative
@@ -85,8 +86,15 @@ instance (p ~ (->), Applicative f, Contravariant f, Functor g, Functor h) => Sno
        meldWithHeap t []      = t
   {-# INLINE _Snoc #-}
 
-morton :: Schedule a -> f Int64 -> Morton f
-morton (Schedule p w c _ _ _) fa
-  = Morton c 1 (MinHeap (Node p         0 w c 0 fa) [])
-               (MaxHeap (Node (p + w*c) 0 w c 0 fa) [])
+morton64 :: Functor f => Schedule a -> f Int64 -> Morton f
+morton64 (Schedule p w c _ _ _) fi
+  = Morton c 1 (MinHeap (Node p         0 w c 0 fi) [])
+               (MaxHeap (Node (p + w*c) 0 w c 0 fi) [])
+{-# INLINE morton64 #-}
+
+morton :: Functor f => Schedule a -> f a -> Morton f
+morton (Schedule p w c _ _ f) fa
+  = Morton c 1 (MinHeap (Node p         0 w c 0 fi) [])
+               (MaxHeap (Node (p + w*c) 0 w c 0 fi) [])
+  where fi = fmap f fa
 {-# INLINE morton #-}
