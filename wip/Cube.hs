@@ -9,6 +9,7 @@ data Supply f
   | Done
   deriving Show
 
+-- Note: this currently conflates the two ends of the bit supply, so don't use this code directly
 supplyN :: Functor f => Node f -> Heap f -> Supply f
 supplyN n@(Node p s w i b) (Heap m@(Node p' s' _ _ _) ts) = case (p' - p) `quotRem` w of
   (q,r) | k <- if r == 0 && s <= s' then q + 1 else q -> Supply (min i k) (b .&. (bit i - 1)) $
