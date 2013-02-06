@@ -27,7 +27,9 @@ import Data.Semigroup
 -- Morton Ordering
 ------------------------------------------------------------------------------
 
--- | This provides a double-ended priority queue with a fixed schedule.
+-- | This provides a double-ended priority queue with a fixed schedule that
+-- can be used to obtain a generalized morton sequence of bits from multiple
+-- sources. Use the monoid to fairly interleave breaking ties to the left.
 data Morton f
   = Z      -- ^ an empty generalized Morton sequence
   | Morton -- ^ a non-empty generalized Morton sequence

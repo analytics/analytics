@@ -45,10 +45,10 @@ magic :: Int
 magic = 256936680
 
 integral :: forall a. (Storable a, Integral a) => Schedule a
-integral = contramap fromIntegral $ bits (sizeOf (undefined :: a))
+integral = contramap fromIntegral $ bits (sizeOf (undefined :: a) * 8)
 
 bits :: Int -> Schedule Int64
-bits n = Schedule 0 (if n > 1 then div magic (n - 1) else 0) n True False id
+bits n = Schedule 0 (if n <= 1 then 0 else div magic (n - 1)) n True False id
 
 hashed :: Hashable a => Schedule a
 hashed = contramap hash integral
