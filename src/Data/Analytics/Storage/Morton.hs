@@ -31,12 +31,12 @@ import Data.Semigroup
 -- can be used to obtain a generalized morton sequence of bits from multiple
 -- sources. Use the monoid to fairly interleave breaking ties to the left.
 data Morton f
-  = Z      -- ^ an empty generalized Morton sequence
-  | Morton -- ^ a non-empty generalized Morton sequence
-    {-# UNPACK #-} !Int -- ^ bits remaining
-    {-# UNPACK #-} !Int -- ^ index count
-    !(MinHeap f)        -- ^ top down
-    !(MaxHeap f)        -- ^ bottom up
+  = Z
+  | Morton
+    {-# UNPACK #-} !Int -- bits remaining
+    {-# UNPACK #-} !Int -- index count
+    !(MinHeap f)        -- top down
+    !(MaxHeap f)        -- bottom up
 
 deriving instance Show (f Int64) => Show (Morton f)
 
