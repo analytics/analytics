@@ -9,19 +9,17 @@ tools from other domains.
 
 Skim the [examples folder](https://github.com/ekmett/analytics/tree/master/examples) to get started for now.
 
-_e.g._ assuming the existence of `edge` and `tc` as datalog predicates that take `Node` arguments that can be the entities 
-`A`, `B`, `C` or variables, we can state the classic datalog transitive closure problem as:
+Using `X`, `Y` and `Z` as `Node` variables, and `A` `B` and `C` as `Node` entities:
 
 ```haskell
-test :: Monad m => Datalog m [TC a]
+test :: Datalog Schema [TC]
 test = do
   edge A B
   edge B C
   edge B A
-  tc x y :- edge x y
-  tc x z :- tc x y & edge y z
-  query $ tc A x & no (edge x C)
-  where x = "x"; y = "y"; z = "z"
+  tc X Y :- edge X Y
+  tc X Z :- tc X Y & edge Y Z
+  query $ tc A X & no (edge X C)
 ```
 
 Contact Information
