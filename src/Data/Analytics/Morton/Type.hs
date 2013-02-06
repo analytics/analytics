@@ -8,7 +8,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
-module Data.Analytics.Storage.Morton
+module Data.Analytics.Morton.Type
   ( Morton(..)
   , morton
   , morton64
@@ -16,9 +16,9 @@ module Data.Analytics.Storage.Morton
 
 import Control.Applicative
 import Control.Lens
-import Data.Analytics.Storage.Morton.Heap
-import Data.Analytics.Storage.Morton.Node
-import Data.Analytics.Storage.Schedule
+import Data.Analytics.Morton.Heap
+import Data.Analytics.Morton.Node
+import Data.Analytics.Morton.Schedule
 import Data.Bits
 import Data.Int
 import Data.Semigroup
@@ -90,13 +90,13 @@ instance (p ~ (->), Applicative f, Contravariant f, Functor g, Functor h) => Sno
 
 morton64 :: Functor f => Schedule a -> f Int64 -> Morton f
 morton64 (Schedule p w c _ _ _) fi
-  = Morton c 1 (MinHeap (Node p         0 w c 0 fi) [])
-               (MaxHeap (Node (p + w*c) 0 w c 0 fi) [])
+  = Morton c 1 (MinHeap (Node p             0 w c 0 fi) [])
+               (MaxHeap (Node (p + w*(c-1)) 0 w c 0 fi) [])
 {-# INLINE morton64 #-}
 
 morton :: Functor f => Schedule a -> f a -> Morton f
 morton (Schedule p w c _ _ f) fa
-  = Morton c 1 (MinHeap (Node p         0 w c 0 fi) [])
-               (MaxHeap (Node (p + w*c) 0 w c 0 fi) [])
+  = Morton c 1 (MinHeap (Node p             0 w c 0 fi) [])
+               (MaxHeap (Node (p + w*(c-1)) 0 w c 0 fi) [])
   where fi = fmap f fa
 {-# INLINE morton #-}

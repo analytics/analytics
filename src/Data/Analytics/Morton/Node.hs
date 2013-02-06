@@ -8,7 +8,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
-module Data.Analytics.Storage.Morton.Node
+module Data.Analytics.Morton.Node
   ( Node(..)
   , HasNode(..)
   , HasNodes(..)

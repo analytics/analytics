@@ -6,7 +6,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE GADTs #-}
-module Data.Analytics.Storage.Schedule
+module Data.Analytics.Morton.Schedule
   ( Schedule(..)
   , HasSchedule(..)
   , Scheduled(..)

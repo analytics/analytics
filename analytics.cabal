@@ -47,10 +47,11 @@ library
     Data.Analytics.Datalog.Table
     Data.Analytics.Datalog.Term
     Data.Analytics.Storage.List
-    Data.Analytics.Storage.Morton
-    Data.Analytics.Storage.Morton.Node
-    Data.Analytics.Storage.Morton.Heap
-    Data.Analytics.Storage.Schedule
+    Data.Analytics.Morton
+    Data.Analytics.Morton.Node
+    Data.Analytics.Morton.Heap
+    Data.Analytics.Morton.Schedule
+    Data.Analytics.Morton.Type
 
   build-depends:
     base                      >= 4.4     && < 5,

@@ -8,13 +8,13 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
-module Data.Analytics.Storage.Morton.Heap
+module Data.Analytics.Morton.Heap
   ( MinHeap(..), insertMin
   , MaxHeap(..), insertMax
   ) where
 
 import Control.Applicative
-import Data.Analytics.Storage.Morton.Node
+import Data.Analytics.Morton.Node
 import Control.Lens
 import Data.Int
 import Data.Semigroup
