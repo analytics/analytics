@@ -7,7 +7,7 @@
 {-# LANGUAGE GADTs #-}
 --------------------------------------------------------------------
 -- |
--- Module    :  Data.Analytics.Internal.Atom
+-- Module    :  Data.Analytics.Datalog.Atom
 -- Copyright :  (c) Edward Kmett 2013
 -- License   :  BSD3
 -- Maintainer:  Edward Kmett <ekmett@gmail.com>
@@ -15,14 +15,14 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Data.Analytics.Internal.Atom
+module Data.Analytics.Datalog.Atom
   ( Atom(..)
   , Heart(..)
   , arg
   ) where
 
 import Control.Applicative
-import Data.Analytics.Internal.Term
+import Data.Analytics.Datalog.Term
 import Data.Typeable
 
 data Atom :: * -> * -> * where

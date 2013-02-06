@@ -3,7 +3,7 @@
 {-# LANGUAGE GADTs #-}
 --------------------------------------------------------------------
 -- |
--- Module    :  Data.Analytics.Subst
+-- Module    :  Data.Analytics.Datalog.Subst
 -- Copyright :  (c) Edward Kmett 2013
 -- License   :  BSD3
 -- Maintainer:  Edward Kmett <ekmett@gmail.com>
@@ -11,7 +11,7 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Data.Analytics.Internal.Subst
+module Data.Analytics.Datalog.Subst
   ( Var(..)
   , ATerm(..)
   , HasVars(..)
@@ -24,7 +24,7 @@ import Control.Applicative
 import Control.Lens
 import Control.Monad
 import Control.Monad.Writer hiding ((<>))
-import Data.Analytics.Internal.Term
+import Data.Analytics.Datalog.Term
 import Data.HashMap.Lazy
 import Data.IntMap
 import Data.Map

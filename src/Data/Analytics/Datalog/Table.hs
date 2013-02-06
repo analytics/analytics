@@ -1,5 +1,5 @@
 {-# LANGUAGE Rank2Types, MultiParamTypeClasses, TypeFamilies, FunctionalDependencies, FlexibleInstances, UndecidableInstances #-}
-module Data.Analytics.Table
+module Data.Analytics.Datalog.Table
   ( T0, T1, T2, T3, T4
   , t0, t1, t2, t3, t4
   -- * Implementation Details
@@ -14,10 +14,10 @@ module Data.Analytics.Table
 import Control.Applicative
 import Control.Monad.State.Lazy as Lazy
 import Control.Monad.State.Strict as Strict
-import Data.Analytics.Internal.Atom
-import Data.Analytics.Internal.Atomic
-import Data.Analytics.Internal.Datalog
-import Data.Analytics.Internal.Term
+import Data.Analytics.Datalog.Atom
+import Data.Analytics.Datalog.Atomic
+import Data.Analytics.Datalog.Monad
+import Data.Analytics.Datalog.Term
 
 type T0 t o         = forall r.          Atomic r t o
                     => r

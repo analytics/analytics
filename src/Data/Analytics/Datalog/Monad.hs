@@ -7,7 +7,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 --------------------------------------------------------------------
 -- |
--- Module    :  Data.Analytics.Internal.Datalog
+-- Module    :  Data.Analytics.Datalog.Monad
 -- Copyright :  (c) Edward Kmett 2013
 -- License   :  BSD3
 -- Maintainer:  Edward Kmett <ekmett@gmail.com>
@@ -19,7 +19,7 @@
 -- between minor versions.
 --
 --------------------------------------------------------------------
-module Data.Analytics.Internal.Datalog
+module Data.Analytics.Datalog.Monad
   (
   -- * Datalog
     Datalog
@@ -32,9 +32,9 @@ import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 import Control.Monad.State.Class
 import Control.Monad.Reader.Class
-import Data.Analytics.Internal.Atom
-import Data.Analytics.Internal.Term
-import Data.Analytics.Query
+import Data.Analytics.Datalog.Atom
+import Data.Analytics.Datalog.Term
+import Data.Analytics.Datalog.Query
 import Data.Functor.Bind
 import Data.Functor.Identity
 

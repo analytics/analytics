@@ -3,7 +3,7 @@
 {-# LANGUAGE GADTs #-}
 --------------------------------------------------------------------
 -- |
--- Module    :  Data.Analytics.Internal.Prompt
+-- Module    :  Data.Analytics.Datalog.Prompt
 -- Copyright :  (c) Edward Kmett 2013
 -- License   :  BSD3
 -- Maintainer:  Edward Kmett <ekmett@gmail.com>
@@ -13,12 +13,12 @@
 -- This module lets you step through a 'Datalog' program one 'Fact',
 -- rule or 'Query' at a time.
 --
--- /Note:/ This module conflicts with @Data.Analytics.Datalog@ and
--- @Data.Analytics.Internal.Datalog@ and the API is mostly of interest
+-- /Note:/ This module conflicts with @Data.Analytics.Datalog.Monad@ and
+-- the API is mostly of interest
 -- to query engine providers, so it is not re-exported through
--- @Data.Analytics@.
+-- @Data.Analytics.Datalog@.
 --------------------------------------------------------------------
-module Data.Analytics.Internal.Prompt
+module Data.Analytics.Datalog.Prompt
   (
   -- * Each Step
     Step, StepT(..)
@@ -32,10 +32,10 @@ module Data.Analytics.Internal.Prompt
 
 import Control.Lens
 import Control.Monad
-import Data.Analytics.Internal.Atom
-import qualified Data.Analytics.Internal.Datalog as Datalog
-import Data.Analytics.Internal.Datalog hiding (Fact, Query, (:-))
-import Data.Analytics.Internal.Query
+import Data.Analytics.Datalog.Atom
+import qualified Data.Analytics.Datalog.Monad as Datalog
+import Data.Analytics.Datalog.Monad hiding (Fact, Query, (:-))
+import Data.Analytics.Datalog.Query
 import Data.Functor.Identity
 
 infixr 0 :-

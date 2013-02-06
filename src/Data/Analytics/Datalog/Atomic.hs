@@ -4,7 +4,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 --------------------------------------------------------------------
 -- |
--- Module    :  Data.Analytics.Internal.Atomic
+-- Module    :  Data.Analytics.Datalog.Atomic
 -- Copyright :  (c) Edward Kmett 2013
 -- License   :  BSD3
 -- Maintainer:  Edward Kmett <ekmett@gmail.com>
@@ -12,13 +12,13 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Data.Analytics.Internal.Atomic
+module Data.Analytics.Datalog.Atomic
   ( Atomic(..)
   ) where
 
-import Data.Analytics.Internal.Datalog
-import Data.Analytics.Internal.Query
-import Data.Analytics.Internal.Atom
+import Data.Analytics.Datalog.Monad
+import Data.Analytics.Datalog.Query
+import Data.Analytics.Datalog.Atom
 
 class Atomic r t a | r -> t where
   atom :: t -> Heart a -> r

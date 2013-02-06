@@ -12,7 +12,7 @@
 #endif
 --------------------------------------------------------------------
 -- |
--- Module    :  Data.Analytics.Internal.Query
+-- Module    :  Data.Analytics.Datalog.Query
 -- Copyright :  (c) Edward Kmett 2013
 -- License   :  BSD3
 -- Maintainer:  Edward Kmett <ekmett@gmail.com>
@@ -20,13 +20,13 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Data.Analytics.Internal.Query
+module Data.Analytics.Datalog.Query
   ( Query(..)
   , no
   ) where
 
-import Data.Analytics.Internal.Atom
-import Data.Analytics.Internal.Term
+import Data.Analytics.Datalog.Atom
+import Data.Analytics.Datalog.Term
 import Control.Applicative
 import Data.Functor.Bind
 import Data.Functor.Plus
@@ -95,5 +95,3 @@ instance Term x => TermOf (Query t a) x
 no :: Atom t a -> Query t ()
 no = No
 {-# INLINE no #-}
-
-
