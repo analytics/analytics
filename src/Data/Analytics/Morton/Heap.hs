@@ -9,8 +9,12 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
 module Data.Analytics.Morton.Heap
-  ( MinHeap(..), insertMin
-  , MaxHeap(..), insertMax
+  ( MinHeap(..)
+  , insertMin
+  , extractMin
+  , MaxHeap(..)
+  , insertMax
+  , extractMax
   ) where
 
 import Control.Applicative
@@ -47,6 +51,14 @@ insertMin n (MinHeap m xs)
   | otherwise = MinHeap m (MinHeap n []:xs)
 {-# INLINE insertMin #-}
 
+extractMin :: MinHeap f -> (Node f, Maybe (MinHeap f))
+extractMin (MinHeap n cs) = (,) n $! case cs of
+  [] -> Nothing
+  (t:ts) -> Just (meld t ts) where
+    meld u []     = u
+    meld u (s:ss) = meld (u <> s) ss
+{-# INLINE extractMin #-}
+
 ------------------------------------------------------------------------------
 -- MaxHeap
 ------------------------------------------------------------------------------
@@ -74,3 +86,12 @@ insertMax n (MaxHeap m xs)
   | n >  m    = MaxHeap n [MaxHeap m xs]
   | otherwise = MaxHeap m (MaxHeap n []:xs)
 {-# INLINE insertMax #-}
+
+extractMax :: MaxHeap f -> (Node f, Maybe (MaxHeap f))
+extractMax (MaxHeap n cs) = (,) n $! case cs of
+  [] -> Nothing
+  (t:ts) -> Just (meld t ts) where
+    meld u []     = u
+    meld u (s:ss) = meld (u <> s) ss
+{-# INLINE extractMax #-}
+
