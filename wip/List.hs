@@ -49,7 +49,7 @@ foldr f z (Cons x xs) = f x (foldr f z xs)
 foldr _ z Nil = z
 {-# INLINE foldr #-}
 
-length :: List f -> Int
+length :: List f as -> Int
 length = go 0 where
   go :: Int -> List f -> Int
   go !n (Cons _ xs) = go (n + 1) xs

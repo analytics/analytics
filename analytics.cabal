@@ -46,7 +46,6 @@ library
     Data.Analytics.Datalog.Subst
     Data.Analytics.Datalog.Table
     Data.Analytics.Datalog.Term
-    Data.Analytics.Storage.List
     Data.Analytics.Morton
     Data.Analytics.Morton.Node
     Data.Analytics.Morton.Heap
