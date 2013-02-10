@@ -12,7 +12,7 @@
 {-# LANGUAGE DeriveFoldable #-}
 {-# LANGUAGE DeriveTraversable #-}
 module Data.Analytics.Morton.Node
-  ( Node(..)
+  ( Node(Node)
   , HasNode(..)
   , HasNodes(..)
   ) where

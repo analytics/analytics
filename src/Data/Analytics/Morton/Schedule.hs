@@ -12,7 +12,7 @@
 #endif
 
 module Data.Analytics.Morton.Schedule
-  ( Schedule(..)
+  ( Schedule(Schedule)
   , HasSchedule(..)
   , Scheduled(..)
   , magic
