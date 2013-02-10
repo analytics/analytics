@@ -1,7 +1,11 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TemplateHaskell #-}
 module Data.Analytics.Approximate.Type
   ( Approximate(..)
+  , HasApproximate(..)
   , exact
   , zero
   , one
@@ -21,7 +25,7 @@ data Approximate a = Approximate
   , _lo, _estimate, _hi :: a
   }
 
-makeLenses ''Approximate
+makeClassy ''Approximate
 
 instance Functor Approximate where
   fmap f (Approximate p l m h) = Approximate p (f l) (f m) (f h)

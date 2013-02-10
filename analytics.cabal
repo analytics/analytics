@@ -42,6 +42,7 @@ library
   cc-options:       -std=c99
 
   exposed-modules:
+    Data.Analytics.Approximate
     Data.Analytics.Approximate.Mass
     Data.Analytics.Approximate.Type
     Data.Analytics.Datalog
