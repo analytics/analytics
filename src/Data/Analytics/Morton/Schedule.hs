@@ -9,12 +9,6 @@
 module Data.Analytics.Morton.Schedule
   ( Schedule(..)
   , HasSchedule(..)
-  , schedulePriority
-  , scheduleStride
-  , scheduleBits
-  , scheduleOrdered
-  , scheduleApproximate
-  , scheduleEncoder
   , Scheduled(..)
   , magic
   , integral

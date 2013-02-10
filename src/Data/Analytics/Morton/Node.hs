@@ -15,12 +15,6 @@ module Data.Analytics.Morton.Node
   ( Node(..)
   , HasNode(..)
   , HasNodes(..)
-  , nodePriority
-  , nodeSequence
-  , nodeStride
-  , nodeHi
-  , nodeLo
-  , nodeBits
   ) where
 
 import Control.Lens

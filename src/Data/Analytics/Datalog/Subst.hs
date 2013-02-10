@@ -19,7 +19,6 @@ module Data.Analytics.Datalog.Subst
   , HasVars(..)
   , Subst(..)
   , HasSubst(..)
-  , mgu
   , apply
   ) where
 

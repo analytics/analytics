@@ -34,7 +34,7 @@ import Data.Semigroup
 data MinHeap a = MinHeap !(Node a) [MinHeap a]
   deriving Show
 
-instance HasNode (MinHeap a) (MinHeap a) a a where
+instance HasNode (MinHeap a) a where
   node f (MinHeap n cs) = (`MinHeap` cs) <$> f n
   {-# INLINE node #-}
 
@@ -82,7 +82,7 @@ extractMin (MinHeap n cs) = (,) n $! case cs of
 data MaxHeap a = MaxHeap !(Node a) [MaxHeap a]
   deriving Show
 
-instance HasNode (MaxHeap a) (MaxHeap a) a a where
+instance HasNode (MaxHeap a) a where
   node f (MaxHeap n cs) = (`MaxHeap` cs) <$> f n
   {-# INLINE node #-}
 

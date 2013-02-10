@@ -19,9 +19,6 @@ import Control.Lens
 import Data.Analytics.Morton.Heap
 import Data.Analytics.Morton.Node
 import Data.Analytics.Morton.Schedule
-import Data.Bits
-import Data.ByteString
-import Data.Int
 import Data.Semigroup
 
 ------------------------------------------------------------------------------
@@ -53,7 +50,7 @@ instance Monoid (Morton f) where
                              (b <> (b' & nodes.nodeSequence +~ i))
   {-# INLINE mappend #-}
 
-instance (p ~ (->), Applicative f, Contravariant f, Functor g, Functor h) => Cons p f (Morton g) (Morton g) (Morton h) (Morton h) (g Bool) (h Bool) where
+instance (p ~ (->), Applicative f, Contravariant f, Functor g, Functor h) => Cons p f (Morton g) (Morton h) (g Bool) (h Bool) where
   _Cons _ Z = pure Z
   _Cons f (Morton k i (MinHeap (Node np ns nw nh nl nd) ts0) b) = coerce $ f
      ( fmap ($ nhm1) nd
@@ -70,7 +67,7 @@ instance (p ~ (->), Applicative f, Contravariant f, Functor g, Functor h) => Con
        meldWithHeap t []      = t
   {-# INLINE _Cons #-}
 
-instance (p ~ (->), Applicative f, Contravariant f, Functor g, Functor h) => Snoc p f (Morton g) (Morton g) (Morton h) (Morton h) (g Bool) (h Bool) where
+instance (p ~ (->), Applicative f, Contravariant f, Functor g, Functor h) => Snoc p f (Morton g) (Morton h) (g Bool) (h Bool) where
   _Snoc _ Z = pure Z
   _Snoc f (Morton k i b (MaxHeap (Node np ns nw nh nl nd) ts0)) = coerce $ f
      ( if k == 1 then Z else Morton (k - 1) i b t'
