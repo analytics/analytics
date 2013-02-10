@@ -23,6 +23,7 @@ import Control.Lens
 import Data.Bits
 import Data.Hashable
 import Data.Int
+import Data.Functor.Contravariant
 import Data.Word
 import Foreign.Storable
 
