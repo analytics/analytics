@@ -1,6 +1,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FunctionalDependencies #-}
 --------------------------------------------------------------------
 -- |
 -- Module    :  Data.Analytics.Datalog.Subst
@@ -17,6 +19,7 @@ module Data.Analytics.Datalog.Subst
   , HasVars(..)
   , Subst(..)
   , HasSubst(..)
+  , mgu
   , apply
   ) where
 

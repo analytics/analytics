@@ -9,6 +9,12 @@
 module Data.Analytics.Morton.Schedule
   ( Schedule(..)
   , HasSchedule(..)
+  , schedulePriority
+  , scheduleStride
+  , scheduleBits
+  , scheduleOrdered
+  , scheduleApproximate
+  , scheduleEncoder
   , Scheduled(..)
   , magic
   , integral
@@ -20,20 +26,20 @@ module Data.Analytics.Morton.Schedule
   ) where
 
 import Control.Lens
+import Data.Bits
 import Data.Hashable
 import Data.Int
 import Data.Word
 import Foreign.Storable
 
--- This is used to schedule how we interleave our keys.
-
+-- | This is used to schedule how we interleave our keys.
 data Schedule a = Schedule
   { _schedulePriority    :: {-# UNPACK #-} !Int
   , _scheduleStride      :: {-# UNPACK #-} !Int
   , _scheduleBits        :: {-# UNPACK #-} !Int
-  , _scheduleOrdered     :: Bool
-  , _scheduleApproximate :: Bool
-  , _scheduleEncoder     :: a -> Int64
+  , _scheduleOrdered     :: !Bool
+  , _scheduleApproximate :: !Bool
+  , _scheduleEncoder     :: a -> Int -> Bool
   }
 
 makeClassy ''Schedule
@@ -49,17 +55,17 @@ magic :: Int
 magic = 256936680
 {-# INLINE magic #-}
 
-integral :: forall a. (Storable a, Integral a) => Schedule a
-integral = contramap fromIntegral $ bits (sizeOf (undefined :: a) * 8)
+integral :: forall a. (Storable a, Bits a) => Schedule a
+integral = bits (sizeOf (undefined :: a) * 8)
 {-# INLINE integral #-}
 
-bits :: Int -> Schedule Int64
-bits n = Schedule 0 (if n <= 1 then 0 else div magic (n - 1)) n True False id
+bits :: Bits a => Int -> Schedule a
+bits n = Schedule 0 (if n <= 1 then 0 else div magic (n - 1)) n True False testBit
 {-# INLINE bits #-}
 
 -- We conservatively approximate characters above of this range by the upper bound to preserve ordering.
 ascii :: Schedule Char
-ascii = contramap (fromIntegral . clamp 127 . fromEnum) (bits 7)
+ascii = contramap (clamp 127 . fromEnum) (bits 7)
 {-# INLINE ascii #-}
 
 clamp :: Int -> Int -> Int
@@ -70,7 +76,7 @@ clamp n k
 
 -- | We conservatively approximate characters above of this range by the upper bound to preserve ordering.
 iso8859_1 :: Schedule Char
-iso8859_1 = contramap (fromIntegral . clamp 255 . fromEnum) (bits 8)
+iso8859_1 = contramap (clamp 255 . fromEnum) (bits 8)
 {-# INLINE iso8859_1 #-}
 
 hashed :: Hashable a => Schedule a
@@ -82,7 +88,7 @@ hashed = contramap hash integral
 -- | Retrieve the default key schedule for a type
 class Scheduled a where
   scheduled :: Schedule a
-  default scheduled :: (Storable a, Integral a) => Schedule a
+  default scheduled :: (Storable a, Bits a, Integral a) => Schedule a
   scheduled = integral
 
 instance Scheduled Int where
@@ -127,7 +133,7 @@ instance Scheduled Word64 where
 
 -- | You can also use 'ascii' and 'iso8859_1'
 instance Scheduled Char where
-  scheduled = contramap (fromIntegral . fromEnum) (bits 21)
+  scheduled = contramap fromEnum (bits 21)
   {-# INLINE scheduled #-}
 
 -- TODO: enumerated :: (Enum a, Bounded a) => Schedule a

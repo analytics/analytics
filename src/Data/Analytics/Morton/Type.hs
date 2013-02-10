@@ -20,6 +20,7 @@ import Data.Analytics.Morton.Heap
 import Data.Analytics.Morton.Node
 import Data.Analytics.Morton.Schedule
 import Data.Bits
+import Data.ByteString
 import Data.Int
 import Data.Semigroup
 
@@ -35,10 +36,8 @@ data Morton f
   | Morton
     {-# UNPACK #-} !Int -- bits remaining
     {-# UNPACK #-} !Int -- index count
-    !(MinHeap f)        -- top down
-    !(MaxHeap f)        -- bottom up
-
-deriving instance Show (f Int64) => Show (Morton f)
+    !(MinHeap (f (Int -> Bool))) -- top down
+    !(MaxHeap (f (Int -> Bool))) -- bottom up
 
 instance Semigroup (Morton f) where
   (<>) = mappend
@@ -57,7 +56,7 @@ instance Monoid (Morton f) where
 instance (p ~ (->), Applicative f, Contravariant f, Functor g, Functor h) => Cons p f (Morton g) (Morton g) (Morton h) (Morton h) (g Bool) (h Bool) where
   _Cons _ Z = pure Z
   _Cons f (Morton k i (MinHeap (Node np ns nw nh nl nd) ts0) b) = coerce $ f
-     ( fmap (`testBit` nhm1) nd
+     ( fmap ($ nhm1) nd
      , if k == 1 then Z else Morton (k - 1) i t' b
      ) where
        !nhm1 = nh - 1
@@ -75,7 +74,7 @@ instance (p ~ (->), Applicative f, Contravariant f, Functor g, Functor h) => Sno
   _Snoc _ Z = pure Z
   _Snoc f (Morton k i b (MaxHeap (Node np ns nw nh nl nd) ts0)) = coerce $ f
      ( if k == 1 then Z else Morton (k - 1) i b t'
-     , fmap (`testBit` nl) nd
+     , fmap ($ nl) nd
      ) where
        !nlp1 = nl + 1
        t' | nlp1 == nh = case ts0 of
@@ -88,7 +87,7 @@ instance (p ~ (->), Applicative f, Contravariant f, Functor g, Functor h) => Sno
        meldWithHeap t []      = t
   {-# INLINE _Snoc #-}
 
-morton64 :: Functor f => Schedule a -> f Int64 -> Morton f
+morton64 :: Functor f => Schedule a -> f (Int -> Bool) -> Morton f
 morton64 (Schedule p w c _ _ _) fi
   = Morton c 1 (MinHeap (Node p             0 w c 0 fi) [])
                (MaxHeap (Node (p + w*(c-1)) 0 w c 0 fi) [])
