@@ -90,8 +90,10 @@ hashed = contramap hash integral
 -- | Retrieve the default key schedule for a type
 class Scheduled a where
   scheduled :: Schedule a
+#ifndef HLINT
   default scheduled :: (Storable a, Bits a, Integral a) => Schedule a
   scheduled = integral
+#endif
 
 instance Scheduled Int where
   scheduled = integral
