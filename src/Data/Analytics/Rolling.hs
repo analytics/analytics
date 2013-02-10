@@ -45,11 +45,12 @@ seed :: Int
 seed = 0
 
 rolling :: L.ByteString -> L.ByteString
-rolling z = L.fromChunks $ Prelude.map B.pack $ go seed 0 (L.unpack (L.replicate 128 0 <> z)) (L.unpack z) [] where
-  go !h !c (x:xs) (y:ys) zs
-    | ((h' .&. mask == mask) && c >= minSize) || c >= maxSize = (y:Prelude.reverse zs) : go seed 0 xs ys []
-    | otherwise                                               = go h' (c + 1) xs ys (y:zs)
-    where 
+rolling z = L.concat $ go seed 0 z (L.unpack (L.replicate 128 0 <> z)) (L.unpack z) where
+  go !h !c !bs (x:xs) (y:ys)
+    | ((h' .&. mask == mask) && c >= minSize) || c >= maxSize = case L.splitAt (fromIntegral $ c + 1) bs of
+       (l,r) -> l : go seed 0 bs xs ys
+    | otherwise                                               = go h' (c + 1) bs xs ys
+    where
       x' = if c < 128 then 0 else x
       h' = rem (rem (h - magic_d * fromIntegral x') magic_q * magic_r + fromIntegral y) magic_q
-  go  h  _ _ _ zs = [Prelude.reverse zs]
+  go _ _ bs _ _ = [bs]
