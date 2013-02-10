@@ -19,7 +19,9 @@ import Control.Lens
 import Data.Analytics.Morton.Heap
 import Data.Analytics.Morton.Node
 import Data.Analytics.Morton.Schedule
+import Data.Functor.Contravariant
 import Data.Semigroup
+import Data.Void
 
 ------------------------------------------------------------------------------
 -- Morton Ordering
@@ -52,7 +54,7 @@ instance Monoid (Morton f) where
 
 instance (p ~ (->), Applicative f, Contravariant f, Functor g, Functor h) => Cons p f (Morton g) (Morton h) (g Bool) (h Bool) where
   _Cons _ Z = pure Z
-  _Cons f (Morton k i (MinHeap (Node np ns nw nh nl nd) ts0) b) = coerce $ f
+  _Cons f (Morton k i (MinHeap (Node np ns nw nh nl nd) ts0) b) = coerce' $ f
      ( fmap ($ nhm1) nd
      , if k == 1 then Z else Morton (k - 1) i t' b
      ) where
@@ -69,7 +71,7 @@ instance (p ~ (->), Applicative f, Contravariant f, Functor g, Functor h) => Con
 
 instance (p ~ (->), Applicative f, Contravariant f, Functor g, Functor h) => Snoc p f (Morton g) (Morton h) (g Bool) (h Bool) where
   _Snoc _ Z = pure Z
-  _Snoc f (Morton k i b (MaxHeap (Node np ns nw nh nl nd) ts0)) = coerce $ f
+  _Snoc f (Morton k i b (MaxHeap (Node np ns nw nh nl nd) ts0)) = coerce' $ f
      ( if k == 1 then Z else Morton (k - 1) i b t'
      , fmap ($ nl) nd
      ) where
@@ -96,3 +98,7 @@ morton (Schedule p w c _ _ f) fa
                (MaxHeap (Node (p + w*(c-1)) 0 w c 0 fi) [])
   where fi = fmap f fa
 {-# INLINE morton #-}
+
+coerce' :: (Contravariant f, Functor f) => f a -> f b
+coerce' a = absurd <$> contramap absurd a
+{-# INLINE coerce' #-}
