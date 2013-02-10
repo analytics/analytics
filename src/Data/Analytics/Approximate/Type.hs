@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE TemplateHaskell #-}
 module Data.Analytics.Approximate.Type
   ( Approximate(..)
@@ -91,3 +92,8 @@ one = exact.only 1
 is :: Getting Any s t a b -> s -> Bool
 is = has
 {-# INLINE is #-}
+
+#if !(MIN_VERSION_lens(3,9,0))
+only :: Eq a => a -> Prism' a ()
+only a = prism' (\() -> a) $ guard . (a ==)
+#endif
