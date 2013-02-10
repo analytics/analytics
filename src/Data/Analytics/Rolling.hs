@@ -34,7 +34,7 @@ powqp :: Int -> Int -> Int
 powqp m n = case quotRem n 2 of
   (0, 1) -> quot m magic_q
   (0, 0) -> 1
-  (q, r) | k <- powqp m q -> quot (k * k) magic_q
+  (q, _) | k <- powqp m q -> quot (k * k) magic_q
 {-# INLINE powqp #-}
 
 -- how much to drop
@@ -45,12 +45,12 @@ seed :: Int
 seed = 0
 
 rolling :: L.ByteString -> L.ByteString
-rolling z = L.concat $ go seed 0 z (L.unpack (L.replicate 128 0 <> z)) (L.unpack z) where
+rolling z = L.fromChunks $ go seed 0 z (L.unpack (L.replicate 128 0 <> z)) (L.unpack z) where
   go !h !c !bs (x:xs) (y:ys)
     | ((h' .&. mask == mask) && c >= minSize) || c >= maxSize = case L.splitAt (fromIntegral $ c + 1) bs of
-       (l,r) -> l : go seed 0 bs xs ys
+       (l,r) -> B.concat (L.toChunks l) : go seed 0 r xs ys
     | otherwise                                               = go h' (c + 1) bs xs ys
     where
       x' = if c < 128 then 0 else x
       h' = rem (rem (h - magic_d * fromIntegral x') magic_q * magic_r + fromIntegral y) magic_q
-  go _ _ bs _ _ = [bs]
+  go _ _ bs _ _ = [B.concat $ L.toChunks bs]
