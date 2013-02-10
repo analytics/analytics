@@ -59,6 +59,7 @@ library
     Data.Analytics.Morton.Heap
     Data.Analytics.Morton.Schedule
     Data.Analytics.Morton.Type
+    Data.Analytics.Rolling
 
   build-depends:
     base                      >= 4.4     && < 5,
