@@ -7,7 +7,7 @@ This is a work-in progress project for working with declarative Datalog style pr
 The current focus is on getting a rich Datalog-esque EDSL that works nicely as a monad transformer, so you can mix and match it with
 tools from other domains.
 
-Skim the [examples folder](https://github.com/ekmett/analytics/tree/master/examples) to get started for now.
+Skim the [examples folder](https://github.com/analytics/analytics/tree/master/examples) to get started for now.
 
 Using `X`, `Y` and `Z` as `Node` variables, and `A` `B` and `C` as `Node` entities:
 
