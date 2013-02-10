@@ -21,7 +21,7 @@ magic_r :: Int
 magic_r = 256
 
 mask :: Int
-mask = 15 -- 8191
+mask = 8191
 
 minSize :: Int
 minSize = 128
@@ -41,10 +41,15 @@ powqp m n = case quotRem n 2 of
 magic_d :: Int
 magic_d = powqp magic_r (window-1)
 
+seed :: Int
+seed = 0
+
 rolling :: L.ByteString -> L.ByteString
-rolling z = L.fromChunks $ Prelude.map B.pack $ go 0 0 (L.unpack (L.replicate 128 0 <> z)) (L.unpack z) [] where
+rolling z = L.fromChunks $ Prelude.map B.pack $ go seed 0 (L.unpack (L.replicate 128 0 <> z)) (L.unpack z) [] where
   go !h !c (x:xs) (y:ys) zs
-    | ((h' .&. mask == mask) && c >= minSize) || c >= maxSize = (y:Prelude.reverse zs) : go 0 0 xs ys []
+    | ((h' .&. mask == mask) && c >= minSize) || c >= maxSize = (y:Prelude.reverse zs) : go seed 0 xs ys []
     | otherwise                                               = go h' (c + 1) xs ys (y:zs)
-    where h' = quot (quot (h - magic_d * fromIntegral x) magic_q * magic_r + fromIntegral y) magic_q
+    where 
+      x' = if c < 128 then 0 else x
+      h' = rem (rem (h - magic_d * fromIntegral x') magic_q * magic_r + fromIntegral y) magic_q
   go  h  _ _ _ zs = [Prelude.reverse zs]
