@@ -4,7 +4,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TemplateHaskell #-}
 module Data.Analytics.Approximate.Type
-  ( Approximate(..)
+  ( Approximate(Approximate)
   , HasApproximate(..)
   , exact
   , zero
