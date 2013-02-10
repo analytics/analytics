@@ -37,6 +37,7 @@ library
   default-language: Haskell2010
   ghc-options:      -Wall -O2
   exposed-modules:
+    Data.Analytics.Approximate
     Data.Analytics.Datalog
     Data.Analytics.Datalog.Atom
     Data.Analytics.Datalog.Atomic
@@ -63,6 +64,7 @@ library
     generic-deriving          >= 1.4     && < 1.5,
     hashable                  >= 1.2     && < 1.3,
     mtl                       >= 2.1.1   && < 2.2,
+    pointed                   >= 3       && < 4,
     prelude-extras            >= 0.3     && < 1,
     lens                      >= 3.8.5   && < 4,
     semigroupoids             == 3.*,
