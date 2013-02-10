@@ -37,7 +37,8 @@ library
   default-language: Haskell2010
   ghc-options:      -Wall -O2
   exposed-modules:
-    Data.Analytics.Approximate
+    Data.Analytics.Approximate.Mass
+    Data.Analytics.Approximate.Type
     Data.Analytics.Datalog
     Data.Analytics.Datalog.Atom
     Data.Analytics.Datalog.Atomic
@@ -47,7 +48,6 @@ library
     Data.Analytics.Datalog.Subst
     Data.Analytics.Datalog.Table
     Data.Analytics.Datalog.Term
-    Data.Analytics.Mass
     Data.Analytics.Morton
     Data.Analytics.Morton.Node
     Data.Analytics.Morton.Heap

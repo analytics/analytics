@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Data.Analytics.Approximate
+module Data.Analytics.Approximate.Type
   ( Approximate(..)
   , exact
   , zero

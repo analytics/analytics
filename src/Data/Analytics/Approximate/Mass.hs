@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable, DeriveGeneric #-}
-module Data.Analytics.Mass
+module Data.Analytics.Approximate.Mass
   ( Mass(..)
   , (|?), (&?), (^?)
   ) where
