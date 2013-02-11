@@ -9,3 +9,5 @@ I also own several potentially relevant domains:
 * sharednothing.net
 * gridfront.com
 * gridfront.net
+
+What's yours is mined. What's mined is yours.
