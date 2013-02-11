@@ -13,6 +13,10 @@ import Data.Traversable
 import Generics.Deriving
 
 -- | A quantity with a lower-bound on its probability mass.
+--
+-- This is most useful for discrete types, such as
+-- small 'Integral' instances or a 'Bounded' 'Enum' like
+-- 'Bool'.
 data Mass a = Mass {-# UNPACK #-} !Double a
   deriving (Eq,Ord,Show,Read,Typeable,Data,Generic)
 
@@ -61,6 +65,7 @@ infixl 6 ^?
 infixr 3 &?
 infixr 2 |?
 
+-- | Calculate the logical @and@ of two booleans with confidence lower bounds.
 (&?) :: Mass Bool -> Mass Bool -> Mass Bool
 Mass p False &? Mass q False = Mass (max p q) False
 Mass p False &? Mass _ True  = Mass p False
@@ -68,6 +73,7 @@ Mass _ True  &? Mass q False = Mass q False
 Mass p True  &? Mass q True  = Mass (p * q) True
 {-# INLINE (&?) #-}
 
+-- | Calculate the logical @or@ of two booleans with confidence lower bounds.
 (|?) :: Mass Bool -> Mass Bool -> Mass Bool
 Mass p False |? Mass q False = Mass (p * q) False
 Mass _ False |? Mass q True  = Mass q True
@@ -75,6 +81,7 @@ Mass p True  |? Mass _ False = Mass p True
 Mass p True  |? Mass q True  = Mass (max p q) True
 {-# INLINE (|?) #-}
 
+-- | Calculate the exclusive @or@ of two booleans with confidence lower bounds.
 (^?) :: Mass Bool -> Mass Bool -> Mass Bool
 Mass p a ^? Mass q b = Mass (p * q) (xor a b) where
   xor True  True  = False
