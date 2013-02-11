@@ -1,9 +1,13 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
+#ifndef MIN_VERSION_lens
+#define MIN_VERSION_lens(x,y,z) 1
+#endif
 module Data.Analytics.Hash.Double
   ( Hash(..)
   , hashed
@@ -14,11 +18,14 @@ import Control.Lens
 import Data.Data
 import Data.Hashable
 import Generics.Deriving
+#if !(MIN_VERSION_lens(3,9,0))
+import Data.Functor.Contravariant
+#endif
 
 -- | \"Less Hashing, Same Performance: Building a Better Bloom Filter\" by
 -- Kirsch and Mitzenmacher demonstrated that for many use-cases, especially
--- involving Bloom filters, we can use a pair of hashes to generate a family
--- of related hash functions with good characteristics.
+-- involving Bloom filters, we can use pairwise independent hashes to
+-- generate a family of related hash functions with good characteristics.
 --
 -- <http://www.eecs.harvard.edu/~kirsch/pubs/bbbf/rsa.pdf>
 --
