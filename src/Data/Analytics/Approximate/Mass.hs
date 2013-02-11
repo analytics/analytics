@@ -41,7 +41,7 @@ instance Apply Mass where
 instance Applicative Mass where
   pure = Mass 0
   {-# INLINE pure #-}
-  Mass p f <*> Mass q a = Mass (p * q) (f a)
+  Mass p f <*> Mass q a = Mass (p + q) (f a)
   {-# INLINE (<*>) #-}
 
 instance Monad Mass where

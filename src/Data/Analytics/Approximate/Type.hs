@@ -60,7 +60,7 @@ instance Apply Approximate where
   {-# INLINE (<.>) #-}
 
 instance Applicative Approximate where
-  pure a = Approximate 1 a a a
+  pure a = Approximate 0 a a a
   {-# INLINE pure #-}
   Approximate p lf mf hf <*> Approximate q la ma ha = Approximate (p + q) (lf la) (mf ma) (hf ha)
   {-# INLINE (<*>) #-}
@@ -89,7 +89,7 @@ instance (Ord a, Num a) => Num (Approximate a) where
 
 exact :: Eq a => Prism' (Approximate a) a
 exact = prism pure $ \ s -> case s of
-  Approximate p a b c | p == 1.0 && a == c -> Right b
+  Approximate p a b c | p == 0 && a == c -> Right b
   _ -> Left s
 {-# INLINE exact #-}
 
