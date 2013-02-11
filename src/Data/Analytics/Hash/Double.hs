@@ -36,6 +36,7 @@ type instance IxValue Hash = Int
 
 instance (Contravariant f, Functor f) => Contains f Hash where
   contains i f _ = coerce $ indexed f (i :: Int) True
+  {-# INLINE contains #-}
 
 instance (Contravariant f, Functor f) => Ixed f Hash where
   ix i f (Hash a b) = coerce $ indexed f i (a + i * (b + i))
