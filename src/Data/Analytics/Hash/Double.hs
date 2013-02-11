@@ -26,6 +26,9 @@ import Generics.Deriving
 --
 -- >>> hashed (42 :: Int)^..taking 4 each
 -- [-2574874314062730062,-9186383815474761572,2648850756822758536,-3962658744589272970]
+--
+-- >>> hashed (42 :: Int)^.ix 3
+-- -3962658744589272970
 data Hash = Hash {-# UNPACK #-} !Int {-# UNPACK #-} !Int
   deriving (Eq,Ord,Show,Read,Data,Typeable,Generic)
 
