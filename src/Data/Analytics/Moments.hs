@@ -15,6 +15,7 @@ module Data.Analytics.Moments
   , skewness
   , kurtosis
   , singleton
+  , momentsOf
   ) where
 
 import Control.Applicative
@@ -82,6 +83,10 @@ combinedMean !m !x !n !y
 singleton :: Real a => a -> Moments
 singleton a = Moments 1 (realToFrac a) 0 0 0
 {-# INLINE singleton #-}
+
+momentsOf :: Real a => Getting Moments s t a b -> s -> Moments
+momentsOf l = foldMapOf l singleton
+{-# INLINE momentsOf #-}
 
 -- this lets us use 'cons' to add a moment to the mix.
 instance (Bifunctor p, Profunctor p, Functor f, Real a, a ~ b) => Cons p f Moments Moments a b where
