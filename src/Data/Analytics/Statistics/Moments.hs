@@ -7,7 +7,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE UndecidableInstances #-}
-module Data.Analytics.Moments
+module Data.Analytics.Statistics.Moments
   ( Moments(..)
   , HasMoments(..)
   , variance

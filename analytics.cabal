@@ -57,12 +57,12 @@ library
     Data.Analytics.Datalog.Term
     Data.Analytics.Hash.Double
     Data.Analytics.Hash.Rolling
-    Data.Analytics.Moments
     Data.Analytics.Morton
     Data.Analytics.Morton.Node
     Data.Analytics.Morton.Heap
     Data.Analytics.Morton.Schedule
     Data.Analytics.Morton.Type
+    Data.Analytics.Statistics.Moments
 
   build-depends:
     base                      >= 4.4     && < 5,
