@@ -12,7 +12,9 @@ import Data.Functor.Apply
 import Data.Traversable
 import Generics.Deriving
 
--- | A quantity with a lower-bound on its probability mass.
+-- | A quantity with a lower-bound on the @log@ of its probability mass.
+--
+-- /NB:/ These probabilities are all stored in the log domain!
 --
 -- This is most useful for discrete types, such as
 -- small 'Integral' instances or a 'Bounded' 'Enum' like
@@ -37,16 +39,16 @@ instance Apply Mass where
   {-# INLINE (<.>) #-}
 
 instance Applicative Mass where
-  pure = Mass 1
+  pure = Mass 0
   {-# INLINE pure #-}
   Mass p f <*> Mass q a = Mass (p * q) (f a)
   {-# INLINE (<*>) #-}
 
 instance Monad Mass where
-  return = Mass 1
+  return = Mass 0
   {-# INLINE return #-}
   Mass p a >>= f = case f a of
-    Mass q b -> Mass (p * q) b
+    Mass q b -> Mass (p + q) b
   {-# INLINE (>>=) #-}
 
 instance Comonad Mass where
@@ -70,12 +72,12 @@ infixr 2 |?
 Mass p False &? Mass q False = Mass (max p q) False
 Mass p False &? Mass _ True  = Mass p False
 Mass _ True  &? Mass q False = Mass q False
-Mass p True  &? Mass q True  = Mass (p * q) True
+Mass p True  &? Mass q True  = Mass (p + q) True
 {-# INLINE (&?) #-}
 
 -- | Calculate the logical @or@ of two booleans with confidence lower bounds.
 (|?) :: Mass Bool -> Mass Bool -> Mass Bool
-Mass p False |? Mass q False = Mass (p * q) False
+Mass p False |? Mass q False = Mass (p + q) False
 Mass _ False |? Mass q True  = Mass q True
 Mass p True  |? Mass _ False = Mass p True
 Mass p True  |? Mass q True  = Mass (max p q) True
@@ -83,7 +85,7 @@ Mass p True  |? Mass q True  = Mass (max p q) True
 
 -- | Calculate the exclusive @or@ of two booleans with confidence lower bounds.
 (^?) :: Mass Bool -> Mass Bool -> Mass Bool
-Mass p a ^? Mass q b = Mass (p * q) (xor a b) where
+Mass p a ^? Mass q b = Mass (p + q) (xor a b) where
   xor True  True  = False
   xor False True  = True
   xor True  False = True
