@@ -1,11 +1,7 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TemplateHaskell #-}
-#ifndef MIN_VERSION_lens
-#define MIN_VERSION_lens(x,y,z) 1
-#endif
 module Data.Analytics.Approximate.Type
   ( Approximate(Approximate)
   , HasApproximate(..)
@@ -16,9 +12,6 @@ module Data.Analytics.Approximate.Type
 
 import Control.Applicative
 import Control.Lens
-#if !(MIN_VERSION_lens(3,9,0))
-import Control.Monad
-#endif
 import Data.Copointed
 import Data.Foldable
 import Data.Functor.Apply
@@ -104,9 +97,3 @@ one = exact.only 1
 is :: Getting Any s t a b -> s -> Bool
 is = has
 {-# INLINE is #-}
-
-#if !(MIN_VERSION_lens(3,9,0))
-only :: Eq a => a -> Prism' a ()
-only a = prism' (\() -> a) $ guard . (a ==)
-{-# INLINE only #-}
-#endif

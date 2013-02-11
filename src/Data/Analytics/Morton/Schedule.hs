@@ -7,10 +7,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE GADTs #-}
-#ifndef MIN_VERSION_lens
-#define MIN_VERSION_lens(x,y,z) 1
-#endif
-
 module Data.Analytics.Morton.Schedule
   ( Schedule(Schedule)
   , HasSchedule(..)
@@ -28,9 +24,6 @@ import Control.Lens
 import Data.Bits
 import Data.Hashable
 import Data.Int
-#if !(MIN_VERSION_lens(3,9,0))
-import Data.Functor.Contravariant
-#endif
 import Data.Word
 import Foreign.Storable
 

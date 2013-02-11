@@ -9,10 +9,6 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
-#ifndef MIN_VERSION_lens
-#define MIN_VERSION_lens(x,y,z) 1
-#endif
-
 module Data.Analytics.Morton.Type
   ( Morton(..)
   , morton
@@ -24,9 +20,6 @@ import Control.Lens
 import Data.Analytics.Morton.Heap
 import Data.Analytics.Morton.Node
 import Data.Analytics.Morton.Schedule
-#if !(MIN_VERSION_lens(3,9,0))
-import Data.Functor.Contravariant
-#endif
 import Data.Semigroup
 import Data.Void
 
