@@ -63,6 +63,7 @@ library
     Data.Analytics.Morton.Schedule
     Data.Analytics.Morton.Type
     Data.Analytics.Statistics.Moments
+    Data.Analytics.Statistics.Variances
 
   build-depends:
     base                      >= 4.4     && < 5,
