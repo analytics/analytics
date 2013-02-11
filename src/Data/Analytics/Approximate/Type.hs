@@ -12,6 +12,7 @@ module Data.Analytics.Approximate.Type
 
 import Control.Applicative
 import Control.Lens
+import Data.Analytics.Approximate.Log
 import Data.Copointed
 import Data.Foldable
 import Data.Functor.Apply
@@ -22,7 +23,7 @@ import Data.Pointed
 --
 -- /NB:/ The probabilities associated with confidence are stored in the @log@ domain!
 data Approximate a = Approximate
-  { _confidence :: {-# UNPACK #-} !Double
+  { _confidence :: {-# UNPACK #-} !(Log Double)
   , _lo, _estimate, _hi :: a
   }
 
@@ -45,17 +46,17 @@ instance Copointed Approximate where
   {-# INLINE copoint #-}
 
 instance Pointed Approximate where
-  point a = Approximate 0 a a a
+  point a = Approximate 1 a a a
   {-# INLINE point #-}
 
 instance Apply Approximate where
-  Approximate p lf mf hf <.> Approximate q la ma ha = Approximate (p + q) (lf la) (mf ma) (hf ha)
+  Approximate p lf mf hf <.> Approximate q la ma ha = Approximate (p * q) (lf la) (mf ma) (hf ha)
   {-# INLINE (<.>) #-}
 
 instance Applicative Approximate where
-  pure a = Approximate 0 a a a
+  pure a = Approximate 1 a a a
   {-# INLINE pure #-}
-  Approximate p lf mf hf <*> Approximate q la ma ha = Approximate (p + q) (lf la) (mf ma) (hf ha)
+  Approximate p lf mf hf <*> Approximate q la ma ha = Approximate (p * q) (lf la) (mf ma) (hf ha)
   {-# INLINE (<*>) #-}
 
 instance (Ord a, Num a) => Num (Approximate a) where
@@ -64,12 +65,12 @@ instance (Ord a, Num a) => Num (Approximate a) where
   m * n
     | is zero n || is one m = m
     | is zero m || is one n = n
-    | otherwise = Approximate (m^.confidence + n^.confidence) (Prelude.minimum extrema) (m^.estimate * n^.estimate) (Prelude.maximum extrema) where
+    | otherwise = Approximate (m^.confidence * n^.confidence) (Prelude.minimum extrema) (m^.estimate * n^.estimate) (Prelude.maximum extrema) where
       extrema = (*) <$> [m^.lo,m^.hi] <*> [n^.lo,n^.hi]
   {-# INLINE (*) #-}
   negate (Approximate p l m h) = Approximate p (-h) (-m) (-l)
   {-# INLINE negate #-}
-  Approximate p la ma ha - Approximate q lb mb hb = Approximate (p + q) (la - hb) (ma - mb) (ha - lb)
+  Approximate p la ma ha - Approximate q lb mb hb = Approximate (p * q) (la - hb) (ma - mb) (ha - lb)
   {-# INLINE (-) #-}
   abs (Approximate p la ma ha) = Approximate p (min lb hb) (abs ma) (max lb hb) where
     lb = abs la
@@ -82,7 +83,7 @@ instance (Ord a, Num a) => Num (Approximate a) where
 
 exact :: Eq a => Prism' (Approximate a) a
 exact = prism pure $ \ s -> case s of
-  Approximate p a b c | p == 0 && a == c -> Right b
+  Approximate (Log lp) a b c | lp == 0 && a == c -> Right b
   _ -> Left s
 {-# INLINE exact #-}
 

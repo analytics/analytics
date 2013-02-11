@@ -1,4 +1,4 @@
-{-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE ForeignFunctionInterface, DeriveDataTypeable, DeriveGeneric #-}
 module Data.Analytics.Approximate.Log
   ( Log(..)
   , Precise(..)
@@ -10,12 +10,14 @@ import Data.Complex
 import Data.Foldable
 import Data.Functor.Apply
 import Data.Traversable
+import Data.Data
+import Generics.Deriving
 
 -- | @data Log@ has no connection to 'Data.Analytics.Datalog'.
 --
 -- Errors should be resolved by taking the answer to negative infinity where possible
 -- as this is typically used as the lower bound on a confidence level.
-newtype Log a = Log a deriving (Eq,Ord,Show,Read)
+newtype Log a = Log a deriving (Eq,Ord,Show,Read,Data,Typeable,Generic)
 
 runLog :: Log a -> a
 runLog (Log a) = a
@@ -102,8 +104,10 @@ instance (Precise a, RealFloat a, Ord a) => Real (Log a) where
 {-# RULES
 "realToFrac" realToFrac = Log . realToFrac . runLog :: Log Double -> Log Float
 "realToFrac" realToFrac = Log . realToFrac . runLog :: Log Float -> Log Double
-"realToFrac" realToFrac = exp . runLog
-"realToFrac" realToFrac = Log . log #-}
+"realToFrac" realToFrac = exp . runLog :: Log Double -> Double
+"realToFrac" realToFrac = exp . runLog :: Log Float -> Float
+"realToFrac" realToFrac = Log . log :: Double -> Log Double
+"realToFrac" realToFrac = Log . log :: Float -> Log Float #-}
 
 class Floating a => Precise a where
   log1p :: a -> a
