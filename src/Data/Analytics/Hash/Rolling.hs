@@ -1,6 +1,7 @@
 {-# LANGUAGE BangPatterns #-}
 module Data.Analytics.Hash.Rolling
   ( rolling
+  , rollingSum
   ) where
 
 import Data.Bits
@@ -31,7 +32,7 @@ rolling z = L.fromChunks $ go seed 0 z (L.unpack (L.replicate window 0 <> z)) (L
   go !h !c !bs (x:xs) (y:ys)
     | ((h' .&. mask == mask) && c >= minSize) || c >= maxSize = case L.splitAt (c + 1) bs of
        (l,r) -> B.concat (L.toChunks l) : go seed 0 r xs ys
-    | otherwise                                               = go h' (c + 1) bs xs ys
+    | otherwise = go h' (c + 1) bs xs ys
     where
       x' = if c < window then 0 else x
       h' = rem (rem (h - magic_d * fromIntegral x') magic_q * magic_r + fromIntegral y) magic_q
@@ -45,3 +46,18 @@ rolling z = L.fromChunks $ go seed 0 z (L.unpack (L.replicate window 0 <> z)) (L
   window  = 128
   seed = 0
 {-# INLINE rolling #-}
+
+rollingSum :: L.ByteString -> L.ByteString
+rollingSum z = L.fromChunks $ go seed 0 z (L.unpack (L.replicate window 0 <> z)) (L.unpack z) where
+  go !h !c !bs (x:xs) (y:ys)
+    | ((h' .&. mask == mask) && c >= minSize) || c >= maxSize = case L.splitAt (c + 1) bs of
+       (l,r) -> B.concat (L.toChunks l) : go seed 0 r xs ys
+    | otherwise = go h' (c + 1) bs xs ys
+    where h' = h - y + if c < window then 0 else x
+  go _ _ bs _ _ = [B.concat $ L.toChunks bs]
+  mask    = 8191
+  minSize = 128
+  maxSize = 65536
+  window  = 128
+  seed = 0
+{-# INLINE rollingSum #-}
