@@ -2,9 +2,12 @@ language: haskell
 before_install:
   # Uncomment whenever hackage is down.
   # - mkdir -p ~/.cabal && cp travis/config ~/.cabal/config && cabal update
-  - cabal update
-
-  # Try installing some of the build-deps with apt-get for speed.
+  - mkdir lens
+  - git clone https://github.com/ekmett/lens.git
+  - cd lens
+  - travis/cabal-apt-install
+  - cabal install
+  - cd ..
   - travis/cabal-apt-install $mode
 
 install:

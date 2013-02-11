@@ -74,7 +74,7 @@ library
     mtl                       >= 2.1.1   && < 2.2,
     pointed                   >= 3       && < 4,
     prelude-extras            >= 0.3     && < 1,
-    lens                      >= 3.8.5   && < 4,
+    lens                      >= 3.9     && < 4,
     reflection                >= 1.1.6   && < 2,
     semigroupoids             == 3.*,
     semigroups                >= 0.9     && < 1,
