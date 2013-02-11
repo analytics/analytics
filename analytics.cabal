@@ -43,6 +43,7 @@ library
 
   exposed-modules:
     Data.Analytics.Approximate
+    Data.Analytics.Approximate.Log
     Data.Analytics.Approximate.Mass
     Data.Analytics.Approximate.Type
     Data.Analytics.Datalog
