@@ -32,7 +32,6 @@ update :: Int32 -> Word8 -> Word8 -> Int32
 update hash x y = rotateR hash 1 `xor` lut x `xor` lut y
 {-# INLINE update #-}
 
-
 -- | Take a strict 'S.ByteString' and generate a new lazy 'L.ByteString' with chunks based on a rolling
 -- hash. This generates chunks with an expected size of 8k, where the sizes vary between 128 bytes and 64k each.
 -- and the breakpoints are based on moments where a rolling hash function applied to the last 128 bytes of the
@@ -99,54 +98,3 @@ rollingPrime z = L.fromChunks $ go seed 0 z (L.unpack (L.replicate window 0 <> z
   window  = 128
   seed = 0
 {-# INLINE rollingPrime #-}
-
-{-
-rollingSum :: L.ByteString -> L.ByteString
-rollingSum z = L.fromChunks $ go seed 0 z (L.unpack (L.replicate window 0 <> z)) (L.unpack z) where
-  go !h !c !bs (x:xs) (y:ys)
-    | ((h' .&. mask == mask) && c >= minSize) || c >= maxSize = case L.splitAt (c + 1) bs of
-       (l,r) -> B.concat (L.toChunks l) : go seed 0 r xs ys
-    | otherwise = go h' (c + 1) bs xs ys
-    where !h' = h + fromIntegral y - if c < window then 0 else fromIntegral x
-  go _ _ bs _ _ = [B.concat $ L.toChunks bs]
-  mask     = 8191
-  minSize  = 128
-  maxSize  = 65536
-  window   = 128
-  seed     = 0 :: Int
-{-# INLINE rollingSum #-}
--}
-
-
-{-
-rolling :: L.ByteString -> L.ByteString
-rolling z = L.fromChunks $ go seed seed 0 z (L.unpack (L.replicate window 0 <> z)) (L.unpack z) where
-  go !h !i !c !bs (x:xs) (y:ys)
-    | ((h' .&. 127 == 127) && (i' .&. 63 == 63) && c >= minSize) || c >= maxSize = case L.splitAt (c + 1) bs of
-       (l,r) -> B.concat (L.toChunks l) : go seed seed 0 r xs ys
-    | otherwise = go h' i' (c + 1) bs xs ys
-    where
-      !x' = if c < window then 0 else x
-      !h' = h + y - x'
-      !i' = i `xor` y `xor` x'
-  go _ _ _ bs _ _ = [B.concat $ L.toChunks bs]
-  minSize  = 128
-  maxSize  = 65536
-  window   = 128
-  seed     = 0 :: Word8
-{-# INLINE rollingSumXor #-}
--}
-
-{-
-unsafeCreate :: Int -> (Ptr Word8 -> IO ()) -> B.ByteString
-unsafeCreate l f = unsafeDupablePerformIO (create l f)
-{-# INLINE unsafeCreate #-}
-
--- | Create ByteString of size @l@ and use action @f@ to fill it's contents.
-create :: Int -> (Ptr Word8 -> IO ()) -> IO B.ByteString
-create l f = do
-  fp <- mallocPlainForeignPtrBytes l
-  withForeignPtr fp $ \p -> f p
-  return $! BI.PS fp 0 l
-{-# INLINE create #-}
--}
