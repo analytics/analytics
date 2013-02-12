@@ -10,6 +10,7 @@ import Data.ByteString as B
 import Data.ByteString.Lazy as L
 import Data.Monoid
 import Data.Int
+import Data.Word
 
 -- |
 -- Calculates @powqp m n p = 'rem' (m^n) p@ under the assumption that @m * p * p@ can fit in an @Int64@.
@@ -35,8 +36,8 @@ rollingPrime z = L.fromChunks $ go seed 0 z (L.unpack (L.replicate window 0 <> z
        (l,r) -> B.concat (L.toChunks l) : go seed 0 r xs ys
     | otherwise = go h' (c + 1) bs xs ys
     where
-      x' = if c < window then 0 else x
-      h' = rem (rem (h - magic_d * fromIntegral x') magic_q * magic_r + fromIntegral y) magic_q
+      x' = if c < window then 0 else fromIntegral x
+      h' = rem (rem (h - magic_d * x') magic_q * magic_r + fromIntegral y) magic_q
   go _ _ bs _ _ = [B.concat $ L.toChunks bs]
   magic_d = powqp magic_r (window-1) magic_q
   mask    = 8191
@@ -54,13 +55,13 @@ rollingSum z = L.fromChunks $ go seed 0 z (L.unpack (L.replicate window 0 <> z))
     | ((h' .&. mask == mask) && c >= minSize) || c >= maxSize = case L.splitAt (c + 1) bs of
        (l,r) -> B.concat (L.toChunks l) : go seed 0 r xs ys
     | otherwise = go h' (c + 1) bs xs ys
-    where h' = h + y - if c < window then 0 else x
+    where h' = h + fromIntegral y - if c < window then 0 else fromIntegral x
   go _ _ bs _ _ = [B.concat $ L.toChunks bs]
   mask     = 8191
   minSize  = 128
   maxSize  = 65536
   window   = 128
-  seed     = 0
+  seed     = 0 :: Int
 {-# INLINE rollingSum #-}
 
 rollingSumXor :: L.ByteString -> L.ByteString
@@ -77,5 +78,5 @@ rollingSumXor z = L.fromChunks $ go seed seed 0 z (L.unpack (L.replicate window 
   minSize  = 128
   maxSize  = 65536
   window   = 128
-  seed     = 0
+  seed     = 0 :: Word8
 {-# INLINE rollingSumXor #-}
