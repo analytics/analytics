@@ -37,8 +37,7 @@ library
   default-language: Haskell2010
   ghc-options:      -Wall -O2
   include-dirs:     includes
-  includes:         MurmurHash3.h
-  c-sources:        cbits/MurmurHash3.c
+  c-sources:        cbits/rolling.c
   cc-options:       -std=c99
 
   exposed-modules:
