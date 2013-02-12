@@ -2,6 +2,7 @@ language: haskell
 before_install:
   # Uncomment whenever hackage is down.
   # - mkdir -p ~/.cabal && cp travis/config ~/.cabal/config && cabal update
+  - cabal update
   - mkdir lens
   - git clone https://github.com/ekmett/lens.git
   - cd lens
