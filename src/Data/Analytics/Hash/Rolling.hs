@@ -1,7 +1,8 @@
 {-# LANGUAGE BangPatterns #-}
 module Data.Analytics.Hash.Rolling
-  ( rolling
+  ( rollingPrime
   , rollingSum
+  , rollingSumXor
   ) where
 
 import Data.Bits
@@ -27,8 +28,8 @@ powqp m n p = case quotRem n 2 of
 --
 -- This can be used with various chunk hashing schemes to allow hashing that is fairly robust in the
 -- presence of inline insertions and deletions.
-rolling :: L.ByteString -> L.ByteString
-rolling z = L.fromChunks $ go seed 0 z (L.unpack (L.replicate window 0 <> z)) (L.unpack z) where
+rollingPrime :: L.ByteString -> L.ByteString
+rollingPrime z = L.fromChunks $ go seed 0 z (L.unpack (L.replicate window 0 <> z)) (L.unpack z) where
   go !h !c !bs (x:xs) (y:ys)
     | ((h' .&. mask == mask) && c >= minSize) || c >= maxSize = case L.splitAt (c + 1) bs of
        (l,r) -> B.concat (L.toChunks l) : go seed 0 r xs ys
@@ -45,7 +46,7 @@ rolling z = L.fromChunks $ go seed 0 z (L.unpack (L.replicate window 0 <> z)) (L
   magic_q = 32749
   window  = 128
   seed = 0
-{-# INLINE rolling #-}
+{-# INLINE rollingPrime #-}
 
 rollingSum :: L.ByteString -> L.ByteString
 rollingSum z = L.fromChunks $ go seed 0 z (L.unpack (L.replicate window 0 <> z)) (L.unpack z) where
@@ -53,11 +54,28 @@ rollingSum z = L.fromChunks $ go seed 0 z (L.unpack (L.replicate window 0 <> z))
     | ((h' .&. mask == mask) && c >= minSize) || c >= maxSize = case L.splitAt (c + 1) bs of
        (l,r) -> B.concat (L.toChunks l) : go seed 0 r xs ys
     | otherwise = go h' (c + 1) bs xs ys
-    where h' = h - y + if c < window then 0 else x
+    where h' = h + y - if c < window then 0 else x
   go _ _ bs _ _ = [B.concat $ L.toChunks bs]
-  mask    = 8191
-  minSize = 128
-  maxSize = 65536
-  window  = 128
-  seed = 0
+  mask     = 8191
+  minSize  = 128
+  maxSize  = 65536
+  window   = 128
+  seed     = 0
 {-# INLINE rollingSum #-}
+
+rollingSumXor :: L.ByteString -> L.ByteString
+rollingSumXor z = L.fromChunks $ go seed seed 0 z (L.unpack (L.replicate window 0 <> z)) (L.unpack z) where
+  go !h !i !c !bs (x:xs) (y:ys)
+    | ((h' .&. 127 == 127) && (i' .&. 63 == 63) && c >= minSize) || c >= maxSize = case L.splitAt (c + 1) bs of
+       (l,r) -> B.concat (L.toChunks l) : go seed seed 0 r xs ys
+    | otherwise = go h' i' (c + 1) bs xs ys
+    where 
+      x' = if c < window then 0 else x
+      h' = h + y - x'
+      i' = i `xor` y `xor` x'
+  go _ _ _ bs _ _ = [B.concat $ L.toChunks bs]
+  minSize  = 128
+  maxSize  = 65536
+  window   = 128
+  seed     = 0
+{-# INLINE rollingSumXor #-}
