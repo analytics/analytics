@@ -40,7 +40,7 @@ update hash x y = rotateR hash 1 `xor` lut x `xor` lut y
 -- This can be used with various chunk hashing schemes to allow hashing that is fairly robust in the
 -- presence of inline insertions and deletions.
 --
--- The rolling hash is based on the idea of buzhash, but since we have a known window size that is an integral
+-- The rolling hash is based on the idea of @buzhash@, but since we have a known window size that is an integral
 -- multiple of the rotation window we save work.
 rolling :: L.ByteString -> L.ByteString
 rolling z = L.fromChunks $ go seed 0 z (L.unpack (L.replicate window 0 <> z)) (L.unpack z) where
