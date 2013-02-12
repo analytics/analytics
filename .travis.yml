@@ -6,7 +6,7 @@ before_install:
   - mkdir lens
   - git clone https://github.com/ekmett/lens.git
   - cd lens
-  - travis/cabal-apt-install
+  - travis/cabal-apt-install --constraint='hashable >= 1.2'
   - cabal install
   - cd ..
   - travis/cabal-apt-install $mode
