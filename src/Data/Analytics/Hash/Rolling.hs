@@ -3,8 +3,8 @@
 {-# LANGUAGE UnboxedTuples #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
 module Data.Analytics.Hash.Rolling
-  ( rollingPrime
-  , rolling
+  ( roll'
+  , roll
   ) where
 
 import Data.Bits
@@ -40,10 +40,10 @@ update hash x y = rotateR hash 1 `xor` lut x `xor` lut y
 -- This can be used with various chunk hashing schemes to allow hashing that is fairly robust in the
 -- presence of inline insertions and deletions.
 --
--- The rolling hash is based on the idea of @buzhash@, but since we have a known window size that is an integral
--- multiple of the rotation window we save work.
-rolling :: L.ByteString -> L.ByteString
-rolling z = L.fromChunks $ go seed 0 z (L.unpack (L.replicate window 0 <> z)) (L.unpack z) where
+-- The rolling hash is based on the ideas from @buzhash@, but since we have a known window size that is an
+-- integral multiple of the rotation window we save work.
+roll :: L.ByteString -> L.ByteString
+roll z = L.fromChunks $ go seed 0 z (L.unpack (L.replicate window 0 <> z)) (L.unpack z) where
   go !h !c !bs (x:xs) (y:ys)
     | ((h' .&. mask == mask) && c >= minSize) || c >= maxSize = case L.splitAt (c + 1) bs of
        (l,r) -> B.concat (L.toChunks l) : go seed 0 r xs ys
@@ -55,9 +55,10 @@ rolling z = L.fromChunks $ go seed 0 z (L.unpack (L.replicate window 0 <> z)) (L
   maxSize  = 65536
   window   = 128
   seed     = 0 :: Int32
-{-# INLINE rolling #-}
+{-# INLINE roll #-}
 -- TODO: use bytestring internals to optimize the concatenations with their known length
--- TODO: split out a separate init loop to run the minSize/window length to avoid the conditional.
+-- TODO: split out a separate init loop to run the minSize/window length to avoid the conditional in the inner loop
+--       and the repeated check against the min size.
 -- TODO: use bytestring internals to avoid constructing a bunch of intermediate lists.
 
 -- |
@@ -78,9 +79,10 @@ powqp m n p = case quotRem n 2 of
 -- This can be used with various chunk hashing schemes to allow hashing that is fairly robust in the
 -- presence of inline insertions and deletions.
 --
--- This scheme is based on the standard Rabin-Karp rolling checksum.
-rollingPrime :: L.ByteString -> L.ByteString
-rollingPrime z = L.fromChunks $ go seed 0 z (L.unpack (L.replicate window 0 <> z)) (L.unpack z) where
+-- This scheme is based on the standard Rabin-Karp rolling checksum. It is much slower than 'rolling', but
+-- is provided here for comparison purposes.
+roll' :: L.ByteString -> L.ByteString
+roll' z = L.fromChunks $ go seed 0 z (L.unpack (L.replicate window 0 <> z)) (L.unpack z) where
   go !h !c !bs (x:xs) (y:ys)
     | ((h' .&. mask == mask) && c >= minSize) || c >= maxSize = case L.splitAt (c + 1) bs of
        (l,r) -> B.concat (L.toChunks l) : go seed 0 r xs ys
@@ -97,4 +99,4 @@ rollingPrime z = L.fromChunks $ go seed 0 z (L.unpack (L.replicate window 0 <> z
   magic_q = 32749
   window  = 128
   seed = 0
-{-# INLINE rollingPrime #-}
+{-# INLINE roll' #-}
