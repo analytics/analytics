@@ -41,7 +41,7 @@ update hash x y = rotateR hash 1 `xor` lut x `xor` lut y
 -- presence of inline insertions and deletions.
 --
 -- The rolling hash is based on the ideas from @buzhash@, but since we have a known window size that is an
--- integral multiple of the rotation window we save work.
+-- integral multiple of the word size we save work.
 roll :: L.ByteString -> L.ByteString
 roll z = L.fromChunks $ go seed 0 z (L.unpack (L.replicate window 0 <> z)) (L.unpack z) where
   go !h !c !bs (x:xs) (y:ys)
