@@ -80,7 +80,8 @@ instance HasVars (Heart a) where
   vars f (ApH l r) = ApH <$> vars f l <*> vars f r
   vars f (MapH k x) = MapH k <$> vars f x
   vars _ (PureH a) = pure (PureH a)
-  vars f (ArgH v) = f (Var v) <&> \(Var u) -> ArgH (fromMaybe (error "PANIC: very illegal substitution" `asTypeOf` v) (cast u))
+  vars f (ArgH v) = f (Var v) <&> \(Var u) ->
+    ArgH (fromMaybe (error "PANIC: very illegal substitution" `asTypeOf` v) (cast u))
   {-# INLINE vars #-}
 
 {-
@@ -88,25 +89,12 @@ match :: (MonadState s m, HasSubst s, MonadPlus m) => Heart a -> Heart b -> m (H
 match (ApH l r) (ApH l' r') = ApH <$> match l l' <*> match r r'
 match (MapH f x) (MapH _ y) = MapH f <$> match x y
 match (PureH a) (PureH _)   = pure (PureH a)
-match l@(ArgH t) (ArgH t')  = case term `withArgType` t of
-  IsVar -> do
-    use subst
+match l@(ArgH t) r@(ArgH t')  = case term `withArgType` t of
+  IsVar -> use subst >>= \u -> case u^.mgu.at (Var t) of
+    Just t'' -> match (ArgH t'') r
+    Nothing  -> do
+      subst .= apply (t ~> t') u
 
-    subst %= apply (t ~> t')
-    
-    u <- use subst
-    apply (t ~> t') u
--}
-
-{-
 withArgType :: t a -> a -> t a
 withArgType = const
-
-match :: Heart a -> Heart b -> Unified (Heart a)
-match l@(ArgH t) (ArgH t')  = case term `withArgType` t of
-  IsVariable -> case term `withArgType` t' of
-    IsVariable -> Just l
-
-  term `withArgType t'
-match _ _ = Nothing
 -}
