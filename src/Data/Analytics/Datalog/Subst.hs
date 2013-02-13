@@ -3,6 +3,8 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 --------------------------------------------------------------------
 -- |
 -- Module    :  Data.Analytics.Datalog.Subst
@@ -20,6 +22,7 @@ module Data.Analytics.Datalog.Subst
   , Subst(..)
   , HasSubst(..)
   , apply
+  , (~>)
   ) where
 
 import Control.Applicative
@@ -29,7 +32,7 @@ import Control.Monad.Writer hiding ((<>))
 import Data.Analytics.Datalog.Term
 import Data.HashMap.Lazy
 import Data.IntMap
-import Data.Map
+import Data.Map as Map
 import Data.Maybe
 import Data.Semigroup
 import Data.Traversable as Traversable
@@ -55,7 +58,13 @@ data ATerm where
   AVar     :: Term t => t -> ATerm
   AnEntity :: (Term t, t ~ Entity t) => t -> ATerm
 
+-- TODO: instance At, Contains, Ix
 newtype Subst = Subst { _mgu :: Map Var ATerm }
+
+(~>) :: forall a b. (Term a, Term b, Entity a ~ Entity b) => a -> b -> Subst
+a ~> b = Subst $ Map.singleton (Var a) $ case term :: Handler b of
+  IsVar    -> AVar b
+  IsEntity -> AnEntity b
 
 makeClassy ''Subst
 
