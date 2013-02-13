@@ -48,7 +48,7 @@ instance (Contravariant f, Functor f) => Ixed f Hash where
   ix i f (Hash a b) = coerce $ indexed f i (a + i * (b + i))
   {-# INLINE ix #-}
 
-instance (Applicative f, Contravariant f, Functor f) => Each f Hash Hash Int Int where
+instance (Contravariant f, Applicative f) => Each f Hash Hash Int Int where
   each f (Hash a b) = go 0 where
     go !i = indexed f i (a + i*(b+i)) *> go (i + 1)
   {-# INLINE each #-}
