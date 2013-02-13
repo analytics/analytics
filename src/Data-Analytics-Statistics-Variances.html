@@ -131,13 +131,11 @@
 <a name="line-122"></a><span class='hs-comment'>{-# INLINE varianceY #-}</span>
 <a name="line-123"></a>
 <a name="line-124"></a><a name="stddevX"></a><span class='hs-definition'>stddevX</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>HasVariances</span> <span class='hs-varid'>t</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-conid'>Traversal'</span> <span class='hs-varid'>t</span> <span class='hs-conid'>Double</span>
-<a name="line-125"></a><span class='hs-definition'>stddevX</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>varianceX</span><span class='hs-varop'>.</span><span class='hs-varid'>iso</span> <span class='hs-varid'>square</span> <span class='hs-varid'>sqrt</span> <span class='hs-keyword'>where</span>
-<a name="line-126"></a>  <span class='hs-varid'>square</span> <span class='hs-varid'>x</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>x</span> <span class='hs-varop'>*</span> <span class='hs-varid'>x</span>
-<a name="line-127"></a><span class='hs-comment'>{-# INLINE stddevX #-}</span>
-<a name="line-128"></a>
-<a name="line-129"></a><a name="stddevY"></a><span class='hs-definition'>stddevY</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>HasVariances</span> <span class='hs-varid'>t</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-conid'>Traversal'</span> <span class='hs-varid'>t</span> <span class='hs-conid'>Double</span>
-<a name="line-130"></a><span class='hs-definition'>stddevY</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>varianceY</span><span class='hs-varop'>.</span><span class='hs-varid'>iso</span> <span class='hs-varid'>square</span> <span class='hs-varid'>sqrt</span> <span class='hs-keyword'>where</span>
-<a name="line-131"></a>  <span class='hs-varid'>square</span> <span class='hs-varid'>x</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>x</span> <span class='hs-varop'>*</span> <span class='hs-varid'>x</span>
-<a name="line-132"></a><span class='hs-comment'>{-# INLINE stddevY #-}</span>
+<a name="line-125"></a><span class='hs-definition'>stddevX</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>varianceX</span><span class='hs-varop'>.</span><span class='hs-varid'>iso</span> <span class='hs-varid'>sqrt</span> <span class='hs-layout'>(</span><span class='hs-keyglyph'>\</span> <span class='hs-varid'>x</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>x</span> <span class='hs-varop'>*</span> <span class='hs-varid'>x</span><span class='hs-layout'>)</span>
+<a name="line-126"></a><span class='hs-comment'>{-# INLINE stddevX #-}</span>
+<a name="line-127"></a>
+<a name="line-128"></a><a name="stddevY"></a><span class='hs-definition'>stddevY</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>HasVariances</span> <span class='hs-varid'>t</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-conid'>Traversal'</span> <span class='hs-varid'>t</span> <span class='hs-conid'>Double</span>
+<a name="line-129"></a><span class='hs-definition'>stddevY</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>varianceY</span><span class='hs-varop'>.</span><span class='hs-varid'>iso</span> <span class='hs-varid'>sqrt</span> <span class='hs-layout'>(</span><span class='hs-keyglyph'>\</span> <span class='hs-varid'>x</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>x</span> <span class='hs-varop'>*</span> <span class='hs-varid'>x</span><span class='hs-layout'>)</span>
+<a name="line-130"></a><span class='hs-comment'>{-# INLINE stddevY #-}</span>
 </pre></body>
 </html>
