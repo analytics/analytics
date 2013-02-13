@@ -44,6 +44,7 @@ library
     Data.Analytics.Approximate
     Data.Analytics.Approximate.Log
     Data.Analytics.Approximate.Mass
+    Data.Analytics.Approximate.Tropical
     Data.Analytics.Approximate.Type
     Data.Analytics.Datalog
     Data.Analytics.Datalog.Atom
