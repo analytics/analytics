@@ -2,7 +2,7 @@
 module Examples.Closure where
 
 import Control.Applicative
-import Data.Analytics
+import Data.Analytics.Datalog
 import Data.Typeable
 
 data Node = A | B | C deriving (Eq,Ord,Show,Typeable)
