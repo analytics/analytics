@@ -122,11 +122,9 @@ varianceY f = variances go where
 {-# INLINE varianceY #-}
 
 stddevX :: HasVariances t => Traversal' t Double
-stddevX = varianceX.iso square sqrt where
-  square x = x * x
+stddevX = varianceX.iso sqrt (\ x -> x * x)
 {-# INLINE stddevX #-}
 
 stddevY :: HasVariances t => Traversal' t Double
-stddevY = varianceY.iso square sqrt where
-  square x = x * x
+stddevY = varianceY.iso sqrt (\ x -> x * x)
 {-# INLINE stddevY #-}
