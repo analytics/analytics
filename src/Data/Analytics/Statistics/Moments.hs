@@ -43,7 +43,7 @@ instance Monoid Moments where
   Moments i a b c d `mappend` Moments j e f g h
     | k == 0    = mempty
     | otherwise = Moments k (combinedMean i a j e) (b + f + z2*ij/dk)
-      (c + g + z3*ij*imj/k2 + 3*z*(di*b - dj*f)/dk)
+      (c + g + z3*ij*imj/k2 + 3*z*(di*f - dj*b)/dk)
       (d + h + z4*ij*(i2 - ij + j2)/k3 + 6*z2*(i2*f + j2*c)/k2 + 4*z*(di*h - dj*d)/dk)
     where !k   = i + j
           !k2  = dk*dk
@@ -108,7 +108,7 @@ variance f = moments go where
 
 -- | /NB:/ setting this will render the higher 'Moments' inconsistent.
 stddev :: HasMoments t => Traversal' t Double
-stddev = variance.iso square sqrt where
+stddev = variance.iso sqrt square where
   square x = x * x
 {-# INLINE stddev #-}
 
