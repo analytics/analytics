@@ -6,7 +6,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 module Data.Analytics.Hash.Double
   ( Hash(..)
-  , hashed
+  , sip
   ) where
 
 import Control.Applicative
@@ -24,31 +24,31 @@ import Generics.Deriving
 --
 -- This stores a pair of hashes.
 --
--- >>> hashed (42 :: Int)^..taking 4 each
+-- >>> sip (42 :: Int)^..taking 4 each
 -- [-2574874314062730062,-9186383815474761572,2648850756822758536,-3962658744589272970]
 --
--- >>> hashed (42 :: Int)^.ix 3
+-- >>> sip (42 :: Int)^.ix 3
 -- -3962658744589272970
 data Hash = Hash {-# UNPACK #-} !Int {-# UNPACK #-} !Int
   deriving (Eq,Ord,Show,Read,Data,Typeable,Generic)
 
-hashed :: Hashable a => a -> Hash
-hashed a = Hash (hashWithSalt 0xdc36d1615b7400a4 a) -- taken from Data.Hash
-                (hashWithSalt 0x53dffa872f4d7341 a) -- chosen by fair die roll
-{-# INLINE hashed #-}
+sip :: Hashable a => a -> Hash
+sip a = Hash (hashWithSalt 0xdc36d1615b7400a4 a) -- taken from Data.Hash
+             (hashWithSalt 0x53dffa872f4d7341 a) -- chosen by fair die roll
+{-# INLINE sip #-}
 
 type instance Index Hash   = Int
 type instance IxValue Hash = Int
 
-instance (Contravariant f, Functor f) => Contains f Hash where
+instance Gettable f => Contains f Hash where
   contains i f _ = coerce $ indexed f (i :: Int) True
   {-# INLINE contains #-}
 
-instance (Contravariant f, Functor f) => Ixed f Hash where
+instance Gettable f => Ixed f Hash where
   ix i f (Hash a b) = coerce $ indexed f i (a + i * (b + i))
   {-# INLINE ix #-}
 
-instance (Contravariant f, Applicative f) => Each f Hash Hash Int Int where
+instance (Gettable f, Applicative f) => Each f Hash Hash Int Int where
   each f (Hash a b) = go 0 where
     go !i = indexed f i (a + i*(b+i)) *> go (i + 1)
   {-# INLINE each #-}
