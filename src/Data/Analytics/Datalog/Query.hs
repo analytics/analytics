@@ -47,6 +47,28 @@ data Query :: * -> * -> * where
   No     :: Atom t a -> Query t ()
   deriving Typeable
 
+instance Num a => Num (Query t a) where
+  (+) = liftA2 (+)
+  {-# INLINE (+) #-}
+  (-) = liftA2 (-)
+  {-# INLINE (-) #-}
+  (*) = liftA2 (*)
+  {-# INLINE (*) #-}
+  abs = fmap abs
+  {-# INLINE abs #-}
+  signum = fmap signum
+  {-# INLINE signum #-}
+  fromInteger = Pure . fromInteger
+  {-# INLINE fromInteger #-}
+
+instance Fractional a => Fractional (Query t a) where
+  (/) = liftA2 (/)
+  {-# INLINE (/) #-}
+  recip = fmap recip
+  {-# INLINE recip #-}
+  fromRational = Pure . fromRational
+  {-# INLINE fromRational #-}
+
 instance Functor (Query t) where
   fmap = Map
   {-# INLINE fmap #-}
