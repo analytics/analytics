@@ -4,61 +4,76 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE UndecidableInstances #-}
 module Data.Analytics.Statistics.Moments
   ( Moments(..)
   , HasMoments(..)
-  , variance
-  , stddev
-  , skewness
-  , kurtosis
+  , dim
+  , variances, variance
+  , stddevs, stddev
+  -- , skewness
+  -- , kurtosis
   , singleton
   , momentsOf
   ) where
 
 import Control.Applicative
-import Control.Lens
+import Control.Lens as L
+import Control.Seq
 import Data.Int
+import Data.Foldable as F
 import Data.Semigroup
 import Data.Data
 import Generics.Deriving
 import GHC.Exts
+import Data.Vector.Unboxed as U
+import qualified Data.Vector as V
 
--- | The first few central moments.
-data Moments = Moments
-  { _count   :: {-# UNPACK #-} !Int64
-  , _mean    :: {-# UNPACK #-} !Double
-  , _moment2 :: {-# UNPACK #-} !Double
-  , _moment3 :: {-# UNPACK #-} !Double
-  , _moment4 :: {-# UNPACK #-} !Double
-  } deriving (Eq,Ord,Show,Read,Data,Typeable,Generic)
+-- | The first few central moments and covariances
+data Moments
+  = NoMoments -- this has no shape information
+  | Moments
+  { _rawCount       :: {-# UNPACK #-} !Int64 -- when 0, this may still carry shape information from 'dim' or from trimming the vector to remove skewness and kurtoses we don't want
+  , _rawMeans       :: !(U.Vector Double) -- means
+  , _rawVariances   :: !(U.Vector Double) -- variances
+  , _rawCovariances :: {-# UNPACK #-} !(V.Vector (U.Vector Double)) -- covariances
+  , _rawSkewnesses  :: !(U.Vector Double) -- skews
+  , _rawKurtoses    :: !(U.Vector Double) -- kurtoses
+  }
+  deriving (Show,Read,Data,Typeable,Generic)
 
+makePrisms ''Moments
 makeClassy ''Moments
 
 instance Monoid Moments where
-  mempty = Moments 0 0 0 0 0
+  mempty = NoMoments
   {-# INLINE mempty #-}
-  Moments i a b c d `mappend` Moments j e f g h
-    | k == 0    = mempty
-    | otherwise = Moments k (combinedMean i a j e) (b + f + z2*ij/dk)
-      (c + g + z3*ij*imj/k2 + 3*z*(di*f - dj*b)/dk)
-      (d + h + z4*ij*(i2 - ij + j2)/k3 + 6*z2*(i2*f + j2*c)/k2 + 4*z*(di*h - dj*d)/dk)
-    where !k   = i + j
-          !k2  = dk*dk
-          !k3  = k2*dk
-          !i2  = di*di
-          !j2  = dj*dj
-          !z   = e - a
-          !z2  = z*z
-          !z3  = z2*z
-          !z4  = z2*z2
-          !ij  = di*dj
-          !imj = di-dj
-          !dk  = fromIntegral k
-          !di  = fromIntegral i
-          !dj  = fromIntegral j
+  NoMoments `mappend` x = x
+  x `mappend` NoMoments = x
+  Moments i mas vas cas sas kas `mappend` Moments j mbs vbs cbs sbs kbs = Moments
+    (i+j)                                                                            -- count
+    (U.zipWith (combinedMean i j) mas mbs)                                           -- means
+    (U.zipWith3 calcVariance ds vas vbs)                                             -- variances
+    (V.izipWith calcCovariance cas cbs `using` seqFoldable rseq)                     -- covariances
+    (U.zipWith5 calcSkewness ds vas sas vbs sbs)                                     -- skewness
+    (U.zipWith3 calcKurtosis2 kas kbs (U.zipWith5 calcKurtosis1 ds vas sas vbs sbs)) -- kurtoses
+    where !ds = U.zipWith (-) mbs mas                                                -- delta means
+          !i' = fromIntegral i
+          !ii = i'*i'
+          !j' = fromIntegral j
+          !jj = j'*j'
+          !k' = i'+j'
+          !kk = k'*k'
+          !ijk = i'*j'/k'
+          !imj = i'-j'
+          calcVariance !d !va !vb = va + vb + d*d*ijk
+          calcCovariance !r | dy <- ds U.! r = U.zipWith3 (\dx ca cb -> ca + cb + dx*dy*ijk) ds
+          calcSkewness !d !va !sa !vb !sb = sa + sb + d*d*d*ijk*imj/k' + 3*d*(i'*vb + j'*va)/k'
+          calcKurtosis1 !d !va !sa !vb !sb = d*d*d*d*(ii-i'*j'+jj)*ijk/kk + 6*d*d*(ii*vb+jj*va)/kk + 4*d*(i'*sb-j'*sa)/k'
+          calcKurtosis2 !ka !kb !dk = ka + kb + dk
   {-# INLINE mappend #-}
 
 instance Semigroup Moments where
@@ -66,13 +81,13 @@ instance Semigroup Moments where
   {-# INLINE (<>) #-}
 
 -- | Aggregate weighted mean.
-combinedMean :: Int64 -> Double -> Int64 -> Double -> Double
-combinedMean !m !x !n !y
-  | m <= n    = inline go m x n y
-  | otherwise = inline go n y m x
+combinedMean :: Int64 -> Int64 -> Double -> Double -> Double
+combinedMean !m !n
+  | m <= n    = inline go m n
+  | otherwise = flip (inline go n m)
   where
     go 0 _ _ b = b
-    go i a j b
+    go i j a b
       | abs scale < threshold = b + (a - b) * scale
       | otherwise = (fromIntegral i * a + fromIntegral j * b) / fromIntegral k
       where k = i + j
@@ -80,43 +95,97 @@ combinedMean !m !x !n !y
             threshold = 0.1
 {-# INLINE combinedMean #-}
 
-singleton :: Real a => a -> Moments
-singleton a = Moments 1 (realToFrac a) 0 0 0
-{-# INLINE singleton #-}
+row :: U.Vector Double -> Moments
+row as = Moments 1 as zs cvs zs zs where
+  !n = U.length as
+  !cvs = V.generate n (\i -> U.take i zs) -- upper triangular
+  !zs = U.replicate n 0
+{-# INLINE row #-}
 
-momentsOf :: Real a => Getting Moments s t a b -> s -> Moments
-momentsOf l = foldMapOf l singleton
+-- | Generate an empty set of moments for a restricted number of dimensions
+dim :: Int -> Moments
+dim n = Moments 0 zs zs cvs zs zs where
+  !cvs = V.generate n (\i -> U.take i zs) -- upper triangular
+  !zs = U.replicate n 0
+
+momentsOf :: Foldable f => Getting Moments s (f Double) -> s -> Moments
+momentsOf l = foldMapOf l (row . U.fromList . F.toList)
 {-# INLINE momentsOf #-}
 
 -- this lets us use 'cons' to add a moment to the mix.
-instance (Bifunctor p, Profunctor p, Functor f, Real a, a ~ b) => Cons p f Moments Moments a b where
-  _Cons = unto $ \(d,m) -> singleton d <> m
+instance (Bifunctor p, Profunctor p, Functor f) => Cons p f Moments Moments (U.Vector Double) (U.Vector Double) where
+  _Cons = unto $ \(d,m) -> row d <> m
   {-# INLINE _Cons #-}
 
-instance (Bifunctor p, Profunctor p, Functor f, Real a, a ~ b) => Snoc p f Moments Moments a b where
-  _Snoc = unto $ \(m,d) -> m <> singleton d
+instance (Bifunctor p, Profunctor p, Functor f) => Snoc p f Moments Moments (U.Vector Double) (U.Vector Double) where
+  _Snoc = unto $ \(m,d) -> m <> row d
   {-# INLINE _Snoc #-}
+
+dividedBy :: Fractional a => a -> Iso' a a
+dividedBy s = iso (/s) (*s)
+
+root :: Floating a => Iso' a a
+root = iso sqrt (\x -> x * x)
 
 -- | Extract the 'variance' as a moment around the 'mean'.
 --
 -- /NB:/ setting this will render the higher 'Moments' inconsistent.
-variance :: HasMoments t => Traversal' t Double
-variance f = moments go where
-  go m@(Moments 0 _ _ _ _) = pure m
-  go (Moments i a b c d)   = f (b / fromIntegral i) <&> \v -> Moments i a (v * fromIntegral i) c d
+--
+variances :: HasMoments t => IndexedTraversal' Int t Double
+variances f = moments ago where
+  ago NoMoments                   = pure NoMoments
+  ago m@(Moments 0 _ _ _ _ _)     = pure m
+  ago (Moments i ms vs cvs ss ks) = each (dividedBy (fromIntegral i) f) vs <&> \us -> Moments i ms us cvs ss ks
+{-# INLINE variances #-}
+
+variance :: HasMoments t => Int -> IndexedTraversal' Int t Double
+variance k f = moments ago where
+  ago NoMoments               = pure NoMoments
+  ago m@(Moments 0 _ _ _ _ _) = pure m
+  ago (Moments i ms vs cvs ss ks) = L.indexed f k ((vs U.! k) / fromIntegral i) <&> \v -> Moments i ms (vs U.// [(k,v*fromIntegral i)]) cvs ss ks
 {-# INLINE variance #-}
 
 -- | /NB:/ setting this will render the higher 'Moments' inconsistent.
-stddev :: HasMoments t => Traversal' t Double
-stddev = variance.iso sqrt square where
-  square x = x * x
+stddevs :: HasMoments t => IndexedTraversal' Int t Double
+stddevs = variances.root
+{-# INLINE stddevs #-}
+
+-- | Retrieve the nth std deviation from our set.
+stddev :: HasMoments t => Int -> IndexedTraversal' Int t Double
+stddev k = variance k . root
 {-# INLINE stddev #-}
 
+{-
+covariances :: HasMoments t => Traversal' t (U.Array (Int,Int) Double)
+covariances f = moments ago where
+  ago NoMoments               = pure NoMoments
+  ago m@(Moments 0 _ _ _ _ _) = pure m
+  ago (Moments i ms vs cvs ss ks) = listArray bds [ getCV i j | i <- [0..nvs-1], j <- [0..nvs]] where
+    !bds = (0,0),(nvs-1,nvs-1)
+    zipWith (range bds) 
+    !nvs = length vs
+    getCV i j = case compare i j of
+      LT -> inline go i j
+      EQ -> vs
+
+
+covariance :: HasMoments t => Int -> Int -> Traversal' t Double
+covariance i j = case compare i j of
+  LT -> inline go i j
+  EQ -> \f -> variances $ ix i . L.indexed f (i,j)
+  GT -> inline go j i
+  where
+    go _  _  _ NoMoments = pure NoMoments
+    go lo hi f (Moments i ms vs cvs ss ks) = (ix hi<.>ix lo.oi) cvs <&> \cvs' -> Moments i ms vs cvs' ss ks
+      where oi = iso (/fromIntegral i) (*fromIntegral i)
+-}
+
+{-
 -- | Calculate 'skewness'.
 --  This is a 'Fold' because 'skewness' may not be defined for some combinations of 'Moments'.
-skewness :: HasMoments t => Fold t Double
+skewness :: HasMoments t => Int -> Fold t Double
 skewness f = moments go where
-  go (Moments i _ b c _)
+  go (Moments i _ bs cs _)
     | abs denom <= 1e-12 = coerce $ pure ()
     | otherwise = coerce $ f (sqrt (fromIntegral i) * c / denom)
     where denom = b**1.5
@@ -169,3 +238,4 @@ instance (Contravariant f, Applicative f) => Contains f Moments where
   contains = containsN 5
   {-# INLINE contains #-}
 
+-}

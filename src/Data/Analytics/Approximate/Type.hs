@@ -95,6 +95,6 @@ one :: (Num a, Eq a) => Prism' (Approximate a) ()
 one = exact.only 1
 {-# INLINE one #-}
 
-is :: Getting Any s t a b -> s -> Bool
+is :: Getting Any s a -> s -> Bool
 is = has
 {-# INLINE is #-}
