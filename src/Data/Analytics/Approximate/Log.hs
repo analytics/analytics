@@ -58,7 +58,7 @@ instance Monad Log where
   {-# INLINE (>>=) #-}
 
 negInf :: Fractional a => a
-negInf = -(0/1)
+negInf = -(1/0)
 {-# INLINE negInf #-}
 
 instance (Precise a, RealFloat a) => Num (Log a) where
