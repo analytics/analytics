@@ -11,15 +11,15 @@ instance Term Node
 data NV = X | Y | Z deriving (Eq,Ord,Show,Typeable)
 instance Term NV where type Entity NV = Node; term = var
 
-data Edge = Edge Node Node deriving (Eq,Ord)
+data Edge = Edge Node Node {-# UNPACK #-} !Int deriving (Eq,Ord)
 
 test :: MonadTable t m => DatalogT t m [Edge]
 test = do
   T2 edge <- table Edge
   T2 tc   <- table Edge
-  edge A B
-  edge B C
-  edge B A
+  edge A B 2
+  edge B C 4
+  edge B A 6
   tc X Y :- edge X Y
-  tc X Z :- tc X Y <* edge Y Z
-  query $ tc A X <* no (edge X C)
+  tc X Z :- tc X Y + edge Y Z
+  query $ row (tc A X) <* no (edge X C)
