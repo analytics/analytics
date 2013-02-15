@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE MagicHash #-}
 {-# LANGUAGE UnboxedTuples #-}
@@ -19,10 +20,12 @@ import GHC.Base
 
 foreign import ccall "static &rolling_lut" rolling_lut :: Ptr Int32
 
+#ifndef HLINT
 inlinePerformIO :: IO a -> a
 inlinePerformIO (IO m) = case m realWorld# of
   (# _, r #) -> r
 {-# INLINE inlinePerformIO #-}
+#endif HLINT
 
 lut :: Word8 -> Int32
 lut i = inlinePerformIO (peekElemOff rolling_lut (fromIntegral i))
