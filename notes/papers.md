@@ -8,3 +8,11 @@
 
 # Morton Ordering
 * [Skjellum provides a nice way to make a Morton order that works even for non-integral numbers of bits](http://people.cs.vt.edu/~asandu/Public/Qual2005/Q2005_skjellum.pdf)
+
+# Incremental Computation
+* [Differential Dataflow](http://www.cidrdb.org/cidr2013/Papers/CIDR13_Paper111.pdf)
+* [Project Naiad](http://research.microsoft.com/en-us/projects/naiad/)
+
+# Weighted Datalog and Generalized Annotated Programs
+* [Dyna: Extending Datalog for Modern AI](http://www.cs.jhu.edu/~nwf/datalog20-paper.pdf)
+* [A Flexible Solver for Finite Arithmetic Circuits](http://cs.jhu.edu/~jason/papers/filardo+eisner.iclp12.pdf)
