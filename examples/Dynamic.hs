@@ -15,8 +15,8 @@ data Edge = Edge Node Node {-# UNPACK #-} !Int deriving (Eq,Ord)
 
 test :: MonadTable t m => DatalogT t m [Edge]
 test = do
-  T2 edge <- table Edge (+)
-  T2 tc   <- table Edge (+)
+  T2 edge <- table Edge min
+  T2 tc   <- table Edge min
   edge A B := 2
   edge B C := 4
   edge B A := 6
