@@ -15,11 +15,11 @@ data Edge = Edge Node Node {-# UNPACK #-} !Int deriving (Eq,Ord)
 
 test :: MonadTable t m => DatalogT t m [Edge]
 test = do
-  T2 edge <- table Edge
-  T2 tc   <- table Edge
-  edge A B 2
-  edge B C 4
-  edge B A 6
+  T2 edge <- table Edge (+)
+  T2 tc   <- table Edge (+)
+  edge A B := 2
+  edge B C := 4
+  edge B A := 6
   tc X Y :- edge X Y
   tc X Z :- tc X Y + edge Y Z
   query $ row (tc A X) <* no (edge X C)
