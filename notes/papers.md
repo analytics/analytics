@@ -16,3 +16,6 @@
 # Weighted Datalog and Generalized Annotated Programs
 * [Dyna: Extending Datalog for Modern AI](http://www.cs.jhu.edu/~nwf/datalog20-paper.pdf)
 * [A Flexible Solver for Finite Arithmetic Circuits](http://cs.jhu.edu/~jason/papers/filardo+eisner.iclp12.pdf)
+
+# Stable Models
+* [Extending and Implementing the Stable Model Semantics](http://arxiv.org/pdf/cs/0005010.pdf)
