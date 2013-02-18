@@ -1,6 +1,6 @@
 # analytics
 
-[![Build Status](https://secure.travis-ci.org/ekmett/analytics.png?branch=master)](http://travis-ci.org/ekmett/analytics)
+[![Build Status](https://secure.travis-ci.org/analytics/analytics.png?branch=master)](http://travis-ci.org/analytics/analytics)
 
 This is a work-in progress project for working with declarative Datalog style programs as an embedded domain-specific language in Haskell.
 
