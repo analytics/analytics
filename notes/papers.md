@@ -20,7 +20,7 @@
 # Stable Models
 * [Extending and Implementing the Stable Model Semantics](http://arxiv.org/pdf/cs/0005010.pdf)
 
-# *-Semirings
+# *-Semirings and C-Semirings/ω-continuous semirings
 ```
 [21:27] nwf:	 Paper dump:
 [21:27] nwf:	 http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.71.7650 is a decent overview, though a little dated
@@ -29,3 +29,4 @@
 [21:30] nwf:	 http://dl.acm.org/citation.cfm?doid=322261.322272 has some more graph-based examples
 ```
 * [Provenance Semirings](http://db.cis.upenn.edu/DL/07/pods07.pdf)
+* [Weighted Datalog and Levels of Trust](http://dl.acm.org/citation.cfm?id=1371966)
