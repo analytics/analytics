@@ -54,37 +54,37 @@ instance Ranked Word32 where
 instance Ranked Word16 where
   lsb = lsb . w32
   {-# INLINE lsb #-}
-  rank = lsb . w32
+  rank = rank . w32
   {-# INLINE rank #-}
 
 instance Ranked Word8 where
   lsb = lsb . w32
   {-# INLINE lsb #-}
-  rank = lsb . w32
+  rank = rank . w32
   {-# INLINE rank #-}
 
 instance Ranked Int64 where
   lsb = lsb . w64
   {-# INLINE lsb #-}
-  rank = lsb . w64
+  rank = rank . w64
   {-# INLINE rank #-}
 
 instance Ranked Int32 where
   lsb = lsb . w32
   {-# INLINE lsb #-}
-  rank = lsb . w32
+  rank = rank . w32
   {-# INLINE rank #-}
 
 instance Ranked Int16 where
   lsb = lsb . w32
   {-# INLINE lsb #-}
-  rank = lsb . w32
+  rank = rank . w32
   {-# INLINE rank #-}
 
 instance Ranked Int8 where
   lsb = lsb . w32
   {-# INLINE lsb #-}
-  rank = lsb . w32
+  rank = rank . w32
   {-# INLINE rank #-}
 
 ------------------------------------------------------------------------------
