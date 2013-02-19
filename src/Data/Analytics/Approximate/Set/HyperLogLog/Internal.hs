@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -11,22 +12,34 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies #-}
+
+#if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 706
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE PolyKinds #-}
+#define USE_TYPE_LITS 1
+#endif
+
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
 module Data.Analytics.Approximate.Set.HyperLogLog.Internal
-  ( HyperLogLog(..)
+  (
+  -- * HyperLogLog
+    HyperLogLog(..)
   , HasHyperLogLog(..)
   , numBits, numBuckets, smallRange, interRange, rawFact, alpha, bucketMask
   , size
   , intersectionSize
-  -- * Config
+  -- * HyperLogLogConfig
   , HyperLogLogConfig(..)
   , HasHyperLogLogConfig(..)
-  , reifyHyperLogLogConfig
   , config
+  -- * ReifiesHyperLogLogConfig
+  , ReifiesHyperLogLogConfig(..)
+  , reifyHyperLogLogConfig
   -- * Testing
   , HLL10
   ) where
+
 
 import Control.Applicative
 import Control.Lens
@@ -42,9 +55,12 @@ import Data.Serialize
 import Data.Vector.Serialize ()
 import Data.Vector.Unboxed as V
 import Data.Vector.Unboxed.Mutable as MV
-import Generics.Deriving hiding (to)
 import GHC.Int
 import GHC.Word
+import Generics.Deriving hiding (to)
+#ifdef USE_TYPELITS
+import GHC.TypeLits
+#endif
 
 type Rank = Int8
 
@@ -93,8 +109,33 @@ config b = HyperLogLogConfig
   a = 0.7213 / (1 + 1.079 / m')
 {-# INLINE config #-}
 
-reifyHyperLogLogConfig :: Int -> (forall s. Reifies s HyperLogLogConfig => Proxy s -> r) -> r
-reifyHyperLogLogConfig i f = reify (config i) f
+------------------------------------------------------------------------------
+-- ReifiesHyperLogLogConfig
+------------------------------------------------------------------------------
+
+class ReifiesHyperLogLogConfig o where
+  reflectHyperLogLogConfig :: p o -> HyperLogLogConfig
+
+#ifdef USE_TYPE_LITS
+instance SingRep n Integer => ReifiesHyperLogLogConfig (n :: Nat) where
+  reflectHyperLogLogConfig = config $ fromInteger $ withSing $ \(x :: Sing n) -> fromSing x
+  {-# INLINE reflectHyperLogLogConfig #-}
+#endif
+
+data ReifiedHyperLogLogConfig (s :: *)
+
+retagReifiedHyperLogLogConfig :: (Proxy s -> a) -> proxy (ReifiedHyperLogLogConfig s) -> a
+retagReifiedHyperLogLogConfig f _ = f Proxy
+{-# INLINE retagReifiedHyperLogLogConfig #-}
+
+instance Reifies s HyperLogLogConfig => ReifiesHyperLogLogConfig (ReifiedHyperLogLogConfig s) where
+  reflectHyperLogLogConfig = retagReifiedHyperLogLogConfig reflect
+  {-# INLINE reflectHyperLogLogConfig #-}
+
+reifyHyperLogLogConfig :: Int -> (forall o. ReifiesHyperLogLogConfig o => Proxy o -> r) -> r
+reifyHyperLogLogConfig i f = reify (config i) (go f) where
+  go :: Reifies o HyperLogLogConfig => (Proxy (ReifiedHyperLogLogConfig o) -> a) -> proxy o -> a
+  go g _ = g Proxy
 {-# INLINE reifyHyperLogLogConfig #-}
 
 ------------------------------------------------------------------------------
@@ -123,8 +164,8 @@ instance Serialize (HyperLogLog p)
 
 makeClassy ''HyperLogLog
 
-instance Reifies p HyperLogLogConfig => HasHyperLogLogConfig (HyperLogLog p) where
-  hyperLogLogConfig = to reflect
+instance ReifiesHyperLogLogConfig p => HasHyperLogLogConfig (HyperLogLog p) where
+  hyperLogLogConfig = to reflectHyperLogLogConfig
   {-# INLINE hyperLogLogConfig #-}
 
 instance Semigroup (HyperLogLog p) where
@@ -133,13 +174,13 @@ instance Semigroup (HyperLogLog p) where
 
 -- | Monoid instance 'should' just work. Give me two estimators and I
 -- can give you an estimator for the union set of the two.
-instance Reifies p HyperLogLogConfig => Monoid (HyperLogLog p) where
-  mempty = HyperLogLog $ V.replicate (reflect (undefined :: [p]) ^. numBuckets) 0
+instance ReifiesHyperLogLogConfig p => Monoid (HyperLogLog p) where
+  mempty = HyperLogLog $ V.replicate (reflectHyperLogLogConfig (undefined :: [p]) ^. numBuckets) 0
   {-# INLINE mempty #-}
   mappend = (<>)
   {-# INLINE mappend #-}
 
-instance (Profunctor p, Bifunctor p, Functor f, Reifies s HyperLogLogConfig, Hashable a, s ~ t, a ~ b) => Cons p f (HyperLogLog s) (HyperLogLog t) a b where
+instance (Profunctor p, Bifunctor p, Functor f, ReifiesHyperLogLogConfig s, Hashable a, s ~ t, a ~ b) => Cons p f (HyperLogLog s) (HyperLogLog t) a b where
   _Cons = unto go where
     go (a,m@(HyperLogLog v)) = HyperLogLog $ V.modify (\x -> do old <- MV.read x bk; when (rnk > old) $ MV.write x bk rnk) v where
       !h = w32 (hash a)
@@ -147,7 +188,7 @@ instance (Profunctor p, Bifunctor p, Functor f, Reifies s HyperLogLogConfig, Has
       !rnk = calcRank m h
   {-# INLINE _Cons #-}
 
-instance (Profunctor p, Bifunctor p, Functor f, Reifies s HyperLogLogConfig, Hashable a, s ~ t, a ~ b) => Snoc p f (HyperLogLog s) (HyperLogLog t) a b where
+instance (Profunctor p, Bifunctor p, Functor f, ReifiesHyperLogLogConfig s, Hashable a, s ~ t, a ~ b) => Snoc p f (HyperLogLog s) (HyperLogLog t) a b where
   _Snoc = unto go where
     go (m@(HyperLogLog v), a) = HyperLogLog $ V.modify (\x -> do old <- MV.read x bk; when (rnk > old) $ MV.write x bk rnk) v where
       !h = w32 (hash a)
@@ -156,7 +197,7 @@ instance (Profunctor p, Bifunctor p, Functor f, Reifies s HyperLogLogConfig, Has
   {-# INLINE _Snoc #-}
 
 -- | Approximate size of our set
-size :: Reifies p HyperLogLogConfig => HyperLogLog p -> Approximate Int64
+size :: ReifiesHyperLogLogConfig p => HyperLogLog p -> Approximate Int64
 size m@(HyperLogLog bs) = Approximate 0.9972 l expected h where
   m' = fromIntegral (m^.numBuckets)
   numZeros = fromIntegral . V.length . V.filter (== 0) $ bs
@@ -174,15 +215,15 @@ size m@(HyperLogLog bs) = Approximate 0.9972 l expected h where
   h = ceiling $ res*(1+3*sd)
 {-# INLINE size #-}
 
-intersectionSize :: Reifies p HyperLogLogConfig => [HyperLogLog p] -> Approximate Int64
+intersectionSize :: ReifiesHyperLogLogConfig p => [HyperLogLog p] -> Approximate Int64
 intersectionSize [] = 0
 intersectionSize (x:xs) = withMin 0 $ size x + intersectionSize xs - intersectionSize (mappend x <$> xs)
 {-# INLINE intersectionSize #-}
 
 data HLL10
 
-instance Reifies HLL10 HyperLogLogConfig where
-  reflect _ = config 10
+instance ReifiesHyperLogLogConfig HLL10 where
+  reflectHyperLogLogConfig _ = config 10
 
 {-
 hllBits = bits . meta
