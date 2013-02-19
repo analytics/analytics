@@ -13,7 +13,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
-module Data.Analytics.Approximate.HyperLogLog
+module Data.Analytics.Approximate.Set.HyperLogLog.Internal
   ( HyperLogLog(..)
   , HasHyperLogLog(..)
   , numBits, numBuckets, smallRange, interRange, rawFact, alpha, bucketMask

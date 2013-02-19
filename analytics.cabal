@@ -42,9 +42,10 @@ library
 
   exposed-modules:
     Data.Analytics.Approximate
-    Data.Analytics.Approximate.HyperLogLog
     Data.Analytics.Approximate.Log
     Data.Analytics.Approximate.Mass
+    Data.Analytics.Approximate.Set.HyperLogLog
+    Data.Analytics.Approximate.Set.HyperLogLog.Internal
     Data.Analytics.Approximate.Tropical
     Data.Analytics.Approximate.Type
     Data.Analytics.Bits
