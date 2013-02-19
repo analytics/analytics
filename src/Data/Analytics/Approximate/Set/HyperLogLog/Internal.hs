@@ -139,30 +139,25 @@ reifyHyperLogLogConfig i f = reify (config i) (go f) where
   go g _ = g Proxy
 {-# INLINE reifyHyperLogLogConfig #-}
 
-instance ReifiesHyperLogLogConfig Z where
-  reflectHyperLogLogConfig _ = config 0
-  {-# INLINE reflectHyperLogLogConfig #-}
-
 instance Reifies n Int => ReifiesHyperLogLogConfig (D n) where
   reflectHyperLogLogConfig = reflect <&> \n -> config (n+n)
   {-# INLINE reflectHyperLogLogConfig #-}
 
+-- this way we only get instances for positive natural numbers
 instance Reifies n Int => ReifiesHyperLogLogConfig (SD n) where
   reflectHyperLogLogConfig = reflect <&> \n -> config (n+n+1)
+  {-# INLINE reflectHyperLogLogConfig #-}
+
+{-
+-- By disabling these it becomes a compile time error to try to generate a config for a non-positive number with $(int n)
+
+instance ReifiesHyperLogLogConfig Z where
+  reflectHyperLogLogConfig _ = config 0
   {-# INLINE reflectHyperLogLogConfig #-}
 
 instance Reifies n Int => ReifiesHyperLogLogConfig (PD n) where
   reflectHyperLogLogConfig = reflect <&> \n -> config (n+n-1)
   {-# INLINE reflectHyperLogLogConfig #-}
-
-{-
--- | Construct an explicit type for a given bucketing factor.
-hll :: Int -> Q Type
-#ifdef USE_TYPE_LITS
-hll = litT . numTyLit . toInteger
-#else
-hll n = nat n
-#endif
 -}
 
 ------------------------------------------------------------------------------
