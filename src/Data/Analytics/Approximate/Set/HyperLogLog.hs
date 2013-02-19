@@ -1,12 +1,13 @@
 module Data.Analytics.Approximate.Set.HyperLogLog
-  ( HyperLogLog
+  (
+  -- * HyperLogLog
+    HyperLogLog
   , HasHyperLogLog(..)
   , size, intersectionSize
-  , HyperLogLogConfig
-  , reifyHyperLogLogConfig
-  , config
-  -- * Testing
-  , HLL10
+  -- * Config
+  , Config
+  , reifyConfig
+  , hll
   ) where
 
 import Data.Analytics.Approximate.Set.HyperLogLog.Internal

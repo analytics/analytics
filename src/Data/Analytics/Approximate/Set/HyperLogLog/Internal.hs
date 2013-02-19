@@ -29,15 +29,13 @@ module Data.Analytics.Approximate.Set.HyperLogLog.Internal
   , numBits, numBuckets, smallRange, interRange, rawFact, alpha, bucketMask
   , size
   , intersectionSize
-  -- * HyperLogLogConfig
-  , HyperLogLogConfig(..)
-  , HasHyperLogLogConfig(..)
-  , config
-  -- * ReifiesHyperLogLogConfig
-  , ReifiesHyperLogLogConfig(..)
-  , reifyHyperLogLogConfig
-  -- * Testing
-  , HLL10
+  -- * Config
+  , Config(..)
+  , HasConfig(..)
+  , hll
+  -- * ReifiesConfig
+  , ReifiesConfig(..)
+  , reifyConfig
   ) where
 
 
@@ -66,11 +64,11 @@ import GHC.TypeLits
 type Rank = Int8
 
 ------------------------------------------------------------------------------
--- HyperLogLogConfig
+-- Config
 ------------------------------------------------------------------------------
 
 -- | Constants required for a bucketing factor b
-data HyperLogLogConfig = HyperLogLogConfig
+data Config = Config
   { _numBits    :: {-# UNPACK #-} !Int
   , _numBuckets :: {-# UNPACK #-} !Int
   , _smallRange :: {-# UNPACK #-} !Double
@@ -80,23 +78,23 @@ data HyperLogLogConfig = HyperLogLogConfig
   , _bucketMask :: {-# UNPACK #-} !Word32
   } deriving (Eq, Show, Generic)
 
-class HasHyperLogLogConfig t where
-  hyperLogLogConfig :: Getter t HyperLogLogConfig
+class HasConfig t where
+  config :: Getter t Config
 
-makeLensesWith ?? ''HyperLogLogConfig $ classyRules
+makeLensesWith ?? ''Config $ classyRules
   & generateSignatures .~ False
-  & createClass .~ False
-  & createInstance .~ False
+  & createClass        .~ False
+  & createInstance     .~ False
 
-instance HasHyperLogLogConfig HyperLogLogConfig where
-  hyperLogLogConfig = id
-  {-# INLINE hyperLogLogConfig #-}
+instance HasConfig Config where
+  config = id
+  {-# INLINE config #-}
 
-instance Serialize HyperLogLogConfig -- serialize as a number?
+instance Serialize Config -- serialize as a number?
 
 -- | Precalculate constants for a given bucketing factor b
-config :: Int -> HyperLogLogConfig
-config b = HyperLogLogConfig
+hll :: Int -> Config
+hll b = Config
   { _numBits = b
   , _numBuckets = m
   , _smallRange = 5/2 * m'
@@ -108,67 +106,67 @@ config b = HyperLogLogConfig
   m = bit b
   m' = fromIntegral m
   a = 0.7213 / (1 + 1.079 / m')
-{-# INLINE config #-}
+{-# INLINE hll #-}
 
 ------------------------------------------------------------------------------
--- ReifiesHyperLogLogConfig
+-- ReifiesConfig
 ------------------------------------------------------------------------------
 
-class ReifiesHyperLogLogConfig o where
-  reflectHyperLogLogConfig :: p o -> HyperLogLogConfig
+class ReifiesConfig o where
+  reflectConfig :: p o -> Config
 
 #ifdef USE_TYPE_LITS
-instance SingRep n Integer => ReifiesHyperLogLogConfig (n :: Nat) where
-  reflectHyperLogLogConfig = config $ fromInteger $ withSing $ \(x :: Sing n) -> fromSing x
-  {-# INLINE reflectHyperLogLogConfig #-}
+instance SingRep n Integer => ReifiesConfig (n :: Nat) where
+  reflectConfig = hll $ fromInteger $ withSing $ \(x :: Sing n) -> fromSing x
+  {-# INLINE reflectConfig #-}
 #endif
 
-data ReifiedHyperLogLogConfig (s :: *)
+data ReifiedConfig (s :: *)
 
-retagReifiedHyperLogLogConfig :: (Proxy s -> a) -> proxy (ReifiedHyperLogLogConfig s) -> a
-retagReifiedHyperLogLogConfig f _ = f Proxy
-{-# INLINE retagReifiedHyperLogLogConfig #-}
+retagReifiedConfig :: (Proxy s -> a) -> proxy (ReifiedConfig s) -> a
+retagReifiedConfig f _ = f Proxy
+{-# INLINE retagReifiedConfig #-}
 
-instance Reifies s HyperLogLogConfig => ReifiesHyperLogLogConfig (ReifiedHyperLogLogConfig s) where
-  reflectHyperLogLogConfig = retagReifiedHyperLogLogConfig reflect
-  {-# INLINE reflectHyperLogLogConfig #-}
+instance Reifies s Config => ReifiesConfig (ReifiedConfig s) where
+  reflectConfig = retagReifiedConfig reflect
+  {-# INLINE reflectConfig #-}
 
-reifyHyperLogLogConfig :: Int -> (forall o. ReifiesHyperLogLogConfig o => Proxy o -> r) -> r
-reifyHyperLogLogConfig i f = reify (config i) (go f) where
-  go :: Reifies o HyperLogLogConfig => (Proxy (ReifiedHyperLogLogConfig o) -> a) -> proxy o -> a
+reifyConfig :: Int -> (forall o. ReifiesConfig o => Proxy o -> r) -> r
+reifyConfig i f = reify (hll i) (go f) where
+  go :: Reifies o Config => (Proxy (ReifiedConfig o) -> a) -> proxy o -> a
   go g _ = g Proxy
-{-# INLINE reifyHyperLogLogConfig #-}
+{-# INLINE reifyConfig #-}
 
-instance Reifies n Int => ReifiesHyperLogLogConfig (D n) where
-  reflectHyperLogLogConfig = reflect <&> \n -> config (n+n)
-  {-# INLINE reflectHyperLogLogConfig #-}
+instance Reifies n Int => ReifiesConfig (D n) where
+  reflectConfig = reflect <&> \n -> hll (n+n)
+  {-# INLINE reflectConfig #-}
 
 -- this way we only get instances for positive natural numbers
-instance Reifies n Int => ReifiesHyperLogLogConfig (SD n) where
-  reflectHyperLogLogConfig = reflect <&> \n -> config (n+n+1)
-  {-# INLINE reflectHyperLogLogConfig #-}
+instance Reifies n Int => ReifiesConfig (SD n) where
+  reflectConfig = reflect <&> \n -> hll (n+n+1)
+  {-# INLINE reflectConfig #-}
 
 {-
 -- By disabling these it becomes a compile time error to try to generate a config for a non-positive number with $(int n)
 
-instance ReifiesHyperLogLogConfig Z where
-  reflectHyperLogLogConfig _ = config 0
-  {-# INLINE reflectHyperLogLogConfig #-}
+instance ReifiesConfig Z where
+  reflectConfig _ = hll 0
+  {-# INLINE reflectConfig #-}
 
-instance Reifies n Int => ReifiesHyperLogLogConfig (PD n) where
-  reflectHyperLogLogConfig = reflect <&> \n -> config (n+n-1)
-  {-# INLINE reflectHyperLogLogConfig #-}
+instance Reifies n Int => ReifiesConfig (PD n) where
+  reflectConfig = reflect <&> \n -> hll (n+n-1)
+  {-# INLINE reflectConfig #-}
 -}
 
 ------------------------------------------------------------------------------
 -- Util
 ------------------------------------------------------------------------------
 
-calcBucket :: HasHyperLogLogConfig t => t -> Word32 -> Int
+calcBucket :: HasConfig t => t -> Word32 -> Int
 calcBucket t w = fromIntegral (w .&. t^.bucketMask)
 {-# INLINE calcBucket #-}
 
-calcRank :: HasHyperLogLogConfig t => t -> Word32 -> Int8
+calcRank :: HasConfig t => t -> Word32 -> Int8
 calcRank t w = fromIntegral $ rank $ shiftR w $ t^.numBits
 {-# INLINE calcRank #-}
 
@@ -186,9 +184,9 @@ instance Serialize (HyperLogLog p)
 
 makeClassy ''HyperLogLog
 
-instance ReifiesHyperLogLogConfig p => HasHyperLogLogConfig (HyperLogLog p) where
-  hyperLogLogConfig = to reflectHyperLogLogConfig
-  {-# INLINE hyperLogLogConfig #-}
+instance ReifiesConfig p => HasConfig (HyperLogLog p) where
+  config = to reflectConfig
+  {-# INLINE config #-}
 
 instance Semigroup (HyperLogLog p) where
   HyperLogLog a <> HyperLogLog b = HyperLogLog (V.zipWith max a b)
@@ -196,13 +194,13 @@ instance Semigroup (HyperLogLog p) where
 
 -- | Monoid instance 'should' just work. Give me two estimators and I
 -- can give you an estimator for the union set of the two.
-instance ReifiesHyperLogLogConfig p => Monoid (HyperLogLog p) where
-  mempty = HyperLogLog $ V.replicate (reflectHyperLogLogConfig (undefined :: [p]) ^. numBuckets) 0
+instance ReifiesConfig p => Monoid (HyperLogLog p) where
+  mempty = HyperLogLog $ V.replicate (reflectConfig (undefined :: [p]) ^. numBuckets) 0
   {-# INLINE mempty #-}
   mappend = (<>)
   {-# INLINE mappend #-}
 
-instance (Profunctor p, Bifunctor p, Functor f, ReifiesHyperLogLogConfig s, Hashable a, s ~ t, a ~ b) => Cons p f (HyperLogLog s) (HyperLogLog t) a b where
+instance (Profunctor p, Bifunctor p, Functor f, ReifiesConfig s, Hashable a, s ~ t, a ~ b) => Cons p f (HyperLogLog s) (HyperLogLog t) a b where
   _Cons = unto go where
     go (a,m@(HyperLogLog v)) = HyperLogLog $ V.modify (\x -> do old <- MV.read x bk; when (rnk > old) $ MV.write x bk rnk) v where
       !h = w32 (hash a)
@@ -210,7 +208,7 @@ instance (Profunctor p, Bifunctor p, Functor f, ReifiesHyperLogLogConfig s, Hash
       !rnk = calcRank m h
   {-# INLINE _Cons #-}
 
-instance (Profunctor p, Bifunctor p, Functor f, ReifiesHyperLogLogConfig s, Hashable a, s ~ t, a ~ b) => Snoc p f (HyperLogLog s) (HyperLogLog t) a b where
+instance (Profunctor p, Bifunctor p, Functor f, ReifiesConfig s, Hashable a, s ~ t, a ~ b) => Snoc p f (HyperLogLog s) (HyperLogLog t) a b where
   _Snoc = unto go where
     go (m@(HyperLogLog v), a) = HyperLogLog $ V.modify (\x -> do old <- MV.read x bk; when (rnk > old) $ MV.write x bk rnk) v where
       !h = w32 (hash a)
@@ -219,7 +217,7 @@ instance (Profunctor p, Bifunctor p, Functor f, ReifiesHyperLogLogConfig s, Hash
   {-# INLINE _Snoc #-}
 
 -- | Approximate size of our set
-size :: ReifiesHyperLogLogConfig p => HyperLogLog p -> Approximate Int64
+size :: ReifiesConfig p => HyperLogLog p -> Approximate Int64
 size m@(HyperLogLog bs) = Approximate 0.9972 l expected h where
   m' = fromIntegral (m^.numBuckets)
   numZeros = fromIntegral . V.length . V.filter (== 0) $ bs
@@ -237,15 +235,10 @@ size m@(HyperLogLog bs) = Approximate 0.9972 l expected h where
   h = ceiling $ res*(1+3*sd)
 {-# INLINE size #-}
 
-intersectionSize :: ReifiesHyperLogLogConfig p => [HyperLogLog p] -> Approximate Int64
+intersectionSize :: ReifiesConfig p => [HyperLogLog p] -> Approximate Int64
 intersectionSize [] = 0
 intersectionSize (x:xs) = withMin 0 $ size x + intersectionSize xs - intersectionSize (mappend x <$> xs)
 {-# INLINE intersectionSize #-}
-
-data HLL10
-
-instance ReifiesHyperLogLogConfig HLL10 where
-  reflectHyperLogLogConfig _ = config 10
 
 {-
 hllBits = bits . meta
