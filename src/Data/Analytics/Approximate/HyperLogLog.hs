@@ -29,6 +29,7 @@ module Data.Analytics.Approximate.HyperLogLog
 
 import Control.Lens
 import Control.Monad
+import Data.Analytics.Approximate.Type
 import Data.Analytics.Bits
 import Data.Bits
 import Data.Hashable
@@ -152,11 +153,9 @@ instance (Profunctor p, Bifunctor p, Functor f, Reifies s HyperLogLogConfig, Has
       !rnk = calcRank m h
   {-# INLINE _Snoc #-}
 
--- | Estimate the size of the dataset so far
---
--- TODO: use Approximate Integer
-size :: Reifies p HyperLogLogConfig => HyperLogLog p -> Integer
-size m@(HyperLogLog bs) = round res where
+-- | Approximate size of our set
+size :: Reifies p HyperLogLogConfig => HyperLogLog p -> Approximate Int64
+size m@(HyperLogLog bs) = Approximate 0.9972 l expected h where
   m' = fromIntegral (m^.numBuckets)
   numZeros = fromIntegral . V.length . V.filter (== 0) $ bs
   res = case raw < m^.smallRange of
@@ -166,6 +165,11 @@ size m@(HyperLogLog bs) = round res where
           | otherwise -> -1 * lim32 * log (1 - raw / lim32)
   raw = m^.rawFact * (1 / sm)
   sm = V.sum $ V.map (\x -> 1 / (2 ^ x)) bs
+  expected = round res
+  sd = err (m^.numBits)
+  err n = 1.04 / sqrt (fromInteger (bit n))
+  l = floor $ max (res*(1-3*sd)) 0
+  h = ceiling $ res*(1+3*sd)
 {-# INLINE size #-}
 
 data HLL10
