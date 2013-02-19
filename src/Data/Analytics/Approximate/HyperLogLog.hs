@@ -7,17 +7,21 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Data.Analytics.Approximate.Set.HyperLogLog
+module Data.Analytics.Approximate.HyperLogLog
   (
   -- * HyperLogLog
     HyperLogLog
   , HasHyperLogLog(..)
-  , size, intersectionSize
+  , size
+  , intersectionSize
   , cast
   -- * Config
   , Config
-  , reifyConfig
   , hll
+  -- * ReifiesConfig
+  , ReifiesConfig
+  , reifyConfig
   ) where
 
-import Data.Analytics.Approximate.Set.HyperLogLog.Internal
+import Data.Analytics.Approximate.HyperLogLog.Config
+import Data.Analytics.Approximate.HyperLogLog.Type
