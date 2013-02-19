@@ -23,6 +23,7 @@ module Data.Analytics.Statistics.Moments
   , dim
   , variances, variance
   , stddevs, stddev
+  , trimmed
   -- , skewness
   -- , kurtosis
   , singleton
@@ -120,6 +121,16 @@ dim n = Moments 0 zs zs cvs zs zs where
 momentsOf :: Foldable f => Getting Moments s (f Double) -> s -> Moments
 momentsOf l = foldMapOf l (row . U.fromList . F.toList)
 {-# INLINE momentsOf #-}
+
+-- | @'trimmed' n v@ will insert the vector @v@ into 'Moments'. If 'Moments' summarizes at least @n@ elements, this will start rejecting extreme components of the vector, replacing them with the @mean@.
+trimmed :: Int64 -> U.Vector Double -> Moments -> Moments
+trimmed k as r@(Moments n ms vs _ _ _)
+  | n >= k = U.zipWith3 go as ms vs <| r where
+  n' = fromIntegral n
+  go a m v
+    | tsd <- 3*sqrt (v/n'), a >= m + tsd || a <= m - tsd = m -- clamp instead?
+    | otherwise                    = a
+trimmed _ as r = as <| r
 
 -- this lets us use 'cons' to add a moment to the mix.
 instance (Bifunctor p, Profunctor p, Functor f) => Cons p f Moments Moments (U.Vector Double) (U.Vector Double) where
