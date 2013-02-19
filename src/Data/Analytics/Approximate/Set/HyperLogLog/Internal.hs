@@ -208,7 +208,7 @@ instance Semigroup (HyperLogLog p) where
 -- | Monoid instance 'should' just work. Give me two estimators and I
 -- can give you an estimator for the union set of the two.
 instance ReifiesConfig p => Monoid (HyperLogLog p) where
-  mempty = HyperLogLog $ V.replicate (reflectConfig (undefined :: [p]) ^. numBuckets) 0
+  mempty = HyperLogLog $ V.replicate (reflectConfig (Proxy :: Proxy p) ^. numBuckets) 0
   {-# INLINE mempty #-}
   mappend = (<>)
   {-# INLINE mappend #-}
