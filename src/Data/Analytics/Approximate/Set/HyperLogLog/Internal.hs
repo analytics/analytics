@@ -29,6 +29,7 @@ module Data.Analytics.Approximate.Set.HyperLogLog.Internal
   , numBits, numBuckets, smallRange, interRange, rawFact, alpha, bucketMask
   , size
   , intersectionSize
+  , cast
   -- * Config
   , Config(..)
   , HasConfig(..)
@@ -184,6 +185,10 @@ instance Serialize (HyperLogLog p)
 
 makeClassy ''HyperLogLog
 
+_HyperLogLog :: Iso' (HyperLogLog p) (Vector Rank)
+_HyperLogLog = iso runHyperLogLog HyperLogLog
+{-# INLINE _HyperLogLog #-}
+
 instance ReifiesConfig p => HasConfig (HyperLogLog p) where
   config = to reflectConfig
   {-# INLINE config #-}
@@ -240,37 +245,16 @@ intersectionSize [] = 0
 intersectionSize (x:xs) = withMin 0 $ size x + intersectionSize xs - intersectionSize (mappend x <$> xs)
 {-# INLINE intersectionSize #-}
 
-{-
-hllBits = bits . meta
-hllNumBuckets = numBuckets . meta
-
--- | Convert HyperLogLog counter into a new length, trying to preserve
--- its estimation capabilities in the process.
-castHyperLogLog :: forall n m. (Reifies n Constants, Reifies m Constants) => HyperLogLog n -> HyperLogLog m
-castHyperLogLog old = new { buckets = newV } where
- (new :: HyperLogLog m) = initHyperLogLog
- oldlen = numBuckets $ meta old
- newlen = numBuckets $ meta new
- fact = newlen `div` oldlen
-
- newV = V.modify update $ buckets new
- oldV = V.toList $ V.indexed (buckets old)
-
-      -- | take each index of the old vector, map it to new vector.
- update m = forM_ oldV $ \ (i, oval) -> do
-   let upWith n rank = do
-       curval <- MV.read m n
-       MV.write m n (max rank curval)
-
-   let (h:rest) = targetIndexes i
-
-   upWith h oval
-   forM_ rest $ \ n -> upWith n (oval-1)
-
- -- | each index in the old vector maps to 1 or more indexes in
- -- the new vector.
- targetIndexes i
-   | newlen <= oldlen = [i `mod` newlen]
-   | otherwise = error "castHyperLogLog: Can't upcast HyperLogLog to a higher accuracy yet."
-   -- else map (\x -> i + oldlen * x) [0.. (fact - 1)]
--}
+cast :: forall p q. (ReifiesConfig p, ReifiesConfig q) => HyperLogLog p -> Maybe (HyperLogLog q)
+cast old
+  | newBuckets <= oldBuckets = Just $ over _HyperLogLog ?? mempty $ V.modify $ \m ->
+    V.forM_ (V.indexed $ old^._HyperLogLog) $ \ (i,o) -> do
+      let j = mod i newBuckets
+      a <- MV.read m j
+      MV.write m j (max o a)
+  | otherwise = Nothing -- TODO?
+  where
+  newConfig = reflectConfig (Proxy :: Proxy q)
+  newBuckets = newConfig^.numBuckets
+  oldBuckets = old^.numBuckets
+{-# INLINE cast #-}
