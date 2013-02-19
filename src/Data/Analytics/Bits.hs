@@ -1,7 +1,9 @@
-{-# LANGUAGE CPP, ForeignFunctionInterface, MagicHash, UnboxedTuples #-}
+{-# LANGUAGE CPP, ForeignFunctionInterface, MagicHash, UnboxedTuples, BangPatterns #-}
 module Data.Analytics.Bits
   ( Ranked(..)
-  , w32, w64
+  , log2
+  , w32
+  , w64
   ) where
 
 import Data.Bits
@@ -10,6 +12,18 @@ import Data.Word
 import Foreign.Ptr
 import Foreign.Storable
 import GHC.Base
+
+-- TODO: generalize to 64 bits, etc.
+log2 :: Word32 -> Int
+log2 !n0 = fromIntegral $ go (shiftR (n5 * 0x7C4ACDD) 27) where
+  go :: Word32 -> Word8
+  go !i = inlinePerformIO $ peekElemOff debruijn_log32 (fromIntegral i)
+  !n1 = n0 .|. shiftR n0 1
+  !n2 = n1 .|. shiftR n1 2
+  !n3 = n2 .|. shiftR n2 4
+  !n4 = n3 .|. shiftR n3 8
+  !n5 = n4 .|. shiftR n4 16
+{-# INLINE log2 #-}
 
 class (Num t, Bits t) => Ranked t where
   -- | Calculate the least significant set bit using a debruijn multiplication table.
@@ -89,9 +103,10 @@ w64 = fromIntegral
 -- de Bruijn Multiplication Tables
 ------------------------------------------------------------------------------
 
-foreign import ccall "static &debruijn_lut" debruijn_lsb64  :: Ptr Word8
-foreign import ccall "static &debruijn_lut" debruijn_lsb32  :: Ptr Word8
-foreign import ccall "static &debruijn_lut" debruijn_rank32 :: Ptr Word8
+foreign import ccall "static &debruijn_lsb64"  debruijn_lsb64  :: Ptr Word8
+foreign import ccall "static &debruijn_lsb32"  debruijn_lsb32  :: Ptr Word8
+foreign import ccall "static &debruijn_rank32" debruijn_rank32 :: Ptr Word8
+foreign import ccall "static &debruijn_log32"  debruijn_log32  :: Ptr Word8
 
 #ifndef HLINT
 inlinePerformIO :: IO a -> a
