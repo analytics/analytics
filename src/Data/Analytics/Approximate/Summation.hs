@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) Edward Kmett 2013
@@ -18,6 +19,7 @@ module Data.Analytics.Approximate.Summation
   , times2
   ) where
 
+import Control.Lens
 import Data.Monoid
 import Data.Ratio
 
@@ -75,6 +77,14 @@ instance Monoid EFT where
   {-# INLINE mempty #-}
   mappend = (+)
   {-# INLINE mappend #-}
+
+instance (Bifunctor p, Profunctor p, Functor f) => Cons p f EFT EFT Double Double where
+  _Cons = unto $ \(a, EFT b c) -> let y = a - c; t = b + y in EFT t ((t - b) - y)
+  {-# INLINE _Cons #-}
+
+instance (Bifunctor p, Profunctor p, Functor f) => Snoc p f EFT EFT Double Double where
+  _Snoc = unto $ \(EFT b c, a) -> let y = a - c; t = b + y in EFT t ((t - b) - y)
+  {-# INLINE _Snoc #-}
 
 instance Num EFT where
   EFT a b + EFT a' b' = EFT x5 (y3 + y4 + y5) where
