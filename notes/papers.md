@@ -19,3 +19,12 @@
 
 # Stable Models
 * [Extending and Implementing the Stable Model Semantics](http://arxiv.org/pdf/cs/0005010.pdf)
+
+# *-Semirings
+```
+[21:27] nwf:	 Paper dump:
+[21:27] nwf:	 http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.71.7650 is a decent overview, though a little dated
+[21:28] nwf:	 http://dl.acm.org/citation.cfm?id=973230 ties a lot of this in to NLP parsing, if you're curious
+[21:28] nwf:	 http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.56.704 I have just skimmed and has some nice examples
+[21:30] nwf:	 http://dl.acm.org/citation.cfm?doid=322261.322272 has some more graph-based examples
+```
