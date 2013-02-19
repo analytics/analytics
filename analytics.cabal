@@ -65,6 +65,7 @@ library
     Data.Analytics.Morton.Heap
     Data.Analytics.Morton.Schedule
     Data.Analytics.Morton.Type
+    Data.Analytics.Reflection
     Data.Analytics.Statistics.Moments
 
   build-depends:
@@ -87,6 +88,7 @@ library
     semigroupoids             == 3.*,
     semigroups                >= 0.9     && < 1,
     tagged                    >= 0.4.4   && < 1,
+    template-haskell,
     transformers              >= 0.2     && < 0.4,
     transformers-compat       >= 0.1     && < 1,
     unordered-containers      >= 0.2.1   && < 0.3,
