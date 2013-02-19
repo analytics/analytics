@@ -18,6 +18,7 @@ module Data.Analytics.Approximate.Set.HyperLogLog.Internal
   , HasHyperLogLog(..)
   , numBits, numBuckets, smallRange, interRange, rawFact, alpha, bucketMask
   , size
+  , intersectionSize
   -- * Config
   , HyperLogLogConfig(..)
   , HasHyperLogLogConfig(..)
@@ -27,6 +28,7 @@ module Data.Analytics.Approximate.Set.HyperLogLog.Internal
   , HLL10
   ) where
 
+import Control.Applicative
 import Control.Lens
 import Control.Monad
 import Data.Analytics.Approximate.Type
@@ -171,6 +173,11 @@ size m@(HyperLogLog bs) = Approximate 0.9972 l expected h where
   l = floor $ max (res*(1-3*sd)) 0
   h = ceiling $ res*(1+3*sd)
 {-# INLINE size #-}
+
+intersectionSize :: Reifies p HyperLogLogConfig => [HyperLogLog p] -> Approximate Int64
+intersectionSize [] = 0
+intersectionSize (x:xs) = withMin 0 $ size x + intersectionSize xs - intersectionSize (mappend x <$> xs)
+{-# INLINE intersectionSize #-}
 
 data HLL10
 

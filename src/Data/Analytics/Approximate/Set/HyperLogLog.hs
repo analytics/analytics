@@ -1,7 +1,7 @@
 module Data.Analytics.Approximate.Set.HyperLogLog
   ( HyperLogLog
   , HasHyperLogLog(..)
-  , size
+  , size, intersectionSize
   , HyperLogLogConfig
   , reifyHyperLogLogConfig
   , config
