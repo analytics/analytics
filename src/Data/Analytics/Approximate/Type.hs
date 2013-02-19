@@ -25,7 +25,7 @@ import Data.Pointed
 data Approximate a = Approximate
   { _confidence :: {-# UNPACK #-} !(Log Double)
   , _lo, _estimate, _hi :: a
-  }
+  } deriving (Eq,Show,Read)
 
 makeClassy ''Approximate
 
