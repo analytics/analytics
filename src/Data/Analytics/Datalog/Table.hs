@@ -1,4 +1,13 @@
 {-# LANGUAGE Rank2Types, MultiParamTypeClasses, TypeFamilies, FunctionalDependencies, FlexibleInstances, UndecidableInstances #-}
+--------------------------------------------------------------------
+-- |
+-- Copyright :  (c) Edward Kmett 2013
+-- License   :  BSD3
+-- Maintainer:  Edward Kmett <ekmett@gmail.com>
+-- Stability :  experimental
+-- Portability: non-portable
+--
+--------------------------------------------------------------------
 module Data.Analytics.Datalog.Table
   ( T0, T1, T2, T3, T4
   , t0, t1, t2, t3, t4
