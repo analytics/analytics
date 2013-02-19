@@ -8,6 +8,7 @@ module Data.Analytics.Approximate.Type
   , exact
   , zero
   , one
+  , withMin, withMax
   ) where
 
 import Control.Applicative
@@ -58,6 +59,18 @@ instance Applicative Approximate where
   {-# INLINE pure #-}
   Approximate p lf mf hf <*> Approximate q la ma ha = Approximate (p * q) (lf la) (mf ma) (hf ha)
   {-# INLINE (<*>) #-}
+
+withMin :: Ord a => a -> Approximate a -> Approximate a
+withMin b r@(Approximate p l m h)
+  | b <= l    = r
+  | otherwise = Approximate p b (max b m) (max b h)
+{-# INLINE withMin #-}
+
+withMax :: Ord a => a -> Approximate a -> Approximate a
+withMax b r@(Approximate p l m h)
+  | h <= b = r
+  | otherwise = Approximate p (min l b) (min m b) b
+{-# INLINE withMax #-}
 
 instance (Ord a, Num a) => Num (Approximate a) where
   (+) = liftA2 (+)
