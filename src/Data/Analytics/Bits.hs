@@ -30,11 +30,13 @@ class (Num t, Bits t) => Ranked t where
   -- /NB:/ The result of this function is undefined when given 0.
   lsb :: t -> Int
   lsb n = rank n - 1
+  {-# INLINE lsb #-}
 
   -- | Calculate the number of trailing 0 bits.
   rank :: t -> Int
   rank 0 = 0
   rank n = lsb n + 1
+  {-# INLINE rank #-}
 
 instance Ranked Word64 where
   lsb n = fromIntegral $ go (shiftR ((n .&. (-n)) * 0x07EDD5E59A4E28C2) 58) where
@@ -46,10 +48,12 @@ instance Ranked Word32 where
   lsb n = fromIntegral $ go (shiftR ((n .&. (-n)) * 0x077CB531) 27) where
     go :: Word32 -> Word8
     go i = inlinePerformIO $ peekElemOff debruijn_lsb32 (fromIntegral i)
+{-
   rank n = fromIntegral $ go (shiftR ((n .&. (-n)) * 0x4279976B) 26) where
     go :: Word32 -> Word8
     go i = inlinePerformIO $ peekElemOff debruijn_rank32 (fromIntegral i)
   {-# INLINE rank #-}
+-}
 
 instance Ranked Word16 where
   lsb = lsb . w32
@@ -105,7 +109,7 @@ w64 = fromIntegral
 
 foreign import ccall "static &debruijn_lsb64"  debruijn_lsb64  :: Ptr Word8
 foreign import ccall "static &debruijn_lsb32"  debruijn_lsb32  :: Ptr Word8
-foreign import ccall "static &debruijn_rank32" debruijn_rank32 :: Ptr Word8
+-- foreign import ccall "static &debruijn_rank32" debruijn_rank32 :: Ptr Word8
 foreign import ccall "static &debruijn_log32"  debruijn_log32  :: Ptr Word8
 
 #ifndef HLINT
