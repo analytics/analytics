@@ -27,6 +27,7 @@ import Control.Monad
 import Data.Analytics.Datalog.Term
 import Data.Analytics.Datalog.Subst
 import Data.Maybe
+import Data.Monoid
 import Data.Typeable
 
 
@@ -52,15 +53,39 @@ data Heart a where
   ArgH  :: Term a => a -> Heart (Entity a)
   deriving Typeable
 
+instance Eq (Heart a) where
+  a == b = compare a b == EQ
+  {-# INLINE (==) #-}
+
+compareHeart :: Heart a -> Heart b -> Ordering
+compareHeart (ApH f x)  (ApH g y)  = compareHeart f g <> compareHeart x y
+compareHeart ApH{}      _          = LT
+compareHeart MapH{}     ApH{}      = GT
+compareHeart (MapH _ x) (MapH _ y) = compareHeart x y
+compareHeart MapH{}     _          = LT
+compareHeart PureH{}    PureH{}    = EQ
+compareHeart PureH{}    ArgH{}     = LT
+compareHeart PureH{}    _          = GT
+compareHeart (ArgH a)   (ArgH b)   = cast a `compare` Just b
+compareHeart ArgH{}     _          = GT
+
+instance Ord (Heart a) where
+  compare = compareHeart
+  {-# INLINE compare #-}
+
 arg :: Term a => a -> Heart (Entity a)
 arg = ArgH
+{-# INLINE arg #-}
 
 instance Functor Heart where
   fmap = MapH
+  {-# INLINE fmap #-}
 
 instance Applicative Heart where
   pure = PureH
+  {-# INLINE pure #-}
   (<*>) = ApH
+  {-# INLINE (<*>) #-}
 
 instance HasVars (Heart a) where
   applyM s (ApH l r)  = liftM2 ApH (applyM s l) (applyM s r)
@@ -74,14 +99,14 @@ instance HasVars (Heart a) where
     Just (AnEntity t) -> case gcast (ArgH t) of
       Just h -> return h
       Nothing -> fail "PANIC: illegal substitution"
-  {-# INLINE applyM #-}
+  {-# INLINEABLE applyM #-}
 
   vars f (ApH l r) = ApH <$> vars f l <*> vars f r
   vars f (MapH k x) = MapH k <$> vars f x
   vars _ (PureH a) = pure (PureH a)
   vars f (ArgH v) = f (Var v) <&> \(Var u) ->
     ArgH (fromMaybe (error "PANIC: very illegal substitution" `asTypeOf` v) (cast u))
-  {-# INLINE vars #-}
+  {-# INLINEABLE vars #-}
 
 {-
 match :: (MonadState s m, HasSubst s, MonadPlus m) => Heart a -> Heart b -> m (Heart a)
