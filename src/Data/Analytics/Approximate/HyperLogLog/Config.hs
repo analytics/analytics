@@ -57,7 +57,7 @@ import Data.Vector.Serialize ()
 import GHC.Int
 import GHC.Word
 import Generics.Deriving hiding (to, D)
-#ifdef USE_TYPELITS
+#ifdef USE_TYPE_LITS
 import GHC.TypeLits
 #endif
 
