@@ -110,7 +110,7 @@ size m@(HyperLogLog bs) = Approximate 0.9972 l expected h where
     False | raw <= m^.interRange -> raw
           | otherwise -> -1 * lim32 * log (1 - raw / lim32)
   raw = m^.rawFact * (1 / sm)
-  sm = V.sum $ V.map (\x -> 1 / (2 ^ x)) bs
+  sm = V.sum $ V.map (\x -> 1 / (2 ^^ x)) bs
   expected = round res
   sd = err (m^.numBits)
   err n = 1.04 / sqrt (fromInteger (bit n))
