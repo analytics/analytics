@@ -122,10 +122,10 @@ match l@(RowArg t) r@(RowArg t')  = case term `withArgType` t of
     case u^.mgu.at (Var t) of
       Just (AVar t'') -> do
          h <- match (RowArg t'') r
-         maybe (error "broken heart") return $ cast h
+         maybe (fail "broken row") return $ cast h
       Just (AnEntity t'') -> do
          h <- match (RowArg t'') r
-         maybe (error "broken heart") return $ cast h
+         maybe (fail "broken row") return $ cast h
       Nothing -> do
          subst .= apply (t ~> t') u
          return l
@@ -141,7 +141,7 @@ match l@(RowArg t) r@(RowArg t')  = case term `withArgType` t of
     IsEntity
        | cast t == Just t' -> return l
        | otherwise         -> fail "unification"
-match _ _ = error "broken heart"
+match _ _ = fail "broken row"
 {-# INLINEABLE match #-}
 
 withArgType :: t a -> a -> t a
