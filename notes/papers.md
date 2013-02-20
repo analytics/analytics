@@ -20,6 +20,14 @@
 # Stable Models
 * [Extending and Implementing the Stable Model Semantics](http://arxiv.org/pdf/cs/0005010.pdf)
 
+# Top-Down Evaluation
+* [Efficient Top-Down Computation of Queries Under the Well-Founded Semantics](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.38.6142&rep=rep1&type=pdf)
+
+# Tabling
+* [OLD Resolution with Tabulation](http://sato-www.cs.titech.ac.jp/reference/Sato-ICLP86.pdf)
+* [A Thread In Time Saves Tabling Time](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.54.9454&rep=rep1&type=pdf)
+* [More Efficient Datalog Queries: Subsumptive Tabling Beats Magic Sets](http://www.logicblox.com/publications/2011/sigmod11-tekle.pdf)
+
 # *-Semirings and C-Semirings/ω-continuous semirings
 ```
 [21:27] nwf:	 Paper dump:
