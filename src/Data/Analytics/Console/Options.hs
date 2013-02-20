@@ -23,7 +23,7 @@ version :: Version
 version = Paths.version
 
 -- enable/disable EKG
-data MonitorOptions = MonitorOptions { monitorHost :: String, monitorPort :: Int, monitorEnabled :: Bool }
+data MonitorOptions = MonitorOptions { _monitorHost :: String, _monitorPort :: Int, _monitorEnabled :: Bool }
   deriving (Eq,Ord,Show,Read,Data,Typeable)
 
 parseMonitorOptions :: Parser MonitorOptions
@@ -85,6 +85,9 @@ data Options = Options
   } deriving (Eq,Ord,Show,Read,Data,Typeable)
 
 makeClassy ''Options
+
+instance HasMonitorOptions Options where
+  monitorOptions = commonOptions.monitorOptions
 
 instance HasCommonOptions Options where
   commonOptions = optionsCommonOptions

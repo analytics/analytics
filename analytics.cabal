@@ -113,7 +113,7 @@ library
 executable edb
   main-is: Main.hs
   default-language: Haskell2010
-  ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N -v0
+  ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N -with-rtsopts=-T -v0
   if os(windows)
     cpp-options: -DOS_WINDOWS=1
   if !flag(edb)
@@ -122,11 +122,13 @@ executable edb
     build-depends:
       analytics,
       base,
-      optparse-applicative,
+      bytestring,
       ekg                       >= 0.3.1.2 && < 0.4,
       haskeline                 >= 0.7     && < 0.8,
+      lens,
       MonadCatchIO-transformers,
       mtl,
+      optparse-applicative,
       unordered-containers
 
 test-suite doctests
