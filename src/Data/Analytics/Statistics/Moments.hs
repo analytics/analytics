@@ -43,6 +43,8 @@ import Data.Vector.Unboxed as U
 import qualified Data.Vector as V
 
 -- | The first few central moments and covariances
+
+-- TODO: Consider storing intermediate results in compensated form for better precision
 data Moments
   = NoMoments -- this has no shape information
   | Moments
@@ -52,8 +54,7 @@ data Moments
   , _rawCovariances :: {-# UNPACK #-} !(V.Vector (U.Vector Double)) -- covariances
   , _rawSkewnesses  :: !(U.Vector Double) -- skews
   , _rawKurtoses    :: !(U.Vector Double) -- kurtoses
-  }
-  deriving (Show,Read,Data,Typeable,Generic)
+  } deriving (Show,Read,Data,Typeable,Generic)
 
 makePrisms ''Moments
 makeClassy ''Moments
@@ -134,10 +135,12 @@ trimmed _ as r = as <| r
 
 -- this lets us use 'cons' to add a moment to the mix.
 instance (Bifunctor p, Profunctor p, Functor f) => Cons p f Moments Moments (U.Vector Double) (U.Vector Double) where
+  -- TODO: Use Welford's algorithm directly (extended by Terriberry)
   _Cons = unto $ \(d,m) -> row d <> m
   {-# INLINE _Cons #-}
 
 instance (Bifunctor p, Profunctor p, Functor f) => Snoc p f Moments Moments (U.Vector Double) (U.Vector Double) where
+  -- TODO: Use Welford's algorithm directly (extended by Terriberry)
   _Snoc = unto $ \(m,d) -> m <> row d
   {-# INLINE _Snoc #-}
 
