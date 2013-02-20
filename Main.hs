@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
 module Main (main) where
 
 import Control.Applicative
@@ -12,9 +13,9 @@ main :: IO ()
 main = withUnicode $ do
   opts <- getOptions
   print opts
-  ekg <- if opts^.monitorEnabled
-         then Just <$> forkServer (Char8.pack $ opts^.monitorHost) (opts^.monitorPort)
-         else pure Nothing
+  _ekg <- if opts^.monitorEnabled
+          then Just <$> forkServer (Char8.pack $ opts^.monitorHost) (opts^.monitorPort)
+          else pure Nothing
   P.putStrLn "Monitor Enabled. Hit Enter to Shutdown."
   P.getLine
   P.putStrLn "Goodbye"

@@ -23,6 +23,8 @@ import Control.Lens
 import Data.Monoid
 import Data.Ratio
 
+{-# ANN module "hlint: ignore Use -" #-}
+
 data EFT = EFT {-# UNPACK #-} !Double {-# UNPACK #-} !Double deriving (Eq,Ord,Show,Read)
 
 magic :: Double
@@ -85,6 +87,7 @@ instance (Bifunctor p, Profunctor p, Functor f) => Cons p f EFT EFT Double Doubl
 instance (Bifunctor p, Profunctor p, Functor f) => Snoc p f EFT EFT Double Double where
   _Snoc = unto $ \(EFT b c, a) -> let y = a - c; t = b + y in EFT t ((t - b) - y)
   {-# INLINE _Snoc #-}
+
 
 instance Num EFT where
   EFT a b + EFT a' b' = EFT x5 (y3 + y4 + y5) where
