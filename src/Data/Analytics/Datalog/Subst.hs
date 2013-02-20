@@ -60,7 +60,7 @@ data ATerm where
 -- TODO: instance At, Contains, Ix
 newtype Subst = Subst { _mgu :: Map Var ATerm }
 
-(~>) :: forall a b. (Term a, Term b, Entity a ~ Entity b) => a -> b -> Subst
+(~>) :: forall a b. (Term a, Term b) => a -> b -> Subst
 a ~> b = Subst $ Map.singleton (Var a) $ case term :: Handler b of
   IsVar    -> AVar b
   IsEntity -> AnEntity b

@@ -19,11 +19,13 @@ module Data.Analytics.Datalog.Atom
   ( Atom(..)
   , Heart(..)
   , arg
+  , match
   ) where
 
 import Control.Applicative
 import Control.Lens
 import Control.Monad
+import Control.Monad.State
 import Data.Analytics.Datalog.Term
 import Data.Analytics.Datalog.Subst
 import Data.Maybe
@@ -108,17 +110,38 @@ instance HasVars (Heart a) where
     ArgH (fromMaybe (error "PANIC: very illegal substitution" `asTypeOf` v) (cast u))
   {-# INLINEABLE vars #-}
 
-{-
 match :: (MonadState s m, HasSubst s, MonadPlus m) => Heart a -> Heart b -> m (Heart a)
-match (ApH l r) (ApH l' r') = ApH <$> match l l' <*> match r r'
-match (MapH f x) (MapH _ y) = MapH f <$> match x y
-match (PureH a) (PureH _)   = pure (PureH a)
+match (ApH l r) (ApH l' r') = liftM2 ApH (match l l') (match r r')
+match (MapH f x) (MapH _ y) = MapH f `liftM` match x y
+match (PureH a) (PureH _)   = return (PureH a)
 match l@(ArgH t) r@(ArgH t')  = case term `withArgType` t of
-  IsVar -> use subst >>= \u -> case u^.mgu.at (Var t) of
-    Just t'' -> match (ArgH t'') r
-    Nothing  -> do
-      subst .= apply (t ~> t') u
+  IsVar -> do
+    u <- use subst
+    case u^.mgu.at (Var t) of
+      Just (AVar t'') -> do
+         h <- match (ArgH t'') r
+         maybe (error "broken heart") return $ cast h
+      Just (AnEntity t'') -> do
+         h <- match (ArgH t'') r
+         maybe (error "broken heart") return $ cast h
+      Nothing -> do
+         subst .= apply (t ~> t') u
+         return l
+  IsEntity -> case term `withArgType` t' of
+    IsVar -> do
+      u <- use subst
+      case u^.mgu.at (Var t') of
+        Just (AVar t'')     -> match l (ArgH t'')
+        Just (AnEntity t'') -> match l (ArgH t'')
+        Nothing -> do
+          subst .= apply (t' ~> t) u
+          return l
+    IsEntity
+       | cast t == Just t' -> return l
+       | otherwise         -> fail "unification"
+match _ _ = error "broken heart"
+{-# INLINEABLE match #-}
 
 withArgType :: t a -> a -> t a
 withArgType = const
--}
+{-# INLINE withArgType #-}
