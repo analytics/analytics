@@ -72,8 +72,6 @@ runEFT :: EFT -> Double
 runEFT (EFT x y) = x + y
 {-# INLINE runEFT #-}
 
--- vsum :: Vector Double -> EFT
-
 instance Monoid EFT where
   mempty = EFT 0 0
   {-# INLINE mempty #-}
@@ -88,24 +86,15 @@ instance (Bifunctor p, Profunctor p, Functor f) => Snoc p f EFT EFT Double Doubl
   _Snoc = unto $ \(EFT b c, a) -> let y = a - c; t = b + y in EFT t ((t - b) - y)
   {-# INLINE _Snoc #-}
 
-
 instance Num EFT where
-  EFT a b + EFT a' b' = EFT x4 (y2 + y3 + y4) where
+  EFT a b + EFT a' b' = sum2 x4 (y2 + y3 + y4) where
     EFT x1 y1 = sum2 a a'
     EFT x2 y2 = sum2 y1 b'
     EFT x3 y3 = sum2 b x2
     EFT x4 y4 = sum2 x1 x3
   {-# INLINE (+) #-}
-{-
-  EFT a b + EFT a' b' = EFT x5 (y3 + y4 + y5) where
-    EFT x1 y1 = sum2 a  a'
-    EFT x2 y2 = sum2 x1 b'
-    EFT x3 y3 = sum2 b  y1
-    EFT x4 y4 = sum2 x3 y2
-    EFT x5 y5 = sum2 x2 x4
--}
 
-  EFT a b * EFT c d = EFT x8 (b * d + y2 + y3 + y6 + y7 + y8) where
+  EFT a b * EFT c d = sum2 x8 (b * d + y2 + y3 + y6 + y7 + y8) where
     EFT x1 y1 = times2 a c
     EFT x2 y2 = times2 b c
     EFT x3 y3 = times2 a d
@@ -114,25 +103,6 @@ instance Num EFT where
     EFT x6 y6 = sum2 y1 y4
     EFT x7 y7 = sum2 y5 x6
     EFT x8 y8 = sum2 x5 x7
-
-{-
-  -- | Ogita et al.'s @DotK, K=3@ applied to the FOIL'd sums
-  EFT a b * EFT c d = EFT xe (y8 + y9 + ya + yb + yc + yd + ye) where
-    EFT x1 y1 = times2 a c
-    EFT x2 y2 = times2 a d
-    EFT x3 y3 = times2 b c
-    EFT x4 y4 = times2 b d
-    EFT x5 y5 = sum2 x1 x2
-    EFT x6 y6 = sum2 x5 x3
-    EFT x7 y7 = sum2 x6 x4
-    EFT x8 y8 = sum2 y1 y2
-    EFT x9 y9 = sum2 y5 x8
-    EFT xa ya = sum2 y3 x9
-    EFT xb yb = sum2 y6 xa
-    EFT xc yc = sum2 y4 xb
-    EFT xd yd = sum2 y7 xc
-    EFT xe ye = sum2 x7 xd
--}
   {-# INLINE (*) #-}
 
   negate (EFT a b) = EFT (negate a) (negate b)
@@ -149,13 +119,27 @@ instance Num EFT where
     | otherwise = e
   {-# INLINE abs #-}
 
-  fromInteger i = EFT x (fromInteger (i - round x)) where
+  fromInteger i = sum2 x (fromInteger (i - round x)) where
     x = fromInteger i
   {-# INLINE fromInteger #-}
 
 instance Fractional EFT where
-  recip (EFT a b) = split $ recip $ a + b -- TODO better
+  -- recip (EFT a b) = split $ recip $ a + b
+
+  -- > 1/(a + b) = 1/a + e where
+  -- > e = 1/(a + b) - 1/a = -b/(a^2 + a b) = -b/a^2 + e_2
+  -- > so e_2 = b^2/a^3 + e_3 is vanishingly small
+  recip (EFT a b) = sum2 (recip a) (negate b / (a*a))
   {-# INLINE recip #-}
+  -- EFT a b / EFT c d = sum2 (a / (c + d)) (b / (c + d))
+  -- EFT a b / EFT c d = sum2 (a / c) ((b*c-a*d)/(c*c))
+  -- EFT a b / EFT c d = sum3 (a/c) (b/c) (-a*d/(c*c))
+  EFT a b / EFT c d = sum2 x3 (y1 + y2 + y3) where
+    aoc = a/c
+    EFT x1 y1 = times2 aoc (d/c)
+    EFT x2 y2 = sum2 x1 (b/c)
+    EFT x3 y3 = sum2 aoc x2
+  {-# INLINE (/) #-}
   fromRational r = fromInteger (numerator r) `times2` recip (fromInteger (denominator r))
   {-# INLINE fromRational #-}
 
