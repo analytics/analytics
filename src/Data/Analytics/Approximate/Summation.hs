@@ -90,14 +90,32 @@ instance (Bifunctor p, Profunctor p, Functor f) => Snoc p f EFT EFT Double Doubl
 
 
 instance Num EFT where
+  EFT a b + EFT a' b' = EFT x4 (y2 + y3 + y4) where
+    EFT x1 y1 = sum2 a a'
+    EFT x2 y2 = sum2 y1 b'
+    EFT x3 y3 = sum2 b x2
+    EFT x4 y4 = sum2 x1 x3
+  {-# INLINE (+) #-}
+{-
   EFT a b + EFT a' b' = EFT x5 (y3 + y4 + y5) where
     EFT x1 y1 = sum2 a  a'
     EFT x2 y2 = sum2 x1 b'
     EFT x3 y3 = sum2 b  y1
     EFT x4 y4 = sum2 x3 y2
     EFT x5 y5 = sum2 x2 x4
-  {-# INLINE (+) #-}
+-}
 
+  EFT a b * EFT c d = EFT x8 (b * d + y2 + y3 + y6 + y7 + y8) where
+    EFT x1 y1 = times2 a c
+    EFT x2 y2 = times2 b c
+    EFT x3 y3 = times2 a d
+    EFT x4 y4 = sum2 x1 x2
+    EFT x5 y5 = sum2 x3 x4
+    EFT x6 y6 = sum2 y1 y4
+    EFT x7 y7 = sum2 y5 x6
+    EFT x8 y8 = sum2 x5 x7
+
+{-
   -- | Ogita et al.'s @DotK, K=3@ applied to the FOIL'd sums
   EFT a b * EFT c d = EFT xe (y8 + y9 + ya + yb + yc + yd + ye) where
     EFT x1 y1 = times2 a c
@@ -114,6 +132,7 @@ instance Num EFT where
     EFT xc yc = sum2 y4 xb
     EFT xd yd = sum2 y7 xc
     EFT xe ye = sum2 x7 xd
+-}
   {-# INLINE (*) #-}
 
   negate (EFT a b) = EFT (negate a) (negate b)
@@ -130,7 +149,8 @@ instance Num EFT where
     | otherwise = e
   {-# INLINE abs #-}
 
-  fromInteger = split . fromInteger
+  fromInteger i = EFT x (fromInteger (i - round x)) where
+    x = fromInteger i
   {-# INLINE fromInteger #-}
 
 instance Fractional EFT where
