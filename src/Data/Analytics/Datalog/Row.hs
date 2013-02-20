@@ -19,7 +19,7 @@ module Data.Analytics.Datalog.Row
   ( Row(..)
   , arg
   , match
-  , ARow
+  , ARow(..)
   ) where
 
 import Control.Applicative
