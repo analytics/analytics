@@ -57,6 +57,7 @@ library
     Data.Analytics.Datalog.Monad
     Data.Analytics.Datalog.Prompt
     Data.Analytics.Datalog.Query
+    Data.Analytics.Datalog.Row
     Data.Analytics.Datalog.Subst
     Data.Analytics.Datalog.Table
     Data.Analytics.Datalog.Term

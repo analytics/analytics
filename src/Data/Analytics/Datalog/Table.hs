@@ -26,6 +26,7 @@ import Control.Monad.State.Strict as Strict
 import Data.Analytics.Datalog.Atom
 import Data.Analytics.Datalog.Atomic
 import Data.Analytics.Datalog.Monad
+import Data.Analytics.Datalog.Row
 import Data.Analytics.Datalog.Term
 
 type T0 t o         = forall r.          Atomic r t o

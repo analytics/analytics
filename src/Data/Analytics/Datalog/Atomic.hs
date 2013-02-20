@@ -16,11 +16,12 @@ module Data.Analytics.Datalog.Atomic
   ) where
 
 import Data.Analytics.Datalog.Monad
-import Data.Analytics.Datalog.Query
 import Data.Analytics.Datalog.Atom
+import Data.Analytics.Datalog.Query
+import Data.Analytics.Datalog.Row
 
 class Atomic r t a | r -> t where
-  atom :: t -> Heart a -> r
+  atom :: t -> Row a -> r
 
 -- All Terms are forced to be Entities
 instance u ~ () => Atomic (DatalogT t m u) t b where
