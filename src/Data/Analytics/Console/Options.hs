@@ -1,47 +1,104 @@
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-cse #-}
 module Data.Analytics.Console.Options
-  ( Options(..)
-  , mode
+  ( MonitorOptions(..), _MonitorOptions, HasMonitorOptions(..)
+  , Verbosity(..), _Normal, _Verbose
+  , CommonOptions(..), HasCommonOptions(..)
+  , RunOptions(..), HasRunOptions(..)
+  , Command(..), HasCommand(..), _Run
+  , Options(..), HasOptions(..)
+  , getOptions
   , version
   ) where
 
+import Control.Lens
 import Data.Data
 import Data.Version as Version
-import System.Console.CmdArgs.Implicit
+import Options.Applicative
 -- import System.FilePath
 import qualified Paths_analytics as Paths
 
 version :: Version
 version = Paths.version
 
-data Options
-  = Console { datadir :: FilePath, files :: [FilePath] }
-  | Run     { datadir :: FilePath, files :: [FilePath] }
-  | Daemon  { datadir :: FilePath, files :: [FilePath] }
-  deriving (Eq, Show, Data, Typeable)
+-- enable/disable EKG
+data MonitorOptions = MonitorOptions { monitorHost :: String, monitorPort :: Int, monitorEnabled :: Bool }
+  deriving (Eq,Ord,Show,Read,Data,Typeable)
 
-mode :: IO (Mode (CmdArgs Options))
-mode = do
-  defaultDataDir <- Paths.getDataDir
-  let console = Console
-        { files = def &= help "input files" &= typFile -- &= args
-        , datadir = def &= opt defaultDataDir &= help "Select the location of the database" &= typDir
-        } &= help "Start a console session"
+parseMonitorOptions :: Parser MonitorOptions
+parseMonitorOptions = MonitorOptions
+  <$> strOption (long "ekg-host" <> short 'h' <> help "host for the EKG server" <> metavar "HOST" <> action "hostname" <> value "localhost")
+  <*> option (long "ekg-port" <> short 'p' <> help "port for the EKG server" <> metavar "PORT" <> value 8000)
+  <*> (not <$> switch (long "no-ekg" <> help "do not start the EKG server" <> value False))
 
-      run = Run
-        { files = def &= help "input files" &= typFile -- &= args
-        , datadir = def &= opt defaultDataDir &= help "Select the location of the database" &= typDir
-        } &= help "Run datalog programs and quit"
-          &= auto
+makePrisms ''MonitorOptions
+makeClassy ''MonitorOptions
 
-      daemon = Daemon
-        { files = def &= help "input files" &= typFile -- &= args
-        , datadir = def &= opt defaultDataDir &= help "Select the location of the database" &= typDir
-        } &= help "Run as a daemon"
+data Verbosity = Normal | Verbose
+  deriving (Eq,Ord,Show,Read,Data,Typeable)
 
-  return $ cmdArgsMode $ modes [console, daemon, run]
-        &= help "What's yours is mined. What's mined is yours."
-        &= summary ("Analytics " ++ showVersion Paths.version ++ ", © Edward Kmett 2013")
-        &= verbosity
-        &= program "edb"
+makePrisms ''Verbosity
+
+data CommonOptions = CommonOptions
+  { _commonVerbosity      :: Verbosity
+  , _commonDatadir        :: FilePath
+  , _commonMonitorOptions :: MonitorOptions
+  } deriving (Eq,Ord,Show,Read,Data,Typeable)
+
+parseCommonOptions :: FilePath -> Parser CommonOptions
+parseCommonOptions dd = CommonOptions
+  <$> flag Normal Verbose (long "verbose" <> short 'v' <> help "Enable verbose mode")
+  <*> strOption (long "datadir" <> short 'd' <> metavar "DIR" <> help "Select the location of the database" <> showDefault <> value dd <> action "directory")
+  <*> parseMonitorOptions
+
+makeClassy ''CommonOptions
+
+instance HasMonitorOptions CommonOptions where
+  monitorOptions = commonMonitorOptions
+
+data RunOptions = RunOptions
+  { _runFiles :: [FilePath]
+  , _interactive :: Bool
+  } deriving (Eq,Ord,Show,Read,Data,Typeable)
+
+makeClassy ''RunOptions
+
+parseRunOptions :: Parser RunOptions
+parseRunOptions = RunOptions
+  <$> arguments Just (help "files" <> metavar "FILE" <> action "file")
+  <*> switch (long "interactive" <> short 'i' <> help "Run a console")
+
+data Command = Run RunOptions
+  deriving (Eq,Ord,Show,Read,Data,Typeable)
+
+makePrisms ''Command
+makeClassy ''Command
+
+-- TODO: other commands
+parseCommand :: Parser Command
+parseCommand = Run <$> parseRunOptions
+
+data Options = Options
+  { _optionsCommonOptions :: CommonOptions
+  , _optionsCommand :: Command
+  } deriving (Eq,Ord,Show,Read,Data,Typeable)
+
+makeClassy ''Options
+
+instance HasCommonOptions Options where
+  commonOptions = optionsCommonOptions
+
+instance HasCommand Options where
+  command = optionsCommand
+
+parseOptions :: FilePath -> Parser Options
+parseOptions dd = Options <$> parseCommonOptions dd <*> parseCommand
+
+getOptions :: IO Options
+getOptions = do
+  ddd <- Paths.getDataDir
+  execParser $ info (helper <*> parseOptions ddd) $
+    fullDesc
+    <> progDesc "Run datalog programs"
+    <> header ("Analytics " ++ showVersion Paths.version ++ ", © Edward Kmett 2013")
