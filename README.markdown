@@ -12,14 +12,14 @@ Skim the [examples folder](https://github.com/analytics/analytics/tree/master/ex
 Using `X`, `Y` and `Z` as `Node` variables, and `A` `B` and `C` as `Node` entities:
 
 ```haskell
-test :: Datalog Schema [TC]
+test :: Datalog [TC]
 test = do
   edge A B
   edge B C
   edge B A
   tc X Y :- edge X Y
-  tc X Z :- tc X Y & edge Y Z
-  query $ tc A X & no (edge X C)
+  tc X Z :- tc X Y <* edge Y Z
+  query $ tc A X <* no (edge X C)
 ```
 
 Contact Information
