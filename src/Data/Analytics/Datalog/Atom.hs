@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -23,14 +24,8 @@ import Data.Analytics.Datalog.Row
 import Data.Analytics.Datalog.Term
 import Data.Typeable
 
-data Atom :: * -> * -> * -> * where
-  -- Atom :: (b -> a) -> t -> Row b -> Atom t a
-  Atom :: t -> Row (a -> b) -> Atom t a b
+data Atom :: * -> * -> * where
+  Atom :: Int -> Row (a -> b) -> Atom a b
   deriving Typeable
 
-{-
-instance Functor (Atom t) where
-  fmap f (Atom k t h) = Atom (f . k) t h
--}
-
-instance Term x => TermOf (Atom t a b) x
+instance Term x => TermOf (Atom a b) x

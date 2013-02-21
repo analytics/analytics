@@ -40,19 +40,19 @@ data Request deriving Typeable
 --
 -- The 'Query' itself forms an 'Alternative', letting you combine them to make a robust
 -- 'Data.Analytics.Datalog.query' language.
-data Query :: * -> * -> * -> * where
-  Ap    :: Query m t (a -> b) -> Query m t a -> Query m t b
-  Map   :: (a -> b) -> Query m t a -> Query m t b
-  Pure  :: a -> Query m t a
-  Alt   :: Query m t a -> Query m t a -> Query m t a
-  Empty :: Query m t a
-  Value :: Atom t a b  -> Query m t a
-  Row   :: Atom t a b  -> Query m t b
-  Key   :: Term a => a -> Query m t (Entity a)
-  No    :: Atom t a b  -> Query m t ()
+data Query :: * -> * -> * where
+  Ap    :: Query m (a -> b) -> Query m a -> Query m b
+  Map   :: (a -> b) -> Query m a -> Query m b
+  Pure  :: a -> Query m a
+  Alt   :: Query m a -> Query m a -> Query m a
+  Empty :: Query m a
+  Value :: Atom a b  -> Query m a
+  Row   :: Atom a b  -> Query m b
+  Key   :: Term a => a -> Query m (Entity a)
+  No    :: Atom a b  -> Query m ()
   deriving Typeable
 
-instance Num a => Num (Query m t a) where
+instance Num a => Num (Query m a) where
   (+) = liftA2 (+)
   {-# INLINE (+) #-}
   (-) = liftA2 (-)
@@ -66,7 +66,7 @@ instance Num a => Num (Query m t a) where
   fromInteger = Pure . fromInteger
   {-# INLINE fromInteger #-}
 
-instance Fractional a => Fractional (Query m t a) where
+instance Fractional a => Fractional (Query m a) where
   (/) = liftA2 (/)
   {-# INLINE (/) #-}
   recip = fmap recip
@@ -74,59 +74,59 @@ instance Fractional a => Fractional (Query m t a) where
   fromRational = Pure . fromRational
   {-# INLINE fromRational #-}
 
-instance Functor (Query m t) where
+instance Functor (Query m) where
   fmap = Map
   {-# INLINE fmap #-}
 
-instance Apply (Query m t) where
+instance Apply (Query m) where
   (<.>) = Ap
   {-# INLINE (<.>) #-}
 
-instance Applicative (Query m t) where
+instance Applicative (Query m) where
   pure = Pure
   {-# INLINE pure #-}
   (<*>) = Ap
   {-# INLINE (<*>) #-}
 
-instance Alt (Query m t) where
+instance Alt (Query m) where
   (<!>) = Alt
   {-# INLINE (<!>) #-}
 
-instance Plus (Query m t) where
+instance Plus (Query m) where
   zero = Empty
   {-# INLINE zero #-}
 
-instance Alternative (Query m t) where
+instance Alternative (Query m) where
   empty = Empty
   {-# INLINE empty #-}
   (<|>) = Alt
   {-# INLINE (<|>) #-}
 
-instance Semigroup a => Semigroup (Query m t a) where
+instance Semigroup a => Semigroup (Query m a) where
   (<>) = liftA2 (<>)
   {-# INLINE (<>) #-}
 
-instance Monoid a => Monoid (Query m t a) where
+instance Monoid a => Monoid (Query m a) where
   mempty = pure mempty
   {-# INLINE mempty #-}
   mappend = liftA2 mappend
   {-# INLINE mappend #-}
 
-instance Term x => TermOf (Query m t a) x
+instance Term x => TermOf (Query m a) x
 
 -- | Stratified negation.
-no :: Atom t a b -> Query m t ()
+no :: Atom a b -> Query m ()
 no = No
 {-# INLINE no #-}
 
-row :: Atom t a b -> Query m t b
+row :: Atom a b -> Query m b
 row = Row
 {-# INLINE row #-}
 
-key :: Term a => a -> Query m t (Entity a)
+key :: Term a => a -> Query m (Entity a)
 key = Key
 {-# INLINE key #-}
 
-value :: Atom t a b -> Query m t a
+value :: Atom a b -> Query m a
 value = Value
 {-# INLINE value #-}

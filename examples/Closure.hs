@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies, TemplateHaskell, DeriveDataTypeable, FlexibleContexts, GADTs, Rank2Types #-}
+{-# LANGUAGE TypeFamilies, TemplateHaskell, DeriveDataTypeable, FlexibleContexts, GADTs, Rank2Types, DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
 module Examples.Closure where
 
 import Control.Applicative
@@ -13,14 +13,11 @@ instance Term NV where type Entity NV = Node; term = var
 
 data Edge = Edge Node Node () deriving (Eq,Ord)
 
--- data Schema = EDGE | TC deriving (Eq,Ord,Show)
-data Schema = EDGE | TC deriving (Eq,Ord,Show)
+edge, tc :: T2 Edge Node Node ()
+edge = t2 0 Edge -- const
+tc   = t2 1 Edge -- const
 
-edge, tc :: T2 Schema Edge Node Node ()
-edge = t2 EDGE Edge
-tc   = t2 TC   Edge
-
-test :: Datalog Schema [Edge]
+test :: Datalog [Edge]
 test = do
   edge A B
   edge B C

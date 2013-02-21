@@ -29,79 +29,79 @@ import Data.Analytics.Datalog.Monad
 import Data.Analytics.Datalog.Row
 import Data.Analytics.Datalog.Term
 
-type T0 t o m         = forall r.          Atomic r t m o
+type T0 o m         = forall r.          Atomic r m o
                       => r
-type T1 t o x m       = forall r a.       (Atomic r t m o, TermOf r a, Entity a ~ x)
+type T1 o x m       = forall r a.       (Atomic r m o, TermOf r a, Entity a ~ x)
                       => a -> r
-type T2 t o x y m     = forall r a b.     (Atomic r t m o, TermOf r a, Entity a ~ x, TermOf r b, Entity b ~ y)
+type T2 o x y m     = forall r a b.     (Atomic r m o, TermOf r a, Entity a ~ x, TermOf r b, Entity b ~ y)
                       => a -> b -> r
-type T3 t o x y z m   = forall r a b c.   (Atomic r t m o, TermOf r a, Entity a ~ x, TermOf r b, Entity b ~ y, TermOf r c, Entity c ~ z)
+type T3 o x y z m   = forall r a b c.   (Atomic r m o, TermOf r a, Entity a ~ x, TermOf r b, Entity b ~ y, TermOf r c, Entity c ~ z)
                       => a -> b -> c -> r
-type T4 t o w x y z m = forall r a b c d. (Atomic r t m o, TermOf r a, Entity a ~ w, TermOf r b, Entity b ~ x, TermOf r c, Entity c ~ y, TermOf r d, Entity d ~ z)
+type T4 o w x y z m = forall r a b c d. (Atomic r m o, TermOf r a, Entity a ~ w, TermOf r b, Entity b ~ x, TermOf r c, Entity c ~ y, TermOf r d, Entity d ~ z)
                       => a -> b -> c -> d -> r
 
-t0 :: t -> (m -> o) -> T0 t o m
+t0 :: Int -> (m -> o) -> T0 o m
 t0 t o = atom t $ pure o
 
-t1 :: t -> (x -> m -> o) -> T1 t o x m
+t1 :: Int -> (x -> m -> o) -> T1 o x m
 t1 t f a = atom t $ f <$> arg a
 
-t2 :: t -> (x -> y -> m -> o) -> T2 t o x y m
+t2 :: Int -> (x -> y -> m -> o) -> T2 o x y m
 t2 t f a b = atom t $ f <$> arg a <*> arg b
 
-t3 :: t -> (x -> y -> z -> m -> o) -> T3 t o x y z m
+t3 :: Int -> (x -> y -> z -> m -> o) -> T3 o x y z m
 t3 t f a b c = atom t $ f <$> arg a <*> arg b <*> arg c
 
-t4 :: t -> (w -> x -> y -> z -> m -> o) -> T4 t o w x y z m
+t4 :: Int -> (w -> x -> y -> z -> m -> o) -> T4 o w x y z m
 t4 t f a b c d = atom t $ f <$> arg a <*> arg b <*> arg c <*> arg d
 
 ------------------------------------------------------------------------------
 -- Useful for returning t0..t4 in a 'Monad' without @ImpredicativeTypes@.
 ------------------------------------------------------------------------------
 
-data Table0 t o m = T0 (T0 t o m)
-data Table1 t o x m = T1 (T1 t o x m)
-data Table2 t o x y m = T2 (T2 t o x y m)
-data Table3 t o x y z m = T3 (T3 t o x y z m)
-data Table4 t o w x y z m = T4 (T4 t o w x y z m)
+data Table0 o m = T0 (T0 o m)
+data Table1 o x m = T1 (T1 o x m)
+data Table2 o x y m = T2 (T2 o x y m)
+data Table3 o x y z m = T3 (T3 o x y z m)
+data Table4 o w x y z m = T4 (T4 o w x y z m)
 
 ------------------------------------------------------------------------------
 -- Tabled
 ------------------------------------------------------------------------------
 
-class Tabled t k r | r -> t k where
-  table :: MonadTable t m => k -> m r
+class Tabled k r | r -> k where
+  table :: MonadTable m => k -> m r
 
-instance Tabled t (n -> k) (Table0 t k n) where
-  table k = freshTable 0 >>= \t -> return $ T0 (t0 t k)
+instance Tabled (n -> k) (Table0 k n) where
+  table k = freshTable >>= \t -> return $ T0 (t0 t k)
 
-instance Tabled t (x -> n -> k) (Table1 t k x n) where
-  table k = freshTable 1 >>= \t -> return $ T1 (t1 t k)
+instance Tabled (x -> n -> k) (Table1 k x n) where
+  table k = freshTable >>= \t -> return $ T1 (t1 t k)
 
-instance Tabled t (x -> y -> n -> k) (Table2 t k x y n) where
-  table k = freshTable 2 >>= \t -> return $ T2 (t2 t k)
+instance Tabled (x -> y -> n -> k) (Table2 k x y n) where
+  table k = freshTable >>= \t -> return $ T2 (t2 t k)
 
-instance Tabled t (x -> y -> z -> n -> k) (Table3 t k x y z n) where
-  table k = freshTable 3 >>= \t -> return $ T3 (t3 t k)
+instance Tabled (x -> y -> z -> n -> k) (Table3 k x y z n) where
+  table k = freshTable >>= \t -> return $ T3 (t3 t k)
 
-instance Tabled t (w -> x -> y -> z -> n -> k) (Table4 t k w x y z n) where
-  table k = freshTable 4 >>= \t -> return $ T4 (t4 t k)
+instance Tabled (w -> x -> y -> z -> n -> k) (Table4 k w x y z n) where
+  table k = freshTable >>= \t -> return $ T4 (t4 t k)
 
 ------------------------------------------------------------------------------
 -- MonadTable
 ------------------------------------------------------------------------------
 
-class Monad m => MonadTable t m | m -> t where
-  freshTable :: Int -> m t -- Build a table with a given arity
+class Monad m => MonadTable m where
+  freshTable :: m Int -- Build a table with a given arity
 
-instance MonadTable t m => MonadTable t (Lazy.StateT s m) where
-  freshTable = lift . freshTable
+instance MonadTable m => MonadTable (Lazy.StateT s m) where
+  freshTable = lift freshTable
   {-# INLINE freshTable #-}
 
-instance MonadTable t m => MonadTable t (Strict.StateT s m) where
-  freshTable = lift . freshTable
+instance MonadTable m => MonadTable (Strict.StateT s m) where
+  freshTable = lift freshTable
   {-# INLINE freshTable #-}
 
-instance MonadTable t m => MonadTable t (DatalogT t m) where
-  freshTable = lift . freshTable
+instance MonadTable m => MonadTable (DatalogT m) where
+  freshTable = lift freshTable
   {-# INLINE freshTable #-}

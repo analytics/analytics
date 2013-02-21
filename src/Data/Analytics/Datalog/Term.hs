@@ -21,7 +21,6 @@ module Data.Analytics.Datalog.Term
   , TermOf
   ) where
 
-import Data.Hashable
 import Data.Typeable
 
 --------------------------------------------------------------------
@@ -39,7 +38,8 @@ entity :: Entity a ~ a => Handler a
 entity = IsEntity
 
 #ifndef HLINT
-class (Typeable (Entity a), Hashable (Entity a), Ord (Entity a), Typeable a, Hashable a, Ord a) => Term a where
+-- class (Typeable (Entity a), Hashable (Entity a), Ord (Entity a), Typeable a, Hashable a, Ord a) => Term a where
+class (Typeable (Entity a), Ord (Entity a), Typeable a, Ord a) => Term a where
   type Entity a :: *
   type Entity a = a
 
