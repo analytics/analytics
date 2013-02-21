@@ -102,6 +102,6 @@ instance MonadTable m => MonadTable (Strict.StateT s m) where
   freshTable = lift freshTable
   {-# INLINE freshTable #-}
 
-instance MonadTable m => MonadTable (DatalogT m) where
-  freshTable = lift freshTable
+instance Monad m => MonadTable (DatalogT m) where
+  freshTable = Fresh
   {-# INLINE freshTable #-}

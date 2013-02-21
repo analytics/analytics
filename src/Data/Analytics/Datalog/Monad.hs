@@ -49,6 +49,7 @@ type Datalog = DatalogT Identity
 -- | An @operational@ encoding of a 'Datalog' program with extra effects in @m@.
 data DatalogT :: (* -> *) -> * -> * where
   (:-)   :: Atom a b -> Query Body a -> DatalogT m ()
+  Fresh  :: DatalogT m Int
   Query  :: Query Request a -> DatalogT m [a]
   Bind   :: DatalogT m a -> (a -> DatalogT m b) -> DatalogT m b
   Return :: a -> DatalogT m a

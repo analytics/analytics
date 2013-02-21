@@ -33,7 +33,7 @@ import Control.Lens
 import Control.Monad
 import Data.Analytics.Datalog.Atom
 import qualified Data.Analytics.Datalog.Monad as Datalog
-import Data.Analytics.Datalog.Monad hiding (Query, (:-))
+import Data.Analytics.Datalog.Monad hiding (Query, (:-), Fresh)
 import Data.Analytics.Datalog.Query
 import Data.Functor.Identity
 
@@ -44,6 +44,7 @@ type Step = StepT Identity
 
 -- | A single 'Datalog' rule or 'Query'.
 data StepT :: (* -> *) -> * -> * where
+  Fresh :: StepT m Int
   (:-)  :: Atom a b -> Query Body a -> StepT m ()
   Query :: Query Request a -> StepT m [a]
 
@@ -58,6 +59,7 @@ prompt :: Datalog a -> Prompt a
 prompt = runIdentity . promptT
 
 unprompt :: PromptT m a -> DatalogT m a
+unprompt (Fresh :>>= k)    = Bind Datalog.Fresh k
 unprompt (Query q :>>= k)  = Bind (Datalog.Query q) k
 unprompt ((h :- b) :>>= k) = Bind (h Datalog.:- b) k
 unprompt (Done a)          = Return a
@@ -65,10 +67,12 @@ unprompt (Done a)          = Return a
 -- | Quotient out operational details of the Datalog program and get to the
 -- next 'Step'.
 promptT :: Monad m => DatalogT m a -> m (PromptT m a)
+promptT Datalog.Fresh              = return $ Fresh :>>= return
 promptT (Datalog.Query q)          = return $ Query q :>>= return
 promptT (h Datalog.:- b)           = return $ (h :- b) :>>= return
 promptT (Return a)                 = return $ Done a
 promptT (Lift m)                   = liftM Done m
+promptT (Bind Datalog.Fresh g)     = return $ Fresh :>>= g
 promptT (Bind (Datalog.Query q) g) = return $ Query q :>>= g
 promptT (Bind (h Datalog.:- b) g)  = return $ (h :- b) :>>= g
 promptT (Bind (Lift m) g)          = m >>= promptT . g
