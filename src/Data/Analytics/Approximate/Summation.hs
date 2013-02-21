@@ -13,6 +13,7 @@
 module Data.Analytics.Approximate.Summation
   ( EFT(..)
   , _Compensated
+  , Overcompensated
   , primal
   , residual
   , uncompensated
@@ -72,6 +73,7 @@ class RealFrac a => EFT a where
   compensated :: EFT a => a -> a -> Compensated a
   magic :: a
 
+
 _Compensated :: EFT a => Iso' (Compensated a) (a, a)
 _Compensated = iso (`with` (,)) (uncurry compensated)
 {-# INLINE _Compensated #-}
@@ -95,6 +97,17 @@ instance EFT Float where
   {-# INLINE compensated #-}
   magic = 4097
   {-# INLINE magic #-}
+
+instance EFT a => EFT (Compensated a) where
+  data Compensated (Compensated a) = CC !(Compensated a) !(Compensated a)
+  with (CC a b) k = k a b
+  {-# INLINE with #-}
+  compensated = CC
+  {-# INLINE compensated #-}
+  magic = times magic magic compensated
+  {-# INLINE magic #-}
+
+type Overcompensated a = Compensated (Compensated a)
 
 primal :: EFT a => Lens' (Compensated a) a
 primal f c = with c $ \a b -> f a <&> \a' -> compensated a' b
