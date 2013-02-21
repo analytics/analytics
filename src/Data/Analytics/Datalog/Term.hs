@@ -4,6 +4,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE FunctionalDependencies #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) Edward Kmett 2013
@@ -48,4 +49,4 @@ class (Typeable (Entity a), Ord (Entity a), Typeable a, Ord a) => Term a where
   term = entity
 #endif
 
-class Term a => TermOf r a
+class Term a => TermOf r a | r -> a
