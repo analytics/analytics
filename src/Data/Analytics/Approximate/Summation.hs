@@ -1,4 +1,8 @@
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, TypeFamilies #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) Edward Kmett 2013
@@ -35,6 +39,8 @@ import Control.Monad
 import Data.Foldable as Foldable
 import Data.Ratio
 import Data.Semigroup
+import Foreign.Ptr
+import Foreign.Storable
 import Text.Read as T
 import Text.Show as T
 import Data.Vector.Unboxed as U
@@ -88,10 +94,10 @@ class RealFrac a => Compensable a where
   --
   -- This construction can be iterated, doubling precision each time.
   --
-  -- >>> round (product [2..100] :: Compensated (Compensated (Compensated Double)))
+  -- >>> round (Prelude.product [2..100] :: Compensated (Compensated (Compensated Double)))
   -- 93326215443944152681699238856266700490715968264381621468592963895217599993229915608941463976156518286253697920827223758251185210916864000000000000000000000000
   --
-  -- >>> product [2..100]
+  -- >>> Prelude.product [2..100]
   -- 93326215443944152681699238856266700490715968264381621468592963895217599993229915608941463976156518286253697920827223758251185210916864000000000000000000000000
   data Compensated a
 
@@ -323,6 +329,32 @@ instance Compensable a => RealFrac (Compensated a) where
     (w, p) -> add p b $ \ x y -> case properFraction x of
       (w',q) -> (w + w', add q y compensated)
   {-# INLINE properFraction #-}
+
+instance (Compensable a, Storable a) => Storable (Compensated a) where
+  sizeOf _ = sizeOf (undefined :: a) * 2
+  {-# INLINE sizeOf #-}
+  alignment _ = alignment (undefined :: a)
+  {-# INLINE alignment #-}
+  peekElemOff p o | q <- castPtr p, o2 <- o * 2 =
+    compensated <$> peekElemOff q o2 <*> peekElemOff q (o2+1)
+  {-# INLINE peekElemOff #-}
+  pokeElemOff p o m | q <- castPtr p, o2 <- o * 2 = with m $ \a b -> do
+    pokeElemOff q o2 a
+    pokeElemOff q (o2+1) b
+  {-# INLINE pokeElemOff #-}
+  peekByteOff p o | q <- castPtr p =
+    compensated <$> peekByteOff q o <*> peekByteOff q (o + sizeOf (undefined :: a))
+  {-# INLINE peekByteOff #-}
+  pokeByteOff p o m | q <- castPtr p = with m $ \a b -> do
+    pokeByteOff q o a
+    pokeByteOff q (o+sizeOf (undefined :: a)) b
+  {-# INLINE pokeByteOff #-}
+  peek p | q <- castPtr p = compensated <$> peek q <*> peekElemOff q 1
+  {-# INLINE peek #-}
+  poke p m | q <- castPtr p = with m $ \a b -> do
+    poke q a
+    pokeElemOff q 1 b
+  {-# INLINE poke #-}
 
 newtype instance U.MVector s (Compensated a) = MV_Compensated (U.MVector s (a,a))
 newtype instance U.Vector (Compensated a) = V_Compensated (U.Vector (a, a))
