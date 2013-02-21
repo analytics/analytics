@@ -17,7 +17,7 @@
 -- precision.
 --------------------------------------------------------------------
 module Data.Analytics.Approximate.Summation
-  ( EFT(..)
+  ( Compensable(..)
   , _Compensated
   , Overcompensated
   , primal
@@ -30,12 +30,16 @@ module Data.Analytics.Approximate.Summation
   ) where
 
 import Control.Applicative
-import Control.Lens
+import Control.Lens as L
+import Control.Monad
 import Data.Foldable as Foldable
 import Data.Ratio
 import Data.Semigroup
-import Text.Read
--- import Data.Vector.Generic as Generic
+import Text.Read as T
+import Text.Show as T
+import Data.Vector.Unboxed as U
+import Data.Vector.Generic as G
+import Data.Vector.Generic.Mutable as M
 
 {-# ANN module "hlint: ignore Use -" #-}
 
@@ -60,7 +64,7 @@ add a b k = k x y where
 --
 -- Which is to say that @x@ is the floating point image of @(a * b)@ and
 -- @y@ stores the residual error term.
-times :: EFT a => a -> a -> (a -> a -> r) -> r
+times :: Compensable a => a -> a -> (a -> a -> r) -> r
 times a b k =
   split a $ \a1 a2 ->
   split b $ \b1 b2 ->
@@ -70,14 +74,14 @@ times a b k =
 -- | error-free split of a floating point number into two parts.
 --
 -- Note: these parts do not satisfy the `compensated` contract
-split :: EFT a => a -> (a -> a -> r) -> r
+split :: Compensable a => a -> (a -> a -> r) -> r
 split a k = k x y where
   c = magic*a
   x = c - (c - a)
   y = a - x
 {-# INLINE split #-}
 
-class RealFrac a => EFT a where
+class RealFrac a => Compensable a where
   -- | This provides a numeric data type with effectively doubled precision by
   -- using Knuth's error free transform and a number of custom compensated
   -- arithmetic circuits.
@@ -93,12 +97,12 @@ class RealFrac a => EFT a where
 
   -- | This extracts both the 'primal' and 'residual' components of a 'Compensated'
   -- number.
-  with :: EFT a => Compensated a -> (a -> a -> r) -> r
+  with :: Compensable a => Compensated a -> (a -> a -> r) -> r
 
   -- | Used internally to construct 'compensated' values that satisfy our residual contract.
   --
   -- When in doubt, use @'add' a b 'compensated'@ instead of @'compensated' a b@
-  compensated :: EFT a => a -> a -> Compensated a
+  compensated :: Compensable a => a -> a -> Compensated a
 
   -- | This 'magic' number is used to 'split' the significand in half, so we can multiply
   -- them separately without losing precision in 'times'.
@@ -106,11 +110,11 @@ class RealFrac a => EFT a where
 
 -- | This provides the isomorphism between the compact representation we store these in internally
 -- and the naive pair of the 'primal' and 'residual' components.
-_Compensated :: EFT a => Iso' (Compensated a) (a, a)
+_Compensated :: Compensable a => Iso' (Compensated a) (a, a)
 _Compensated = iso (`with` (,)) (uncurry compensated)
 {-# INLINE _Compensated #-}
 
-instance EFT Double where
+instance Compensable Double where
   data Compensated Double = CD {-# UNPACK #-} !Double {-# UNPACK #-} !Double
   with (CD a b) k = k a b
   {-# INLINE with #-}
@@ -119,7 +123,7 @@ instance EFT Double where
   magic = 134217729
   {-# INLINE magic #-}
 
-instance EFT Float where
+instance Compensable Float where
   data Compensated Float = CF {-# UNPACK #-} !Float {-# UNPACK #-} !Float
   with (CF a b) k = k a b
   {-# INLINE with #-}
@@ -128,7 +132,7 @@ instance EFT Float where
   magic = 4097
   {-# INLINE magic #-}
 
-instance EFT a => EFT (Compensated a) where
+instance Compensable a => Compensable (Compensated a) where
   data Compensated (Compensated a) = CC !(Compensated a) !(Compensated a)
   with (CC a b) k = k a b
   {-# INLINE with #-}
@@ -139,39 +143,39 @@ instance EFT a => EFT (Compensated a) where
 
 type Overcompensated a = Compensated (Compensated a)
 
-instance (EFT a, Show a) => Show (Compensated a) where
+instance (Compensable a, Show a) => Show (Compensated a) where
   showsPrec d m = with m $ \a b -> showParen (d > 10) $
-    showString "compensated " . showsPrec 11 a . showChar ' ' . showsPrec 11 b
+    showString "compensated " . T.showsPrec 11 a . showChar ' ' . T.showsPrec 11 b
 
-instance (EFT a, Read a) => Read (Compensated a) where
+instance (Compensable a, Read a) => Read (Compensated a) where
   readPrec = parens $ prec 10 $ do
     Ident "compensated" <- lexP
-    a <- step readPrec
-    b <- step readPrec
+    a <- step T.readPrec
+    b <- step T.readPrec
     return $ compensated a b
 
 -- | This 'Lens' lets us edit the 'primal' directly, leaving the 'residual' untouched.
-primal :: EFT a => Lens' (Compensated a) a
+primal :: Compensable a => Lens' (Compensated a) a
 primal f c = with c $ \a b -> f a <&> \a' -> compensated a' b
 {-# INLINE primal #-}
 
 -- | This 'Lens' lets us edit the 'residual' directly, leaving the 'primal' untouched.
-residual :: EFT a => Lens' (Compensated a) a
+residual :: Compensable a => Lens' (Compensated a) a
 residual f c = with c $ \a b -> compensated a <$> f b
 {-# INLINE residual #-}
 
 -- | Extract the 'primal' component of a 'compensated' value, when and if compensation
 -- is no longer required.
-uncompensated :: EFT a => Compensated a -> a
+uncompensated :: Compensable a => Compensated a -> a
 uncompensated c = with c const
 {-# INLINE uncompensated #-}
 
-instance EFT a => Eq (Compensated a) where
+instance Compensable a => Eq (Compensated a) where
   m == n = with m $ \a b -> with n $ \c d -> a == c && b == d
   m /= n = with m $ \a b -> with n $ \c d -> a /= c && b /= d
   {-# INLINE (==) #-}
 
-instance EFT a => Ord (Compensated a) where
+instance Compensable a => Ord (Compensated a) where
   compare m n = with m $ \a b -> with n $ \c d -> compare a c <> compare b d
   {-# INLINE compare #-}
   m <= n = with m $ \a b -> with n $ \c d -> case compare a c of
@@ -195,33 +199,33 @@ instance EFT a => Ord (Compensated a) where
     GT -> False
   {-# INLINE (<) #-}
 
-instance EFT a => Semigroup (Compensated a) where
+instance Compensable a => Semigroup (Compensated a) where
   (<>) = (+)
   {-# INLINE (<>) #-}
 
-instance EFT a => Monoid (Compensated a) where
+instance Compensable a => Monoid (Compensated a) where
   mempty = compensated 0 0
   {-# INLINE mempty #-}
   mappend = (+)
   {-# INLINE mappend #-}
 
 -- | Perform Kahan summation over a list.
-kahan :: (Foldable f, EFT a) => f a -> Compensated a
-kahan = Foldable.foldr cons mempty
+kahan :: (Foldable f, Compensable a) => f a -> Compensated a
+kahan = Foldable.foldr L.cons mempty
 {-# INLINE kahan #-}
 
 -- dot :: Vector v a => v a -> v a -> Compensated a
 -- dot = Generic.zipWith
 
-instance (Bifunctor p, Profunctor p, Functor f, EFT a, a ~ b) => Cons p f (Compensated a) (Compensated b) a b where
+instance (Bifunctor p, Profunctor p, Functor f, Compensable a, a ~ b) => Cons p f (Compensated a) (Compensated b) a b where
   _Cons = unto $ \(a, e) -> with e $ \b c -> let y = a - c; t = b + y in compensated t ((t - b) - y)
   {-# INLINE _Cons #-}
 
-instance (Bifunctor p, Profunctor p, Functor f, EFT a, a ~ b) => Snoc p f (Compensated a) (Compensated b) a b where
+instance (Bifunctor p, Profunctor p, Functor f, Compensable a, a ~ b) => Snoc p f (Compensated a) (Compensated b) a b where
   _Snoc = unto $ \(e, a) -> with e $ \b c -> let y = a - c; t = b + y in compensated t ((t - b) - y)
   {-# INLINE _Snoc #-}
 
-instance EFT a => Num (Compensated a) where
+instance Compensable a => Num (Compensated a) where
   m + n =
     with m $ \a  b  ->
     with n $ \c d ->
@@ -265,7 +269,7 @@ instance EFT a => Num (Compensated a) where
     x = fromInteger i
   {-# INLINE fromInteger #-}
 
-instance EFT a => Enum (Compensated a) where
+instance Compensable a => Enum (Compensated a) where
   succ a = a + 1
   {-# INLINE succ #-}
   pred a = a - 1
@@ -275,12 +279,12 @@ instance EFT a => Enum (Compensated a) where
   {-# INLINE toEnum #-}
   fromEnum = round
   {-# INLINE fromEnum #-}
-  enumFrom a = a : enumFrom (a + 1)
+  enumFrom a = a : Prelude.enumFrom (a + 1)
   {-# INLINE enumFrom #-}
-  enumFromThen a b = a : enumFromThen b (b - a + b)
+  enumFromThen a b = a : Prelude.enumFromThen b (b - a + b)
   {-# INLINE enumFromThen #-}
   enumFromTo a b
-    | a <= b = a : enumFromTo (a + 1) b
+    | a <= b = a : Prelude.enumFromTo (a + 1) b
     | otherwise = []
   {-# INLINE enumFromTo #-}
   enumFromThenTo a b c
@@ -294,7 +298,7 @@ instance EFT a => Enum (Compensated a) where
             | otherwise = []
   {-# INLINE enumFromThenTo #-}
 
-instance EFT a => Fractional (Compensated a) where
+instance Compensable a => Fractional (Compensated a) where
   recip m = with m $ \a b -> add (recip a) (-b / (a * a)) compensated
   {-# INLINE recip #-}
 
@@ -310,12 +314,60 @@ instance EFT a => Fractional (Compensated a) where
   fromRational r = fromInteger (numerator r) / fromInteger (denominator r)
   {-# INLINE fromRational #-}
 
-instance EFT a => Real (Compensated a) where
+instance Compensable a => Real (Compensated a) where
   toRational m = with m $ \a b -> toRational a + toRational b
   {-# INLINE toRational #-}
 
-instance EFT a => RealFrac (Compensated a) where
+instance Compensable a => RealFrac (Compensated a) where
   properFraction m = with m $ \a b -> case properFraction a of
     (w, p) -> add p b $ \ x y -> case properFraction x of
       (w',q) -> (w + w', add q y compensated)
   {-# INLINE properFraction #-}
+
+newtype instance U.MVector s (Compensated a) = MV_Compensated (U.MVector s (a,a))
+newtype instance U.Vector (Compensated a) = V_Compensated (U.Vector (a, a))
+
+instance (Compensable a, Unbox a) => M.MVector U.MVector (Compensated a) where
+  basicLength (MV_Compensated v) = M.basicLength v
+  {-# INLINE basicLength #-}
+  basicUnsafeSlice i n (MV_Compensated v) = MV_Compensated $ M.basicUnsafeSlice i n v
+  {-# INLINE basicUnsafeSlice #-}
+  basicOverlaps (MV_Compensated v1) (MV_Compensated v2) = M.basicOverlaps v1 v2
+  {-# INLINE basicOverlaps #-}
+  basicUnsafeNew n = MV_Compensated `liftM` M.basicUnsafeNew n
+  {-# INLINE basicUnsafeNew #-}
+  basicUnsafeReplicate n m = with m $ \x y -> MV_Compensated `liftM` M.basicUnsafeReplicate n (x,y)
+  {-# INLINE basicUnsafeReplicate #-}
+  basicUnsafeRead (MV_Compensated v) i = uncurry compensated `liftM` M.basicUnsafeRead v i
+  {-# INLINE basicUnsafeRead #-}
+  basicUnsafeWrite (MV_Compensated v) i m = with m $ \ x y -> M.basicUnsafeWrite v i (x,y)
+  {-# INLINE basicUnsafeWrite #-}
+  basicClear (MV_Compensated v) = M.basicClear v
+  {-# INLINE basicClear #-}
+  basicSet (MV_Compensated v) m = with m $ \ x y -> M.basicSet v (x,y)
+  {-# INLINE basicSet #-}
+  basicUnsafeCopy (MV_Compensated v1) (MV_Compensated v2) = M.basicUnsafeCopy v1 v2
+  {-# INLINE basicUnsafeCopy #-}
+  basicUnsafeMove (MV_Compensated v1) (MV_Compensated v2) = M.basicUnsafeMove v1 v2
+  {-# INLINE basicUnsafeMove #-}
+  basicUnsafeGrow (MV_Compensated v) n = MV_Compensated `liftM` M.basicUnsafeGrow v n
+  {-# INLINE basicUnsafeGrow #-}
+
+instance (Compensable a, Unbox a) => G.Vector U.Vector (Compensated a) where
+  basicUnsafeFreeze (MV_Compensated v) = V_Compensated `liftM` G.basicUnsafeFreeze v
+  {-# INLINE basicUnsafeFreeze #-}
+  basicUnsafeThaw (V_Compensated v) = MV_Compensated `liftM` G.basicUnsafeThaw v
+  {-# INLINE basicUnsafeThaw #-}
+  basicLength (V_Compensated v) = G.basicLength v
+  {-# INLINE basicLength #-}
+  basicUnsafeSlice i n (V_Compensated v) = V_Compensated $ G.basicUnsafeSlice i n v
+  {-# INLINE basicUnsafeSlice #-}
+  basicUnsafeIndexM (V_Compensated v) i
+                = uncurry compensated `liftM` G.basicUnsafeIndexM v i
+  {-# INLINE basicUnsafeIndexM #-}
+  basicUnsafeCopy (MV_Compensated mv) (V_Compensated v)
+                = G.basicUnsafeCopy mv v
+  {-# INLINE basicUnsafeCopy #-}
+  elemseq _ m z = with m $ \x y -> G.elemseq (undefined :: U.Vector a) x
+                                 $ G.elemseq (undefined :: U.Vector a) y z
+  {-# INLINE elemseq #-}
