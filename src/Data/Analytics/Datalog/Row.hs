@@ -17,8 +17,10 @@
 --------------------------------------------------------------------
 module Data.Analytics.Datalog.Row
   ( Row(..)
+  , runRow
   , arg
   , match
+  , matches
   , ARow
   ) where
 
@@ -56,6 +58,14 @@ data Row a where
   RowPure :: a -> Row a
   RowArg  :: Term a => a -> Row (Entity a)
   deriving Typeable
+
+runRow :: Row a -> Maybe a
+runRow (RowAp l r)  = runRow l <*> runRow r
+runRow (RowMap f x) = f <$> runRow x
+runRow (RowPure a)  = Just a
+runRow (RowArg a) = case term `withArgType` a of
+  IsEntity -> Just a
+  IsVar    -> Nothing
 
 instance Eq (Row a) where
   a == b = compare a b == EQ
@@ -111,6 +121,9 @@ instance HasVars (Row a) where
   vars f (RowArg v)   = f (Var v) <&> \(Var u) ->
     RowArg (fromMaybe (error "PANIC: very illegal substitution" `asTypeOf` v) (cast u))
   {-# INLINEABLE vars #-}
+
+matches :: Row a -> Row b -> Bool
+matches a b = has _Just $ evalStateT (match a b) (mempty :: Subst)
 
 match :: (MonadState s m, HasSubst s, MonadPlus m) => Row a -> Row b -> m (Row a)
 match (RowAp l r) (RowAp l' r')   = liftM2 RowAp (match l l') (match r r')
