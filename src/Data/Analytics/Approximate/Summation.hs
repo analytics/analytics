@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, TypeFamilies #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) Edward Kmett 2013
@@ -12,151 +12,188 @@
 --------------------------------------------------------------------
 module Data.Analytics.Approximate.Summation
   ( EFT(..)
-  , runEFT
-  , magic
+  , _Compensated
+  , primal
+  , residual
+  , uncompensated
+  , add
+  , times
   , split
-  , sum2, sum3
-  , times2
   ) where
 
+import Control.Applicative
 import Control.Lens
 import Data.Monoid
 import Data.Ratio
 
 {-# ANN module "hlint: ignore Use -" #-}
 
-data EFT = EFT {-# UNPACK #-} !Double {-# UNPACK #-} !Double deriving (Eq,Ord,Show,Read)
+-- | @'add' a b k@ computes @k x y@ such that
+--
+-- > x + y = a + b
+-- > x = fl(a + b)
+--
+-- Which is to say that @x@ is the floating point image of @(a + b)@ and
+-- @y@ stores the residual error term.
+add :: Num a => a -> a -> (a -> a -> r) -> r
+add a b k = k x y where
+  x = a + b
+  z = x - a
+  y = (a - (x - z)) + (b - z)
+{-# INLINE add #-}
 
-magic :: Double
-magic = 134217729 -- 2^27+1,  2^12+1 for float
-{-# INLINE magic #-}
+-- | @'times' a b k@ computes @k x y@ such that
+--
+-- > x + y = a * b
+-- > x = fl(a * b)
+--
+-- Which is to say that @x@ is the floating point image of @(a * b)@ and
+-- @y@ stores the residual error term.
+times :: EFT a => a -> a -> (a -> a -> r) -> r
+times a b k =
+  split a $ \a1 a2 ->
+  split b $ \b1 b2 ->
+  let x = a * b in k x (a2*b2 - (((x - a1*b1) - a2*b1) - a1*b2))
+{-# INLINE times #-}
 
 -- | error-free split of a floating point number into two parts.
-split :: Double -> EFT
-split a = EFT x y where
+--
+-- Note: these parts do not satisfy the `compensated` contract
+split :: EFT a => a -> (a -> a -> r) -> r
+split a k = k x y where
   c = magic*a
   x = c - (c - a)
   y = a - x
 {-# INLINE split #-}
 
--- | Knuth's error free transformation
---
--- After @'EFT' x y = 'sum2' a b@:
---
--- > a + b = x + y
--- > x = fl(a + b)
-sum2 :: Double -> Double -> EFT
-sum2 a b = EFT x y where
-  x = a + b
-  z = x - a
-  y = (a - (x - z)) + (b - z)
-{-# INLINE sum2 #-}
+class RealFrac a => EFT a where
+  data Compensated a
+  with :: EFT a => Compensated a -> (a -> a -> r) -> r
+  compensated :: EFT a => a -> a -> Compensated a
+  magic :: a
 
--- | Ogita, Rump and Oishi's 'VecSum'
-sum3 :: Double -> Double -> Double -> EFT
-sum3 a b c = EFT x4 (y3 + y4) where
-  EFT x1 y1 = sum2 a b
-  EFT x2 y2 = sum2 x1 c
-  EFT x3 y3 = sum2 y1 y2
-  EFT x4 y4 = sum2 x2 x3
-{-# INLINE sum3 #-}
+_Compensated :: EFT a => Iso' (Compensated a) (a, a)
+_Compensated = iso (`with` (,)) (uncurry compensated)
+{-# INLINE _Compensated #-}
 
-times2 :: Double -> Double -> EFT
-times2 a b = EFT x (a2*b2 - (((x - a1*b1) - a2*b1) - a1*b2)) where
-  x = a * b
-  EFT a1 a2 = split a
-  EFT b1 b2 = split b
-{-# INLINE times2 #-}
+instance EFT Double where
+  data Compensated Double = CD {-# UNPACK #-} !Double {-# UNPACK #-} !Double
+    deriving (Show,Read)
+  with (CD a b) k = k a b
+  {-# INLINE with #-}
+  compensated = CD
+  {-# INLINE compensated #-}
+  magic = 134217729
+  {-# INLINE magic #-}
 
-runEFT :: EFT -> Double
-runEFT (EFT x y) = x + y
-{-# INLINE runEFT #-}
+instance EFT Float where
+  data Compensated Float = CF {-# UNPACK #-} !Float {-# UNPACK #-} !Float
+    deriving (Show,Read)
+  with (CF a b) k = k a b
+  {-# INLINE with #-}
+  compensated = CF
+  {-# INLINE compensated #-}
+  magic = 4097
+  {-# INLINE magic #-}
 
-instance Monoid EFT where
-  mempty = EFT 0 0
+primal :: EFT a => Lens' (Compensated a) a
+primal f c = with c $ \a b -> f a <&> \a' -> compensated a' b
+{-# INLINE primal #-}
+
+residual :: EFT a => Lens' (Compensated a) a
+residual f c = with c $ \a b -> compensated a <$> f b
+{-# INLINE residual #-}
+
+uncompensated :: EFT a => Compensated a -> a
+uncompensated c = with c const
+{-# INLINE uncompensated #-}
+
+instance EFT a => Eq (Compensated a) where
+  m == n = with m $ \a b -> with n $ \c d -> a == c && b == d
+
+instance EFT a => Ord (Compensated a) where
+  compare m n = with m $ \a b -> with n $ \c d -> compare a c <> compare b d
+
+instance EFT a => Monoid (Compensated a) where
+  mempty = compensated 0 0
   {-# INLINE mempty #-}
   mappend = (+)
   {-# INLINE mappend #-}
 
-instance (Bifunctor p, Profunctor p, Functor f) => Cons p f EFT EFT Double Double where
-  _Cons = unto $ \(a, EFT b c) -> let y = a - c; t = b + y in EFT t ((t - b) - y)
+instance (Bifunctor p, Profunctor p, Functor f, EFT a, a ~ b) => Cons p f (Compensated a) (Compensated b) a b where
+  _Cons = unto $ \(a, e) -> with e $ \b c -> let y = a - c; t = b + y in compensated t ((t - b) - y)
   {-# INLINE _Cons #-}
 
-instance (Bifunctor p, Profunctor p, Functor f) => Snoc p f EFT EFT Double Double where
-  _Snoc = unto $ \(EFT b c, a) -> let y = a - c; t = b + y in EFT t ((t - b) - y)
+instance (Bifunctor p, Profunctor p, Functor f, EFT a, a ~ b) => Snoc p f (Compensated a) (Compensated b) a b where
+  _Snoc = unto $ \(e, a) -> with e $ \b c -> let y = a - c; t = b + y in compensated t ((t - b) - y)
   {-# INLINE _Snoc #-}
 
-instance Num EFT where
-  EFT a b + EFT a' b' = sum2 x4 (y2 + y3 + y4) where
-    EFT x1 y1 = sum2 a a'
-    EFT x2 y2 = sum2 y1 b'
-    EFT x3 y3 = sum2 b x2
-    EFT x4 y4 = sum2 x1 x3
+instance EFT a => Num (Compensated a) where
+  m + n =
+    with m $ \a  b  ->
+    with n $ \c d ->
+    add  a  c $ \x1 y1 ->
+    add y1  d $ \x2 y2 ->
+    add  b x2 $ \x3 y3 ->
+    add x1 x3 $ \x4 y4 ->
+    add x4 (y2 + y3 + y4) compensated
   {-# INLINE (+) #-}
 
-  EFT a b * EFT c d = sum2 x8 (b * d + y2 + y3 + y6 + y7 + y8) where
-    EFT x1 y1 = times2 a c
-    EFT x2 y2 = times2 b c
-    EFT x3 y3 = times2 a d
-    EFT x4 y4 = sum2 x1 x2
-    EFT x5 y5 = sum2 x3 x4
-    EFT x6 y6 = sum2 y1 y4
-    EFT x7 y7 = sum2 y5 x6
-    EFT x8 y8 = sum2 x5 x7
+  m * n =
+    with m $ \a b ->
+    with n $ \c d ->
+    times a c $ \x1 y1 ->
+    times b c $ \x2 y2 ->
+    times a d $ \x3 y3 ->
+    add x1 x2 $ \x4 y4 ->
+    add x3 x4 $ \x5 y5 ->
+    add y1 y4 $ \x6 y6 ->
+    add y5 x6 $ \x7 y7 ->
+    add x5 x7 $ \x8 y8 ->
+    add x8 (b*d + y2 + y3 + y6 + y7 + y8) compensated
   {-# INLINE (*) #-}
 
-  negate (EFT a b) = EFT (negate a) (negate b)
+  negate m = with m $ \a b -> compensated (negate a) (negate b)
   {-# INLINE negate #-}
 
   x - y = x + negate y
   {-# INLINE (-) #-}
 
-  signum (EFT a b) = EFT (signum (a + b)) 0
+  signum m = with m $ \a _ -> compensated (signum a) 0
   {-# INLINE signum #-}
 
-  abs e@(EFT a b)
-    | a + b < 0 = negate e
-    | otherwise = e
+  abs m = with m $ \a b ->
+    if a < 0
+    then compensated (negate a) (negate b)
+    else compensated a b
   {-# INLINE abs #-}
 
-  fromInteger i = sum2 x (fromInteger (i - round x)) where
+  fromInteger i = add x (fromInteger (i - round x)) compensated where
     x = fromInteger i
   {-# INLINE fromInteger #-}
 
-instance Fractional EFT where
-  -- recip (EFT a b) = split $ recip $ a + b
-
-  -- > 1/(a + b) = 1/a + e where
-  -- > e = 1/(a + b) - 1/a = -b/(a^2 + a b) = -b/a^2 + e_2
-  -- > so e_2 = b^2/a^3 + e_3 is vanishingly small
-  recip (EFT a b) = sum2 (recip a) (negate b / (a*a))
+instance EFT a => Fractional (Compensated a) where
+  recip m = with m $ \a b -> add (recip a) (-b / (a * a)) compensated
   {-# INLINE recip #-}
-  -- EFT a b / EFT c d = sum2 (a / (c + d)) (b / (c + d))
-  -- EFT a b / EFT c d = sum2 (a / c) ((b*c-a*d)/(c*c))
-  -- EFT a b / EFT c d = sum3 (a/c) (b/c) (-a*d/(c*c))
-  EFT a b / EFT c d = sum2 x3 (y1 + y2 + y3) where
-    aoc = a/c
-    EFT x1 y1 = times2 aoc (d/c)
-    EFT x2 y2 = sum2 x1 (b/c)
-    EFT x3 y3 = sum2 aoc x2
+
+  m / n =
+    with m $ \a b ->
+    with n $ \c d ->
+    times (a/c) (d/c) $ \x1 y1 ->
+    add x1 (b/c) $ \x2 y2 ->
+    add x2 (a/c) $ \x3 y3 ->
+    add x3 (y1 + y2 + y3) compensated
   {-# INLINE (/) #-}
-  fromRational r = fromInteger (numerator r) `times2` recip (fromInteger (denominator r))
+
+  fromRational r = fromInteger (numerator r) / fromInteger (denominator r)
   {-# INLINE fromRational #-}
 
-instance Real EFT where
-  toRational (EFT a b) = toRational a + toRational b
+instance EFT a => Real (Compensated a) where
+  toRational m = with m $ \a b -> toRational a + toRational b
   {-# INLINE toRational #-}
 
-instance RealFrac EFT where
-  properFraction (EFT a b) = case sum2 a b of
-    EFT x y -> case properFraction x of
-      (w,p) -> (w, sum2 p y)
+instance EFT a => RealFrac (Compensated a) where
+  properFraction m = with m $ \a b -> case properFraction a of
+    (w, p) -> add p b $ \ x y -> case properFraction x of
+      (w',q) -> (w + w', add q y compensated)
   {-# INLINE properFraction #-}
-  round = round . runEFT
-  {-# INLINE round #-}
-  truncate = truncate . runEFT
-  {-# INLINE truncate #-}
-  ceiling = ceiling . runEFT
-  {-# INLINE ceiling #-}
-  floor = floor . runEFT
-  {-# INLINE floor #-}
