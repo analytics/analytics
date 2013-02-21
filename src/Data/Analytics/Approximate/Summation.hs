@@ -7,8 +7,14 @@
 -- Stability :  experimental
 -- Portability: non-portable
 --
--- Monoidal compensated summation based on Knuth's error free
--- transformation and various algorithms by Ogita, Rump and Oishi.
+-- Compensated floating point summation based on Knuth's error free
+-- transformation, various algorithms by Ogita, Rump and Oishi and
+-- Kahan summation, with custom compensated arithetic circuits to
+-- do multiplication, division, etc. of compensated numbers.
+--
+-- In general if @a@ has x bits of significand, @Compensated a@ gives
+-- you twice that. You can iterate this construction for arbitrary
+-- precision.
 --------------------------------------------------------------------
 module Data.Analytics.Approximate.Summation
   ( EFT(..)
@@ -17,6 +23,7 @@ module Data.Analytics.Approximate.Summation
   , primal
   , residual
   , uncompensated
+  , kahan
   , add
   , times
   , split
@@ -24,8 +31,11 @@ module Data.Analytics.Approximate.Summation
 
 import Control.Applicative
 import Control.Lens
-import Data.Monoid
+import Data.Foldable as Foldable
 import Data.Ratio
+import Data.Semigroup
+import Text.Read
+-- import Data.Vector.Generic as Generic
 
 {-# ANN module "hlint: ignore Use -" #-}
 
@@ -68,19 +78,40 @@ split a k = k x y where
 {-# INLINE split #-}
 
 class RealFrac a => EFT a where
+  -- | This provides a numeric data type with effectively doubled precision by
+  -- using Knuth's error free transform and a number of custom compensated
+  -- arithmetic circuits.
+  --
+  -- This construction can be iterated, doubling precision each time.
+  --
+  -- >>> round (product [2..100] :: Compensated (Compensated (Compensated Double)))
+  -- 93326215443944152681699238856266700490715968264381621468592963895217599993229915608941463976156518286253697920827223758251185210916864000000000000000000000000
+  --
+  -- >>> product [2..100]
+  -- 93326215443944152681699238856266700490715968264381621468592963895217599993229915608941463976156518286253697920827223758251185210916864000000000000000000000000
   data Compensated a
+
+  -- | This extracts both the 'primal' and 'residual' components of a 'Compensated'
+  -- number.
   with :: EFT a => Compensated a -> (a -> a -> r) -> r
+
+  -- | Used internally to construct 'compensated' values that satisfy our residual contract.
+  --
+  -- When in doubt, use @'add' a b 'compensated'@ instead of @'compensated' a b@
   compensated :: EFT a => a -> a -> Compensated a
+
+  -- | This 'magic' number is used to 'split' the significand in half, so we can multiply
+  -- them separately without losing precision in 'times'.
   magic :: a
 
-
+-- | This provides the isomorphism between the compact representation we store these in internally
+-- and the naive pair of the 'primal' and 'residual' components.
 _Compensated :: EFT a => Iso' (Compensated a) (a, a)
 _Compensated = iso (`with` (,)) (uncurry compensated)
 {-# INLINE _Compensated #-}
 
 instance EFT Double where
   data Compensated Double = CD {-# UNPACK #-} !Double {-# UNPACK #-} !Double
-    deriving (Show,Read)
   with (CD a b) k = k a b
   {-# INLINE with #-}
   compensated = CD
@@ -90,7 +121,6 @@ instance EFT Double where
 
 instance EFT Float where
   data Compensated Float = CF {-# UNPACK #-} !Float {-# UNPACK #-} !Float
-    deriving (Show,Read)
   with (CF a b) k = k a b
   {-# INLINE with #-}
   compensated = CF
@@ -109,29 +139,79 @@ instance EFT a => EFT (Compensated a) where
 
 type Overcompensated a = Compensated (Compensated a)
 
+instance (EFT a, Show a) => Show (Compensated a) where
+  showsPrec d m = with m $ \a b -> showParen (d > 10) $
+    showString "compensated " . showsPrec 11 a . showChar ' ' . showsPrec 11 b
+
+instance (EFT a, Read a) => Read (Compensated a) where
+  readPrec = parens $ prec 10 $ do
+    Ident "compensated" <- lexP
+    a <- step readPrec
+    b <- step readPrec
+    return $ compensated a b
+
+-- | This 'Lens' lets us edit the 'primal' directly, leaving the 'residual' untouched.
 primal :: EFT a => Lens' (Compensated a) a
 primal f c = with c $ \a b -> f a <&> \a' -> compensated a' b
 {-# INLINE primal #-}
 
+-- | This 'Lens' lets us edit the 'residual' directly, leaving the 'primal' untouched.
 residual :: EFT a => Lens' (Compensated a) a
 residual f c = with c $ \a b -> compensated a <$> f b
 {-# INLINE residual #-}
 
+-- | Extract the 'primal' component of a 'compensated' value, when and if compensation
+-- is no longer required.
 uncompensated :: EFT a => Compensated a -> a
 uncompensated c = with c const
 {-# INLINE uncompensated #-}
 
 instance EFT a => Eq (Compensated a) where
   m == n = with m $ \a b -> with n $ \c d -> a == c && b == d
+  m /= n = with m $ \a b -> with n $ \c d -> a /= c && b /= d
+  {-# INLINE (==) #-}
 
 instance EFT a => Ord (Compensated a) where
   compare m n = with m $ \a b -> with n $ \c d -> compare a c <> compare b d
+  {-# INLINE compare #-}
+  m <= n = with m $ \a b -> with n $ \c d -> case compare a c of
+    LT -> True
+    EQ -> b <= d
+    GT -> False
+  {-# INLINE (<=) #-}
+  m >= n = with m $ \a b -> with n $ \c d -> case compare a c of
+    LT -> False
+    EQ -> b >= d
+    GT -> a >= c -- @compare x NaN@ and @compare naN x@ always return 'GT', but @m >= n@ should be 'False'
+  {-# INLINE (>=) #-}
+  m > n = with m $ \a b -> with n $ \c d -> case compare a c of
+    LT -> False
+    EQ -> b > d
+    GT -> a > c -- @compare x NaN@ and @compare naN x@ always return 'GT', but @m >= n@ should be 'False'
+  {-# INLINE (>) #-}
+  m < n = with m $ \a b -> with n $ \c d -> case compare a c of
+    LT -> True
+    EQ -> b < d
+    GT -> False
+  {-# INLINE (<) #-}
+
+instance EFT a => Semigroup (Compensated a) where
+  (<>) = (+)
+  {-# INLINE (<>) #-}
 
 instance EFT a => Monoid (Compensated a) where
   mempty = compensated 0 0
   {-# INLINE mempty #-}
   mappend = (+)
   {-# INLINE mappend #-}
+
+-- | Perform Kahan summation over a list.
+kahan :: (Foldable f, EFT a) => f a -> Compensated a
+kahan = Foldable.foldr cons mempty
+{-# INLINE kahan #-}
+
+-- dot :: Vector v a => v a -> v a -> Compensated a
+-- dot = Generic.zipWith
 
 instance (Bifunctor p, Profunctor p, Functor f, EFT a, a ~ b) => Cons p f (Compensated a) (Compensated b) a b where
   _Cons = unto $ \(a, e) -> with e $ \b c -> let y = a - c; t = b + y in compensated t ((t - b) - y)
@@ -184,6 +264,35 @@ instance EFT a => Num (Compensated a) where
   fromInteger i = add x (fromInteger (i - round x)) compensated where
     x = fromInteger i
   {-# INLINE fromInteger #-}
+
+instance EFT a => Enum (Compensated a) where
+  succ a = a + 1
+  {-# INLINE succ #-}
+  pred a = a - 1
+  {-# INLINE pred #-}
+  toEnum i = add x (fromIntegral (i - round x)) compensated where
+    x = fromIntegral i
+  {-# INLINE toEnum #-}
+  fromEnum = round
+  {-# INLINE fromEnum #-}
+  enumFrom a = a : enumFrom (a + 1)
+  {-# INLINE enumFrom #-}
+  enumFromThen a b = a : enumFromThen b (b - a + b)
+  {-# INLINE enumFromThen #-}
+  enumFromTo a b
+    | a <= b = a : enumFromTo (a + 1) b
+    | otherwise = []
+  {-# INLINE enumFromTo #-}
+  enumFromThenTo a b c
+    | a <= b    = up a
+    | otherwise = down a
+    where
+     delta = b - a
+     up x | x <= c    = x : up (x + delta)
+          | otherwise = []
+     down x | c <= x    = x : down (x + delta)
+            | otherwise = []
+  {-# INLINE enumFromThenTo #-}
 
 instance EFT a => Fractional (Compensated a) where
   recip m = with m $ \a b -> add (recip a) (-b / (a * a)) compensated
