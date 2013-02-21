@@ -2,7 +2,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE UndecidableInstances #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) Edward Kmett 2013
@@ -22,18 +21,18 @@ import Data.Analytics.Datalog.Atom
 import Data.Analytics.Datalog.Query
 import Data.Analytics.Datalog.Row
 
-class Atomic r a b | r -> a b where
+class Atomic r a b where
   atom :: Int -> Row (a -> b) -> r
 
 -- All Terms are forced to be Entities
-instance u ~ () => Atomic (DatalogT m u) () b where
+instance (u ~ (), v ~ ()) => Atomic (DatalogT m u) v b where
   atom t a = atom t a :- pure ()
 
-instance Atomic (Query Body a) a b where
+instance a ~ b => Atomic (Query Body a) b c where
   atom t a = Value (atom t a)
 
-instance Atomic (Query Request b) a b where
+instance a ~ c => Atomic (Query Request a) b c where
   atom t a = Row (atom t a)
 
-instance Atomic (Atom a b) a b where
+instance (a ~ c, b ~ d) => Atomic (Atom a b) c d where
   atom = Atom
