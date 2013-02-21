@@ -15,20 +15,21 @@ module Data.Analytics.Datalog.Atomic
   ( Atomic(..)
   ) where
 
+import Control.Applicative
 import Data.Analytics.Datalog.Monad
 import Data.Analytics.Datalog.Atom
 import Data.Analytics.Datalog.Query
 import Data.Analytics.Datalog.Row
 
-class Atomic r t a | r -> t where
-  atom :: t -> Row a -> r
+class Atomic r t a b | r -> t where
+  atom :: t -> Row (a -> b) -> r
 
 -- All Terms are forced to be Entities
-instance u ~ () => Atomic (DatalogT t m u) t b where
-  atom t a = Fact (atom t a)
+instance (u ~ (), v ~ ()) => Atomic (DatalogT t m u) t v b where
+  atom t a = atom t a :- pure ()
 
-instance a ~ b => Atomic (Query t a) t b where
+instance a ~ b => Atomic (Query t a) t b c where
   atom t a = Select (atom t a)
 
-instance a ~ b => Atomic (Atom t a) t b where
-  atom = Atom id
+instance (a ~ c, b ~ d) => Atomic (Atom t a b) t c d where
+  atom = Atom

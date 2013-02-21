@@ -18,6 +18,8 @@
 module Data.Analytics.Datalog.Query
   ( Query(..)
   , no
+  , key
+  , row
   ) where
 
 import Data.Analytics.Datalog.Atom
@@ -42,8 +44,10 @@ data Query :: * -> * -> * where
   Pure   :: a -> Query t a
   Alt    :: Query t a -> Query t a -> Query t a
   Empty  :: Query t a
-  Select :: Atom t a -> Query t a
-  No     :: Atom t a -> Query t ()
+  Select :: Atom t a b -> Query t a
+  Row    :: Atom t a b -> Query t b
+  Key    :: Term a => a -> Query t (Entity a)
+  No     :: Atom t a b -> Query t ()
   deriving Typeable
 
 instance Num a => Num (Query t a) where
@@ -109,6 +113,15 @@ instance Monoid a => Monoid (Query t a) where
 instance Term x => TermOf (Query t a) x
 
 -- | Stratified negation.
-no :: Atom t a -> Query t ()
+no :: Atom t a b -> Query t ()
 no = No
 {-# INLINE no #-}
+
+row :: Atom t a b -> Query t b
+row = Row
+{-# INLINE row #-}
+
+key :: Term a => a -> Query t (Entity a)
+key = Key
+{-# INLINE key #-}
+

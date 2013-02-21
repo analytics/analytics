@@ -29,41 +29,41 @@ import Data.Analytics.Datalog.Monad
 import Data.Analytics.Datalog.Row
 import Data.Analytics.Datalog.Term
 
-type T0 t o         = forall r.          Atomic r t o
-                    => r
-type T1 t o x       = forall r a.       (Atomic r t o, TermOf r a, Entity a ~ x)
-                    => a -> r
-type T2 t o x y     = forall r a b.     (Atomic r t o, TermOf r a, Entity a ~ x, TermOf r b, Entity b ~ y)
-                    => a -> b -> r
-type T3 t o x y z   = forall r a b c.   (Atomic r t o, TermOf r a, Entity a ~ x, TermOf r b, Entity b ~ y, TermOf r c, Entity c ~ z)
-                    => a -> b -> c -> r
-type T4 t o w x y z = forall r a b c d. (Atomic r t o, TermOf r a, Entity a ~ w, TermOf r b, Entity b ~ x, TermOf r c, Entity c ~ y, TermOf r d, Entity d ~ z)
-                    => a -> b -> c -> d -> r
+type T0 t o m         = forall r.          Atomic r t m o
+                      => r
+type T1 t o x m       = forall r a.       (Atomic r t m o, TermOf r a, Entity a ~ x)
+                      => a -> r
+type T2 t o x y m     = forall r a b.     (Atomic r t m o, TermOf r a, Entity a ~ x, TermOf r b, Entity b ~ y)
+                      => a -> b -> r
+type T3 t o x y z m   = forall r a b c.   (Atomic r t m o, TermOf r a, Entity a ~ x, TermOf r b, Entity b ~ y, TermOf r c, Entity c ~ z)
+                      => a -> b -> c -> r
+type T4 t o w x y z m = forall r a b c d. (Atomic r t m o, TermOf r a, Entity a ~ w, TermOf r b, Entity b ~ x, TermOf r c, Entity c ~ y, TermOf r d, Entity d ~ z)
+                      => a -> b -> c -> d -> r
 
-t0 :: t -> o -> T0 t o
+t0 :: t -> (m -> o) -> T0 t o m
 t0 t o = atom t $ pure o
 
-t1 :: t -> (x -> o) -> T1 t o x
+t1 :: t -> (x -> m -> o) -> T1 t o x m
 t1 t f a = atom t $ f <$> arg a
 
-t2 :: t -> (x -> y -> o) -> T2 t o x y
+t2 :: t -> (x -> y -> m -> o) -> T2 t o x y m
 t2 t f a b = atom t $ f <$> arg a <*> arg b
 
-t3 :: t -> (x -> y -> z -> o) -> T3 t o x y z
+t3 :: t -> (x -> y -> z -> m -> o) -> T3 t o x y z m
 t3 t f a b c = atom t $ f <$> arg a <*> arg b <*> arg c
 
-t4 :: t -> (w -> x -> y -> z -> o) -> T4 t o w x y z
+t4 :: t -> (w -> x -> y -> z -> m -> o) -> T4 t o w x y z m
 t4 t f a b c d = atom t $ f <$> arg a <*> arg b <*> arg c <*> arg d
 
 ------------------------------------------------------------------------------
 -- Useful for returning t0..t4 in a 'Monad' without @ImpredicativeTypes@.
 ------------------------------------------------------------------------------
 
-data Table0 t o = T0 (T0 t o)
-data Table1 t o x = T1 (T1 t o x)
-data Table2 t o x y = T2 (T2 t o x y)
-data Table3 t o x y z = T3 (T3 t o x y z)
-data Table4 t o w x y z = T4 (T4 t o w x y z)
+data Table0 t o m = T0 (T0 t o m)
+data Table1 t o x m = T1 (T1 t o x m)
+data Table2 t o x y m = T2 (T2 t o x y m)
+data Table3 t o x y z m = T3 (T3 t o x y z m)
+data Table4 t o w x y z m = T4 (T4 t o w x y z m)
 
 ------------------------------------------------------------------------------
 -- Tabled
@@ -72,19 +72,19 @@ data Table4 t o w x y z = T4 (T4 t o w x y z)
 class Tabled t k r | r -> t k where
   table :: MonadTable t m => k -> m r
 
-instance Tabled t k (Table0 t k) where
+instance Tabled t (n -> k) (Table0 t k n) where
   table k = freshTable 0 >>= \t -> return $ T0 (t0 t k)
 
-instance Tabled t (x -> k) (Table1 t k x) where
+instance Tabled t (x -> n -> k) (Table1 t k x n) where
   table k = freshTable 1 >>= \t -> return $ T1 (t1 t k)
 
-instance Tabled t (x -> y -> k) (Table2 t k x y) where
+instance Tabled t (x -> y -> n -> k) (Table2 t k x y n) where
   table k = freshTable 2 >>= \t -> return $ T2 (t2 t k)
 
-instance Tabled t (x -> y -> z -> k) (Table3 t k x y z) where
+instance Tabled t (x -> y -> z -> n -> k) (Table3 t k x y z n) where
   table k = freshTable 3 >>= \t -> return $ T3 (t3 t k)
 
-instance Tabled t (w -> x -> y -> z -> k) (Table4 t k w x y z) where
+instance Tabled t (w -> x -> y -> z -> n -> k) (Table4 t k w x y z n) where
   table k = freshTable 4 >>= \t -> return $ T4 (t4 t k)
 
 ------------------------------------------------------------------------------

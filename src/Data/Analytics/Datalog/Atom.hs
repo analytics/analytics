@@ -23,11 +23,14 @@ import Data.Analytics.Datalog.Row
 import Data.Analytics.Datalog.Term
 import Data.Typeable
 
-data Atom :: * -> * -> * where
-  Atom :: (b -> a) -> t -> Row b -> Atom t a
+data Atom :: * -> * -> * -> * where
+  -- Atom :: (b -> a) -> t -> Row b -> Atom t a
+  Atom :: t -> Row (a -> b) -> Atom t a b
   deriving Typeable
 
+{-
 instance Functor (Atom t) where
   fmap f (Atom k t h) = Atom (f . k) t h
+-}
 
-instance Term x => TermOf (Atom t a) x
+instance Term x => TermOf (Atom t a b) x

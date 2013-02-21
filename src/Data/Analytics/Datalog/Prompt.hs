@@ -9,7 +9,7 @@
 -- Stability :  experimental
 -- Portability: non-portable
 --
--- This module lets you step through a 'Datalog' program one 'Fact',
+-- This module lets you step through a 'Datalog' program one
 -- rule or 'Query' at a time.
 --
 -- /Note:/ This module conflicts with @Data.Analytics.Datalog.Monad@ and
@@ -33,7 +33,7 @@ import Control.Lens
 import Control.Monad
 import Data.Analytics.Datalog.Atom
 import qualified Data.Analytics.Datalog.Monad as Datalog
-import Data.Analytics.Datalog.Monad hiding (Fact, Query, (:-))
+import Data.Analytics.Datalog.Monad hiding (Query, (:-))
 import Data.Analytics.Datalog.Query
 import Data.Functor.Identity
 
@@ -42,10 +42,9 @@ infixl 1 :>>=
 
 type Step t = StepT t Identity
 
--- | A single 'Datalog' 'Fact', rule or 'Query'.
+-- | A single 'Datalog' rule or 'Query'.
 data StepT :: * -> (* -> *) -> * -> * where
-  Fact  :: Atom t a -> StepT t m ()
-  (:-)  :: Atom t a -> Query t b -> StepT t m ()
+  (:-)  :: Atom t a b -> Query t a -> StepT t m ()
   Query :: Query t a -> StepT t m [a]
 
 type Prompt t = PromptT t Identity
@@ -59,7 +58,6 @@ prompt :: Datalog t a -> Prompt t a
 prompt = runIdentity . promptT
 
 unprompt :: PromptT t m a -> DatalogT t m a
-unprompt (Fact xs :>>= k)  = Bind (Datalog.Fact xs) k
 unprompt (Query q :>>= k)  = Bind (Datalog.Query q) k
 unprompt ((h :- b) :>>= k) = Bind (h Datalog.:- b) k
 unprompt (Done a)          = Return a
@@ -67,12 +65,10 @@ unprompt (Done a)          = Return a
 -- | Quotient out operational details of the Datalog program and get to the
 -- next 'Step'.
 promptT :: Monad m => DatalogT t m a -> m (PromptT t m a)
-promptT (Datalog.Fact xs)          = return $ Fact xs :>>= return
 promptT (Datalog.Query q)          = return $ Query q :>>= return
 promptT (h Datalog.:- b)           = return $ (h :- b) :>>= return
 promptT (Return a)                 = return $ Done a
 promptT (Lift m)                   = liftM Done m
-promptT (Bind (Datalog.Fact xs) g) = return $ Fact xs :>>= g
 promptT (Bind (Datalog.Query q) g) = return $ Query q :>>= g
 promptT (Bind (h Datalog.:- b) g)  = return $ (h :- b) :>>= g
 promptT (Bind (Lift m) g)          = m >>= promptT . g
