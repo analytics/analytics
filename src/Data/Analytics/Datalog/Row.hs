@@ -21,7 +21,7 @@ module Data.Analytics.Datalog.Row
   , arg
   , match
   , matches
-  , ARow
+  , ARow(..)
   ) where
 
 import Control.Applicative
