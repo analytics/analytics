@@ -32,7 +32,7 @@ source-repository head
   type: git
   location: git://github.com/analytics/analytics.git
 
-flag edb
+flag rebase
   description: Build the REPL.
   default:     True
   manual:      True
@@ -116,11 +116,11 @@ library
     vector                    >= 0.10    && < 0.11,
     void                      >= 0.5.10  && < 1
 
-executable edb
+executable rebase
   main-is: Main.hs
   default-language: Haskell2010
   ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N -with-rtsopts=-T -v0
-  if !flag(edb)
+  if !flag(rebase)
     buildable: False
   else
     build-depends: base < 5, analytics

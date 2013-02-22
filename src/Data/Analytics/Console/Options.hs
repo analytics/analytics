@@ -28,8 +28,8 @@ data MonitorOptions = MonitorOptions { _monitorHost :: String, _monitorPort :: I
 
 parseMonitorOptions :: Parser MonitorOptions
 parseMonitorOptions = MonitorOptions
-  <$> strOption (long "ekg-host" <> short 'h' <> help "host for the EKG server" <> metavar "HOST" <> action "hostname" <> value "localhost")
-  <*> option (long "ekg-port" <> short 'p' <> help "port for the EKG server" <> metavar "PORT" <> value 8000)
+  <$> strOption (long "ekg-host" <> short 'h' <> help "host for the EKG server" <> metavar "HOST" <> action "hostname" <> value "localhost" <> showDefault)
+  <*> option (long "ekg-port" <> short 'p' <> help "port for the EKG server" <> metavar "PORT" <> value 8000 <> showDefault)
   <*> (not <$> switch (long "no-ekg" <> help "do not start the EKG server" <> value False))
 
 makePrisms ''MonitorOptions
