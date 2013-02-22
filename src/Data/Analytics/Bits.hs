@@ -126,4 +126,4 @@ inlinePerformIO :: IO a -> a
 inlinePerformIO (IO m) = case m realWorld# of
   (# _, r #) -> r
 {-# INLINE inlinePerformIO #-}
-#endif HLINT
+#endif
