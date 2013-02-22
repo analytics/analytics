@@ -31,6 +31,7 @@ module Data.Analytics.Approximate.Summation
   , add
   , times
   , split
+  , sin', cos'
   ) where
 
 import Control.Applicative
@@ -144,7 +145,8 @@ instance Compensable a => Compensable (Compensated a) where
   {-# INLINE with #-}
   compensated = CC
   {-# INLINE compensated #-}
-  magic = times magic magic compensated
+  magic = times (magic - 1) (magic - 1) $ \ x y -> compensated x (y + 1)
+  -- magic = times magic magic compensated
   {-# INLINE magic #-}
 
 type Overcompensated a = Compensated (Compensated a)
@@ -403,3 +405,108 @@ instance (Compensable a, Unbox a) => G.Vector U.Vector (Compensated a) where
   elemseq _ m z = with m $ \x y -> G.elemseq (undefined :: U.Vector a) x
                                  $ G.elemseq (undefined :: U.Vector a) y z
   {-# INLINE elemseq #-}
+
+sin' :: (Compensable a, Floating a) => Compensated a -> Compensated a
+sin' m =
+    with m $ \a b ->
+    times (sin a) (cos b) $ \x1 y1 ->
+    times (sin b) (cos a) $ \x2 y2 ->
+    add x1 x2 $ \x3 y3 ->
+    add y1 y2 $ \x4 y4 ->
+    add x4 y3 $ \x5 y5 ->
+    add x5 x3 $ \x6 y6 ->
+    add y4 y5 $ \x7 y7 ->
+    add x7 y6 $ \x8 y8 ->
+    add x8 x6 $ \x9 y9 ->
+    add (y7 + y8 + y9) x9 compensated
+{-# INLINE sin' #-}
+
+cos' :: (Compensable a, Floating a) => Compensated a -> Compensated a
+cos' m =
+    with m $ \a b ->
+    times (cos a)  (cos b) $ \x1 y1 ->
+    times (-sin b) (sin a) $ \x2 y2 ->
+    add x1 x2 $ \x3 y3 ->
+    add y1 y2 $ \x4 y4 ->
+    add x4 y3 $ \x5 y5 ->
+    add x5 x3 $ \x6 y6 ->
+    add y4 y5 $ \x7 y7 ->
+    add x7 y6 $ \x8 y8 ->
+    add x8 x6 $ \x9 y9 ->
+    add (y7 + y8 + y9) x9 compensated
+{-# INLINE cos' #-}
+
+instance (Compensable a, Floating a) => Floating (Compensated a) where
+  exp m =
+    with m $ \a b ->
+    times (exp a) (exp b) compensated
+  {-# INLINE exp #-}
+
+  sin m =
+    with m $ \a b ->
+    times (sin a) (cos b) $ \x1 y1 ->
+    times (sin b) (cos a) $ \x2 y2 ->
+    add x1 x2 $ \x3 y3 ->
+    add y1 y2 $ \x4 y4 ->
+    add x4 y3 $ \x5 y5 ->
+    add x5 x3 $ \x6 y6 ->
+    add (y4 + y5 + y6) x6 compensated
+  {-# INLINE sin #-}
+
+  cos m =
+    with m $ \a b ->
+    times (cos a) (cos b) $ \x1 y1 ->
+    times (-sin b) (sin a) $ \x2 y2 ->
+    add x1 x2 $ \x3 y3 ->
+    add y1 y2 $ \x4 y4 ->
+    add x4 y3 $ \x5 y5 ->
+    add x5 x3 $ \x6 y6 ->
+    add (y4 + y5 + y6) x6 compensated
+  {-# INLINE cos #-}
+
+  tan m =
+    with m $ \a b ->
+    add (tan a) (tan b) compensated /
+    (1 <| times (tan a) (tan b) compensated)
+  {-# INLINE tan #-}
+
+  sinh m =
+    with m $ \a b ->
+    times (sinh a) (cosh b) $ \x1 y1 ->
+    times (cosh a) (sinh b) $ \x2 y2 ->
+    add x1 x2 $ \x3 y3 ->
+    add y1 y2 $ \x4 y4 ->
+    add x4 y3 $ \x5 y5 ->
+    add x5 x3 $ \x6 y6 ->
+    add (y4 + y5 + y6) x6 compensated
+  {-# INLINE sinh #-}
+
+  cosh m =
+    with m $ \a b ->
+    times (cosh a) (cosh b) $ \x1 y1 ->
+    times (sinh b) (sinh a) $ \x2 y2 ->
+    add x1 x2 $ \x3 y3 ->
+    add y1 y2 $ \x4 y4 ->
+    add x4 y3 $ \x5 y5 ->
+    add x5 x3 $ \x6 y6 ->
+    add (y4 + y5 + y6) x6 compensated
+  {-# INLINE cosh #-}
+
+  tanh m =
+    with m $ \a b ->
+    add (tanh a) (tanh b) compensated /
+    (1 <| times (tanh a) (tanh b) compensated)
+  {-# INLINE tanh #-}
+
+  pi      = error "TODO"
+  log     = error "TODO"
+  logBase = error "TODO"
+  (**)    = error "TODO"
+  sqrt    = error "TODO"
+  asin    = error "TODO"
+  atan    = error "TODO"
+  acos    = error "TODO"
+  asinh   = error "TODO"
+  atanh   = error "TODO"
+  acosh   = error "TODO"
+
