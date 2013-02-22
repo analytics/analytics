@@ -6,8 +6,12 @@ The first and most thoroughly documented Sibyl was the Cumaean Sibyl, named Demo
 
 I also own several potentially relevant domains:
 
+* rebase.org
+* dibase.org
+* zigbase.com
+* wanbase.com
 * sharednothing.net
 * gridfront.com
 * gridfront.net
 
-What's yours is mined. What's mined is yours.
+"What's yours is mined. What's mined is yours." -- Tim Newsham
