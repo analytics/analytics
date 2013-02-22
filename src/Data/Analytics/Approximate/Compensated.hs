@@ -20,7 +20,7 @@
 -- you twice that. You can iterate this construction for arbitrary
 -- precision.
 --------------------------------------------------------------------
-module Data.Analytics.Approximate.Summation
+module Data.Analytics.Approximate.Compensated
   ( Compensable(..)
   , _Compensated
   , Overcompensated
