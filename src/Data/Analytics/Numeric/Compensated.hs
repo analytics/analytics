@@ -37,6 +37,7 @@ import Control.Applicative
 import Control.Lens as L
 import Control.Monad
 import Data.Foldable as Foldable
+import Data.Analytics.Numeric.Log
 import Data.Ratio
 import Data.Semigroup
 import Foreign.Ptr
@@ -405,7 +406,8 @@ instance (Compensable a, Unbox a) => G.Vector U.Vector (Compensated a) where
                                  $ G.elemseq (undefined :: U.Vector a) y z
   {-# INLINE elemseq #-}
 
-instance (Compensable a, Floating a) => Floating (Compensated a) where
+-- | /NB:/ Experimental and partially implemented. The accuracy of these is basically uncalculated! Patches and improvements are welcome.
+instance (Compensable a, Precise a, Floating a) => Floating (Compensated a) where
   exp m =
     with m $ \a b ->
     times (exp a) (exp b) compensated
@@ -467,15 +469,42 @@ instance (Compensable a, Floating a) => Floating (Compensated a) where
     (1 <| times (tanh a) (tanh b) compensated)
   {-# INLINE tanh #-}
 
+  log m =
+    with m $ \ a b -> let
+      xy1 = add (log a) (b/a) compensated
+      xy2 = xy1 + m * exp (-xy1) - 1 -- Newton Raphson step 1
+    in xy2 + m * exp (-xy2) - 1      -- Newton Raphson step 2
+{-
+  -- minor terms are dominated by the error from 'log'
+  log m   =
+    with m $ \ a b ->
+    split a $ \a0 a1 ->
+    add (log1p (a1/a0)) (log1p (b/a)) $ \x1 y1 ->
+    add x1 (log a0) $ \x2 y2 ->
+    add x2 (y1 + y2) compensated
+  {-# INLINE log #-}
+-}
+
+  --log m   =
+  --  with m $ \ a b ->
+  --  add (b/a) (b*b/(2*a*a)) $ \x1 y1 ->
+  --  add x1 (log a) $ \x2 y2 ->
+  --  add x2 (y1 + y2) compensated
+
+  --log m   =
+  --  with m $ \ a b ->
+  --  add (log a) (log1p (b/a)) compensated
+
+  --log m   =
+  --  with m $ \ a b ->
+  --  add (log a) (b/a) compensated
+
+  -- (**)    = error "TODO"
+  -- sqrt    = error "TODO"
   pi      = error "TODO"
-  log     = error "TODO"
-  logBase = error "TODO"
-  (**)    = error "TODO"
-  sqrt    = error "TODO"
   asin    = error "TODO"
   atan    = error "TODO"
   acos    = error "TODO"
   asinh   = error "TODO"
   atanh   = error "TODO"
   acosh   = error "TODO"
-
