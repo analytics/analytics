@@ -31,7 +31,9 @@ Also can we calculate approximate aggregations over our data using wavelets of o
 
 Should we consider other wavelets than Haar/D2 for other data types?
 
-Notably, we can store these exactly by storing the sum rather than the average (weighting it as if we stored the latter)
+Storage:
+
+We can easiy store these exactly by storing the sum rather than the average (weighting it as if we stored the latter)
 
 ```
 1000 => 10 => 12 => 3 => 7 | 1 | 1 4 | -1 2 2 2 | -1 0 0 0 0 0 0 0
