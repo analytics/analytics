@@ -6,6 +6,7 @@ The first and most thoroughly documented Sibyl was the Cumaean Sibyl, named Demo
 
 I also own several potentially relevant domains:
 
+* scibase.org
 * rebase.org
 * dibase.org
 * zigbase.com
