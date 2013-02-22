@@ -31,7 +31,6 @@ module Data.Analytics.Approximate.Summation
   , add
   , times
   , split
-  , sin', cos'
   ) where
 
 import Control.Applicative
@@ -405,36 +404,6 @@ instance (Compensable a, Unbox a) => G.Vector U.Vector (Compensated a) where
   elemseq _ m z = with m $ \x y -> G.elemseq (undefined :: U.Vector a) x
                                  $ G.elemseq (undefined :: U.Vector a) y z
   {-# INLINE elemseq #-}
-
-sin' :: (Compensable a, Floating a) => Compensated a -> Compensated a
-sin' m =
-    with m $ \a b ->
-    times (sin a) (cos b) $ \x1 y1 ->
-    times (sin b) (cos a) $ \x2 y2 ->
-    add x1 x2 $ \x3 y3 ->
-    add y1 y2 $ \x4 y4 ->
-    add x4 y3 $ \x5 y5 ->
-    add x5 x3 $ \x6 y6 ->
-    add y4 y5 $ \x7 y7 ->
-    add x7 y6 $ \x8 y8 ->
-    add x8 x6 $ \x9 y9 ->
-    add (y7 + y8 + y9) x9 compensated
-{-# INLINE sin' #-}
-
-cos' :: (Compensable a, Floating a) => Compensated a -> Compensated a
-cos' m =
-    with m $ \a b ->
-    times (cos a)  (cos b) $ \x1 y1 ->
-    times (-sin b) (sin a) $ \x2 y2 ->
-    add x1 x2 $ \x3 y3 ->
-    add y1 y2 $ \x4 y4 ->
-    add x4 y3 $ \x5 y5 ->
-    add x5 x3 $ \x6 y6 ->
-    add y4 y5 $ \x7 y7 ->
-    add x7 y6 $ \x8 y8 ->
-    add x8 x6 $ \x9 y9 ->
-    add (y7 + y8 + y9) x9 compensated
-{-# INLINE cos' #-}
 
 instance (Compensable a, Floating a) => Floating (Compensated a) where
   exp m =
