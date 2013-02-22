@@ -25,13 +25,22 @@ import Data.Traversable
 import Data.Semigroup
 import Generics.Deriving
 
--- | A quantity with a lower-bound on the @log@ of its probability mass.
+-- | A quantity with a lower-bound on its probability mass. This represents
+-- a 'probable value' as a 'Monad' that you can use to calculate progressively
+-- less likely consequences.
 --
--- /NB:/ These probabilities are all stored in the log domain!
+-- /NB:/ These probabilities are all stored in the log domain. This enables us
+-- to retain accuracy despite very long multiplication chains. We never add
+-- these probabilities so the additional overhead of working in the log domain
+-- is never incurred, except on transitioning in and out.
 --
 -- This is most useful for discrete types, such as
 -- small 'Integral' instances or a 'Bounded' 'Enum' like
 -- 'Bool'.
+--
+-- Also note that @('&?')@ and @('|?')@ are able to use knowledge about the
+-- function to get better precision on their results than naively using
+-- @'liftA2' ('&&')@
 data Mass a = Mass {-# UNPACK #-} !(Log Double) a
   deriving (Eq,Ord,Show,Read,Typeable,Data,Generic)
 

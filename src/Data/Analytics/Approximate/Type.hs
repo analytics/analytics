@@ -29,9 +29,9 @@ import Data.Functor.Apply
 import Data.Monoid
 import Data.Pointed
 
--- | An approximate number, with a likely interval, a selected mode and a lower bound on the @log@ of probability that the answer falls in the interval.
+-- | An approximate number, with a likely interval, an expected value and a lower bound on the @log@ of probability that the answer falls in the interval.
 --
--- /NB:/ The probabilities associated with confidence are stored in the @log@ domain!
+-- /NB:/ The probabilities associated with confidence are stored in the @log@ domain.
 data Approximate a = Approximate
   { _confidence :: {-# UNPACK #-} !(Log Double)
   , _lo, _estimate, _hi :: a
