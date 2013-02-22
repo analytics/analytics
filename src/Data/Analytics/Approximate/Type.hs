@@ -22,7 +22,7 @@ module Data.Analytics.Approximate.Type
 
 import Control.Applicative
 import Control.Lens
-import Data.Analytics.Approximate.Log
+import Data.Analytics.Numeric.Log
 import Data.Copointed
 import Data.Foldable
 import Data.Functor.Apply

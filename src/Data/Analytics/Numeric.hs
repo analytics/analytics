@@ -7,10 +7,12 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Data.Analytics.Approximate
-  ( module Data.Analytics.Approximate.Mass
-  , module Data.Analytics.Approximate.Type
+module Data.Analytics.Numeric
+  ( module Data.Analytics.Numeric.Compensated
+  , module Data.Analytics.Numeric.Log
+  , module Data.Analytics.Numeric.Tropical
   ) where
 
-import Data.Analytics.Approximate.Mass
-import Data.Analytics.Approximate.Type
+import Data.Analytics.Numeric.Compensated
+import Data.Analytics.Numeric.Log
+import Data.Analytics.Numeric.Tropical

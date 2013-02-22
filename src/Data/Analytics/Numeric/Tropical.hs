@@ -8,7 +8,7 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Data.Analytics.Approximate.Tropical
+module Data.Analytics.Numeric.Tropical
   ( Tropical(..)
   ) where
 

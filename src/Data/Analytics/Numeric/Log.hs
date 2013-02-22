@@ -8,7 +8,7 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Data.Analytics.Approximate.Log
+module Data.Analytics.Numeric.Log
   ( Log(..)
   , Precise(..)
   ) where

@@ -49,13 +49,10 @@ library
 
   exposed-modules:
     Data.Analytics.Approximate
-    Data.Analytics.Approximate.Compensated
     Data.Analytics.Approximate.HyperLogLog
     Data.Analytics.Approximate.HyperLogLog.Config
     Data.Analytics.Approximate.HyperLogLog.Type
-    Data.Analytics.Approximate.Log
     Data.Analytics.Approximate.Mass
-    Data.Analytics.Approximate.Tropical
     Data.Analytics.Approximate.Type
     Data.Analytics.Bits
     Data.Analytics.Console
@@ -79,8 +76,11 @@ library
     Data.Analytics.Morton.Heap
     Data.Analytics.Morton.Schedule
     Data.Analytics.Morton.Type
+    Data.Analytics.Numeric.Compensated
+    Data.Analytics.Numeric.Log
+    Data.Analytics.Numeric.Moments
+    Data.Analytics.Numeric.Tropical
     Data.Analytics.Reflection
-    Data.Analytics.Statistics.Moments
 
   other-modules: Paths_analytics
 

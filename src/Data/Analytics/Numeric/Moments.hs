@@ -18,7 +18,7 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Data.Analytics.Statistics.Moments
+module Data.Analytics.Numeric.Moments
   ( Moments(..)
   , HasMoments(..)
   , dim

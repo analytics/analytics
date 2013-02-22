@@ -18,7 +18,7 @@ import Control.Comonad
 import Data.Data
 import Data.Default
 import Data.Foldable
-import Data.Analytics.Approximate.Log
+import Data.Analytics.Numeric.Log
 import Data.Functor.Apply
 import Data.Pointed
 import Data.Traversable
