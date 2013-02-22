@@ -38,9 +38,9 @@
 <a name="line-29"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Monoid</span>
 <a name="line-30"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Pointed</span>
 <a name="line-31"></a>
-<a name="line-32"></a><a name="Approximate"></a><span class='hs-comment'>-- | An approximate number, with a likely interval, a selected mode and a lower bound on the @log@ of probability that the answer falls in the interval.</span>
+<a name="line-32"></a><a name="Approximate"></a><span class='hs-comment'>-- | An approximate number, with a likely interval, an expected value and a lower bound on the @log@ of probability that the answer falls in the interval.</span>
 <a name="line-33"></a><a name="Approximate"></a><span class='hs-comment'>--</span>
-<a name="line-34"></a><a name="Approximate"></a><span class='hs-comment'>-- /NB:/ The probabilities associated with confidence are stored in the @log@ domain!</span>
+<a name="line-34"></a><a name="Approximate"></a><span class='hs-comment'>-- /NB:/ The probabilities associated with confidence are stored in the @log@ domain.</span>
 <a name="line-35"></a><a name="Approximate"></a><span class='hs-keyword'>data</span> <span class='hs-conid'>Approximate</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Approximate</span>
 <a name="line-36"></a>  <span class='hs-layout'>{</span> <span class='hs-sel'>_confidence</span> <span class='hs-keyglyph'>::</span> <span class='hs-comment'>{-# UNPACK #-}</span> <span class='hs-varop'>!</span><span class='hs-layout'>(</span><span class='hs-conid'>Log</span> <span class='hs-conid'>Double</span><span class='hs-layout'>)</span>
 <a name="line-37"></a>  <span class='hs-layout'>,</span> <span class='hs-sel'>_lo</span><span class='hs-layout'>,</span> <span class='hs-sel'>_estimate</span><span class='hs-layout'>,</span> <span class='hs-sel'>_hi</span> <span class='hs-keyglyph'>::</span> <span class='hs-varid'>a</span>
