@@ -31,11 +31,12 @@ import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 import Control.Monad.State.Class
 import Control.Monad.Reader.Class
-import Data.Analytics.Datalog.Atom
 import Data.Analytics.Datalog.Term
+import Data.Analytics.Datalog.Atom
 import Data.Analytics.Datalog.Query
 import Data.Functor.Bind
 import Data.Functor.Identity
+import Data.Typeable
 
 infixr 0 :-
 
@@ -48,8 +49,8 @@ type Datalog = DatalogT Identity
 
 -- | An @operational@ encoding of a 'Datalog' program with extra effects in @m@.
 data DatalogT :: (* -> *) -> * -> * where
-  (:-)   :: Atom a b -> Query a -> DatalogT m ()
-  Fresh  :: DatalogT m Int
+  (:-)   :: (Typeable a, Typeable b) => Atom a b -> Query a -> DatalogT m ()
+  Fresh  :: (a -> a -> a) -> DatalogT m (Table a)
   Query  :: Query a -> DatalogT m [a]
   Bind   :: DatalogT m a -> (a -> DatalogT m b) -> DatalogT m b
   Return :: a -> DatalogT m a
@@ -120,3 +121,7 @@ instance (Term a, Entity a ~ a, u ~ ()) => TermOf (DatalogT m u) a
 query :: Query a -> DatalogT m [a]
 query = Query
 {-# INLINE query #-}
+
+-- All Terms are forced to be Entities
+instance (u ~ (), v ~ (), Typeable b) => Atomic (DatalogT m u) v b where
+  atom t a = atom t a :- pure ()

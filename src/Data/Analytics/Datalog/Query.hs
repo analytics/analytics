@@ -42,10 +42,10 @@ data Query :: * -> * where
   Pure  :: a -> Query a
   Alt   :: Query a -> Query a -> Query a
   Empty :: Query a
-  Value :: Atom a b -> Query a
-  Row   :: Atom a b -> Query b
+  Value :: (Typeable a, Typeable b) => Atom a b -> Query a
+  Row   :: (Typeable a, Typeable b) => Atom a b -> Query b
   Key   :: Term a => a -> Query (Entity a)
-  No    :: Atom a b -> Query ()
+  No    :: (Typeable a, Typeable b) => Atom a b -> Query ()
   deriving Typeable
 
 instance Num a => Num (Query a) where
@@ -110,12 +110,15 @@ instance Monoid a => Monoid (Query a) where
 
 instance Term x => TermOf (Query a) x
 
+instance (Typeable b, Typeable c, a ~ b) => Atomic (Query a) b c where
+  atom t a = Value (atom t a)
+
 -- | Stratified negation.
-no :: Atom a b -> Query ()
+no :: (Typeable a, Typeable b) => Atom a b -> Query ()
 no = No
 {-# INLINE no #-}
 
-row :: Atom a b -> Query b
+row :: (Typeable a, Typeable b) => Atom a b -> Query b
 row = Row
 {-# INLINE row #-}
 
@@ -123,6 +126,9 @@ key :: Term a => a -> Query (Entity a)
 key = Key
 {-# INLINE key #-}
 
-value :: Atom a b -> Query a
+value :: (Typeable a, Typeable b) => Atom a b -> Query a
 value = Value
 {-# INLINE value #-}
+
+
+

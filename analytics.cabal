@@ -60,7 +60,6 @@ library
     Data.Analytics.Console.Unicode
     Data.Analytics.Datalog
     Data.Analytics.Datalog.Atom
-    Data.Analytics.Datalog.Atomic
     Data.Analytics.Datalog.Evaluation.Naive
     Data.Analytics.Datalog.Monad
     Data.Analytics.Datalog.Prompt

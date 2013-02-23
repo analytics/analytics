@@ -1,11 +1,9 @@
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE GADTs #-}
 --------------------------------------------------------------------
 -- |
@@ -17,15 +15,44 @@
 --
 --------------------------------------------------------------------
 module Data.Analytics.Datalog.Atom
-  ( Atom(..)
+  ( Atomic(..)
+  , Atom(..)
+  , Table(..)
+  , tableId
+  , tableRollup
   ) where
 
+import Control.Applicative
+import Control.Monad
+import Control.Lens
 import Data.Analytics.Datalog.Row
+import Data.Analytics.Datalog.Subst
 import Data.Analytics.Datalog.Term
 import Data.Typeable
 
+data Table a = Table
+  { _tableId :: {-# UNPACK #-} !Int
+  , _tableRollup :: a -> a -> a
+  } deriving Typeable
+
+makeLenses ''Table
+
 data Atom :: * -> * -> * where
-  Atom :: Int -> Row (a -> b) -> Atom a b
+  Atom :: !(Table a) -> !(Row (a -> b)) -> Atom a b
   deriving Typeable
 
+instance HasVars (Atom a b) where
+  applyM s (Atom t r) = Atom t `liftM` applyM s r
+  {-# INLINEABLE applyM #-}
+
+  vars f (Atom l r) = Atom l <$> vars f r
+  {-# INLINEABLE vars #-}
+
 instance Term x => TermOf (Atom a b) x
+
+class Atomic r a b where
+  atom :: Table a -> Row (a -> b) -> r
+
+instance (a ~ c, b ~ d) => Atomic (Atom a b) c d where
+  atom = Atom
+

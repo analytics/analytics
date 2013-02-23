@@ -34,7 +34,7 @@ import Data.Maybe
 import Data.Monoid
 import Data.Typeable
 
-data ARow = forall a. Typeable a => ARow (Row a)
+data ARow = forall a. Typeable a => ARow !(Row a)
   deriving Typeable
 
 instance Eq ARow where
@@ -53,8 +53,8 @@ instance Ord ARow where
 -- | A relation with free variables of type @a@. This is used to represent
 -- the head of a datalog rule and is used by 'no'.
 data Row a where
-  RowAp   :: Row (a -> b) -> Row a -> Row b
-  RowMap  :: (a -> b) -> Row a -> Row b
+  RowAp   :: !(Row (a -> b)) -> !(Row a) -> Row b
+  RowMap  :: (a -> b) -> !(Row a) -> Row b
   RowPure :: a -> Row a
   RowArg  :: Term a => a -> Row (Entity a)
   deriving Typeable
