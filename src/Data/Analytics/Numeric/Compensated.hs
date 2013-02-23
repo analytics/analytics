@@ -30,6 +30,7 @@ module Data.Analytics.Numeric.Compensated
   , kahan
   , add
   , times
+  , square
   , split
   ) where
 
@@ -77,6 +78,19 @@ times a b k =
   split b $ \b1 b2 ->
   let x = a * b in k x (a2*b2 - (((x - a1*b1) - a2*b1) - a1*b2))
 {-# INLINE times #-}
+
+-- | @'square' a k@ computes @k x y@ such that
+--
+-- > x + y = a * a
+-- > x = fl(a * a)
+--
+-- Which is to say that @x@ is the floating point image of @(a * a)@ and
+-- @y@ stores the residual error term.
+square :: Compensable a => a -> a -> (a -> a -> r) -> r
+square a k =
+  split a $ \a1 a2 ->
+  let x = a * a in k x (a2*a2 - ((x - a1*a1) - 2*a2*a1))
+{-# INLINE square #-}
 
 -- | error-free split of a floating point number into two parts.
 --
