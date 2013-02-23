@@ -119,10 +119,10 @@ instance HasVars (Row a) where
       Just h  -> do
         tell (Any True)
         applyM s h
-      Nothing -> fail "PANIC: illegal substitution"
+      Nothing -> error "PANIC: illegal substitution"
     Just (AnEntity t) -> case gcast (RowArg t) of
       Just h -> return h
-      Nothing -> fail "PANIC: illegal substitution"
+      Nothing -> error "PANIC: illegal substitution"
   {-# INLINEABLE applyM #-}
 
   vars f (RowAp l r)  = RowAp <$> vars f l <*> vars f r
