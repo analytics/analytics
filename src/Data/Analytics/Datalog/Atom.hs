@@ -35,11 +35,19 @@ data Table a = Table
   , _tableRollup :: a -> a -> a
   } deriving Typeable
 
+instance Show (Table a) where
+  showsPrec d (Table i _) = showParen (d > 10) $
+    showString "Table " . showsPrec 11 i . showString " .."
+
 makeLenses ''Table
 
 data Atom :: * -> * -> * where
-  Atom :: !(Table a) -> !(Row (a -> b)) -> Atom a b
+  Atom :: (Typeable a, Show a, Typeable b) => !(Table a) -> !(Row (a -> b)) -> Atom a b
   deriving Typeable
+
+instance Show (Atom a b) where
+  showsPrec d (Atom (Table i _) r) = showParen (d > 10) $
+    showsPrec 10 i . showChar ' ' . showsPrec 10 r
 
 instance HasVars (Atom a b) where
   applyM s (Atom t r) = Atom t `liftM` applyM s r
@@ -53,6 +61,6 @@ instance Term x => TermOf (Atom a b) x
 class Atomic r a b where
   atom :: Table a -> Row (a -> b) -> r
 
-instance (a ~ c, b ~ d) => Atomic (Atom a b) c d where
+instance (Typeable c, Show c, Typeable d, a ~ c, b ~ d) => Atomic (Atom a b) c d where
   atom = Atom
 

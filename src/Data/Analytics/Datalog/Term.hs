@@ -19,9 +19,12 @@ module Data.Analytics.Datalog.Term
   , var
   , entity
   , TermOf
+  , compareTerm
+  , eqTerm
   ) where
 
 import Data.Typeable
+import Unsafe.Coerce
 
 --------------------------------------------------------------------
 -- Term
@@ -38,8 +41,7 @@ entity :: Entity a ~ a => Handler a
 entity = IsEntity
 
 #ifndef HLINT
--- class (Typeable (Entity a), Hashable (Entity a), Ord (Entity a), Typeable a, Hashable a, Ord a) => Term a where
-class (Typeable (Entity a), Ord (Entity a), Typeable a, Ord a) => Term a where
+class (Typeable (Entity a), Ord (Entity a), Show (Entity a), Typeable a, Ord a, Show a) => Term a where
   type Entity a :: *
   type Entity a = a
 
@@ -47,5 +49,15 @@ class (Typeable (Entity a), Ord (Entity a), Typeable a, Ord a) => Term a where
   default term :: Entity a ~ a => Handler a
   term = entity
 #endif
+
+compareTerm :: (Term a, Term b) => a -> b -> Ordering
+compareTerm x y = case typeOf x `compare` typeOf y of
+  LT -> LT
+  EQ -> unsafeCoerce x `compare` y
+  GT -> GT
+{-# INLINE compareTerm #-}
+
+eqTerm :: (Term a, Term b) => a -> b -> Bool
+eqTerm a b = cast a == Just b
 
 class Term a => TermOf r a

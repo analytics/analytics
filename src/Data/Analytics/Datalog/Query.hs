@@ -42,11 +42,29 @@ data Query :: * -> * where
   Pure  :: a -> Query a
   Alt   :: Query a -> Query a -> Query a
   Empty :: Query a
-  Value :: (Typeable a, Typeable b) => Atom a b -> Query a
-  Row   :: (Typeable a, Typeable b) => Atom a b -> Query b
+  Value :: (Typeable a, Show a, Typeable b, Show b) => Atom a b -> Query a
+  Row   :: (Typeable a, Show a, Typeable b, Show b) => Atom a b -> Query b
   Key   :: Term a => a -> Query (Entity a)
-  No    :: (Typeable a, Typeable b) => Atom a b -> Query ()
+  No    :: (Typeable a, Show a, Typeable b, Show b) => Atom a b -> Query ()
   deriving Typeable
+
+instance Show (Query a) where
+  showsPrec d (Ap l r) = showParen (d > 4) $
+    showsPrec 4 l . showString " <*> " . showsPrec 5 r
+  showsPrec d (Map l r) = showParen (d > 4) $
+    showString ".. <$> " . showsPrec 5 r
+  showsPrec d (Pure a) = showParen (d > 10) $ showString "pure .."
+  showsPrec d (Alt l r) = showParen (d > 3) $
+    showsPrec 3 l . showString " <|> " . showsPrec 4 r
+  showsPrec d Empty = showString "empty"
+  showsPrec d (Value a) = showParen (d > 10) $
+    showString "value " . showsPrec 11 a
+  showsPrec d (Row a) = showParen (d > 10) $
+    showString "row " . showsPrec 11 a
+  showsPrec d (Key a) = showParen (d > 10) $
+    showString "key " . showsPrec 11 a
+  showsPrec d (No a) = showParen (d > 10) $
+    showString "no " . showsPrec 11 a
 
 instance Num a => Num (Query a) where
   (+) = liftA2 (+)
@@ -110,16 +128,16 @@ instance Monoid a => Monoid (Query a) where
 
 instance Term x => TermOf (Query a) x
 
-instance (Typeable b, Typeable c, a ~ b) => Atomic (Query a) b c where
+instance (Typeable b, Show b, Typeable c, Show c, a ~ b) => Atomic (Query a) b c where
   atom t a = Value (atom t a)
   {-# INLINE atom #-}
 
 -- | Stratified negation.
-no :: (Typeable a, Typeable b) => Atom a b -> Query ()
+no :: (Typeable a, Show a, Typeable b, Show b) => Atom a b -> Query ()
 no = No
 {-# INLINE no #-}
 
-row :: (Typeable a, Typeable b) => Atom a b -> Query b
+row :: (Typeable a, Show a, Typeable b, Show b) => Atom a b -> Query b
 row = Row
 {-# INLINE row #-}
 
@@ -127,6 +145,6 @@ key :: Term a => a -> Query (Entity a)
 key = Key
 {-# INLINE key #-}
 
-value :: (Typeable a, Typeable b) => Atom a b -> Query a
+value :: (Typeable a, Show a, Typeable b, Show b) => Atom a b -> Query a
 value = Value
 {-# INLINE value #-}

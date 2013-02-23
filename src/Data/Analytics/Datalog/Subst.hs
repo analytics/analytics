@@ -47,10 +47,7 @@ instance Eq Var where
   {-# INLINE (==) #-}
 
 instance Ord Var where
-  Var x `compare` Var y = case typeOf x `compare` typeOf y of
-    LT -> LT
-    EQ -> unsafeCoerce x `compare` y
-    GT -> GT
+  Var x `compare` Var y = compareTerm x y
   {-# INLINE compare #-}
 
 data ATerm where
@@ -84,12 +81,15 @@ apply s t = case runWriter (applyM s t) of
 {-# INLINE apply #-}
 
 instance HasVars ATerm where
-  applyM (Subst l) t@(AVar v) = case l^.at (Var v) of
-    Just r  -> do
+  applyM s@(Subst l) t@(AVar v) = case l^.at (Var v) of
+    Just t'@(AnEntity _) -> do
       tell (Any True)
-      return r
+      return t'
+    Just v -> do
+      tell (Any True)
+      applyM s v
     Nothing -> return t
-  applyM _         t = return t
+  applyM _ t = return t
   {-# INLINE applyM #-}
 
   vars f (AVar v) = (\(Var v') -> AVar v') <$> f (Var v)

@@ -49,12 +49,26 @@ type Datalog = DatalogT Identity
 
 -- | An @operational@ encoding of a 'Datalog' program with extra effects in @m@.
 data DatalogT :: (* -> *) -> * -> * where
-  (:-)   :: (Typeable a, Typeable b) => Atom a b -> Query a -> DatalogT m ()
+  (:-)   :: Atom a b -> Query a -> DatalogT m ()
   Fresh  :: (a -> a -> a) -> DatalogT m (Table a)
   Query  :: Query a -> DatalogT m [a]
   Bind   :: DatalogT m a -> (a -> DatalogT m b) -> DatalogT m b
   Return :: a -> DatalogT m a
   Lift   :: m a -> DatalogT m a
+
+instance Show (DatalogT m a) where
+  showsPrec d (h :- b) = showParen (d > 0) $
+    showsPrec 1 h . showString " :- " . showsPrec 0 b
+  showsPrec d (Fresh f) = showParen (d > 10) $
+    showString "Fresh .."
+  showsPrec d (Query q) = showParen (d > 10) $
+    showString "Query " . showsPrec 11 q
+  showsPrec d (Bind m k) = showParen (d > 10) $
+    showString "Bind " . showsPrec 11 m . showString " .."
+  showsPrec d (Return a) = showParen (d > 10) $
+    showString "return .."
+  showsPrec d (Lift m) = showParen (d > 10) $
+    showString "lift .."
 
 instance Functor (DatalogT m) where
   fmap f m = Bind m (Return . f)

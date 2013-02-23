@@ -32,8 +32,12 @@ import Data.Map as Map hiding (insert)
 import Data.Typeable
 
 data Relation where
-  Relation :: (Typeable a, Typeable b) => !(Map (Row (a -> b)) a) -> Relation
+  Relation :: (Typeable a, Show a, Typeable b) => !(Map (Row (a -> b)) a) -> Relation
   deriving Typeable
+
+instance Show Relation where
+  showsPrec d (Relation m) = showParen (d > 10) $
+    showString "Relation " . showsPrec 11 m
 
 rows :: (HasSubst s, Typeable a, Typeable b) => Atom a b -> IntMap Relation -> StateT s [] (a, b)
 rows (Atom i r) m = case m^.at (i^.tableId) of
@@ -41,11 +45,11 @@ rows (Atom i r) m = case m^.at (i^.tableId) of
   Just (Relation rl) -> do
      (r', a) <- lift $ Map.toList rl
      r'' <- match r' r
-     f <- lift $ maybeToList (runRow r'' >>= cast)
+     f <- lift $ maybeToList $ runRow r'' >>= cast
      a' <- lift $ maybeToList $ cast a
      return (a', f a)
 
-insert' :: (Typeable a, Typeable b) => Atom a b -> a -> IntMap Relation -> Maybe (IntMap Relation)
+insert' :: Atom a b -> a -> IntMap Relation -> Maybe (IntMap Relation)
 insert' (Atom i r) a m = at (i^.tableId) ?? m $ \ys -> case ys of
   Nothing            -> Just $! Just $! Relation $ Map.singleton r a
   Just (Relation rm) -> do
@@ -54,12 +58,13 @@ insert' (Atom i r) a m = at (i^.tableId) ?? m $ \ys -> case ys of
       Nothing -> Just $! Just $! a
       Just _  -> Nothing -- we should update using an omega-continuous semiring.
 
-insert :: (Typeable a, Typeable b) => Atom a b -> a -> IntMap Relation -> (Any, IntMap Relation)
+insert :: Atom a b -> a -> IntMap Relation -> (Any, IntMap Relation)
 insert a r m = case insert' a r m of
   Just n  -> (Any True, n)
   Nothing -> (Any False, m)
 
-data Rule = forall a b. (Typeable a, Typeable b) => Rule (Atom a b) (Query a)
+data Rule where
+  Rule :: Atom a b -> Query a -> Rule
 
 data Env = Env
   { _envFresh :: {-# UNPACK #-} !Int
@@ -76,7 +81,7 @@ defacto (Pure a)  = [a]
 defacto (Alt l r) = defacto l ++ defacto r
 defacto _         = []
 
-eval :: (Monad m, HasEnv s) => DatalogT m a -> StateT s m a
+-- eval :: (Monad m, HasEnv s) => DatalogT m a -> StateT s m a
 eval m = lift (promptT m) >>= \ s -> case s of
   Done a -> return a
   Fresh f :>>= k -> do
@@ -91,6 +96,7 @@ eval m = lift (promptT m) >>= \ s -> case s of
       eval $ k ()
   Query q :>>= k -> do
     saturate
+    use edb >>= lift . print
     xs <- uses edb $ \db -> evalStateT (bodyRows db q) mempty
     eval $ k xs
 
@@ -109,10 +115,10 @@ saturate :: (MonadState s m, HasEnv s) => m ()
 saturate = do
   rules <- use idb
   let go :: Rule -> (Any, IntMap Relation) -> (Any, IntMap Relation)
-      go (Rule h b) (n,db) = case Prelude.foldr (goto h) (mempty,db) $ runStateT ?? mempty $ bodyRows db b of
+      go (Rule h b) (n,db) = case Prelude.foldr (goto h) (n,db) $ runStateT ?? mempty $ bodyRows db b of
         (m, db') -> (n <> m, db')
-      goto :: (Typeable a, Typeable b) => Atom a b -> (a, Subst) -> (Any, IntMap Relation) -> (Any, IntMap Relation)
-      goto h (a, e) (n, db) | h' <- apply e h = case insert h' a db of
+      goto :: Atom a b -> (a, Subst) -> (Any, IntMap Relation) -> (Any, IntMap Relation)
+      goto h@Atom{} (a, e) (n, db) = case insert (apply e h) a db of
         (m, db') -> (n <> m, db')
 
   Any interesting <- edb %%= \db -> Prelude.foldr go (mempty,db) rules

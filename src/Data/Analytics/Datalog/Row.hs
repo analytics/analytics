@@ -28,10 +28,10 @@ import Control.Applicative
 import Control.Lens
 import Control.Monad
 import Control.Monad.State
+import Control.Monad.Writer
 import Data.Analytics.Datalog.Term
 import Data.Analytics.Datalog.Subst
 import Data.Maybe
-import Data.Monoid
 import Data.Typeable
 
 data ARow = forall a. Typeable a => ARow !(Row a)
@@ -58,6 +58,14 @@ data Row a where
   RowPure :: a -> Row a
   RowArg  :: Term a => a -> Row (Entity a)
   deriving Typeable
+
+instance Show (Row a) where
+  showsPrec d (RowAp l r) = showParen (d > 10) $
+    showsPrec 10 l . showChar ' ' . showsPrec 11 r
+  showsPrec d (RowMap _ x) = showParen (d > 10) $
+    showString "_ " . showsPrec 11 x
+  showsPrec _ RowPure{} = showString "_"
+  showsPrec d (RowArg a) = showsPrec d a
 
 runRow :: Row a -> Maybe a
 runRow (RowAp l r)  = runRow l <*> runRow r
@@ -108,7 +116,9 @@ instance HasVars (Row a) where
   applyM s (RowArg v)   = case s^.mgu.at (Var v) of
     Nothing -> return $ RowArg v
     Just (AVar v')    -> case gcast (RowArg v') of
-      Just h  -> return h
+      Just h  -> do
+        tell (Any True)
+        applyM s h
       Nothing -> fail "PANIC: illegal substitution"
     Just (AnEntity t) -> case gcast (RowArg t) of
       Just h -> return h
@@ -135,13 +145,13 @@ match l@(RowArg t) r@(RowArg t')  = case term `withArgType` t of
     case u^.mgu.at (Var t) of
       Just (AVar t'') -> do
          h <- match (RowArg t'') r
-         maybe (fail "broken row") return $ cast h
+         maybe (error "broken row") return $ cast h
       Just (AnEntity t'') -> do
          h <- match (RowArg t'') r
-         maybe (fail "broken row") return $ cast h
+         maybe (error "broken row") return $ cast h
       Nothing -> do
-         subst .= apply (t ~> t') u
-         maybe (fail "broken row") return  $ cast (RowArg t')
+         unless (eqTerm t t') $ subst %= apply (t ~> t')
+         maybe (error "broken row") return  $ cast (RowArg t')
   IsEntity -> case term `withArgType` t' of
     IsVar -> do
       u <- use subst
@@ -149,12 +159,12 @@ match l@(RowArg t) r@(RowArg t')  = case term `withArgType` t of
         Just (AVar t'')     -> match l (RowArg t'')
         Just (AnEntity t'') -> match l (RowArg t'')
         Nothing -> do
-          subst .= apply (t' ~> t) u
+          unless (eqTerm t t') $ subst %= apply (t' ~> t)
           return l
     IsEntity
        | cast t == Just t' -> return l
        | otherwise         -> fail "unification"
-match _ _ = fail "broken row"
+match _ _ = error "broken row"
 {-# INLINEABLE match #-}
 
 withArgType :: t a -> a -> t a

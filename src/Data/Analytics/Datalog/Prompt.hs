@@ -46,7 +46,7 @@ type Step = StepT Identity
 -- | A single 'Datalog' rule or 'Query'.
 data StepT :: (* -> *) -> * -> * where
   Fresh :: (a -> a -> a) -> StepT m (Table a)
-  (:-)  :: (Typeable a, Typeable b) => Atom a b -> Query a -> StepT m ()
+  (:-)  :: Atom a b -> Query a -> StepT m ()
   Query :: Query a -> StepT m [a]
 
 type Prompt = PromptT Identity
