@@ -7,36 +7,63 @@
 <link type='text/css' rel='stylesheet' href='hscolour.css' />
 </head>
 <body>
-<pre><a name="line-1"></a><span class='hs-comment'>{-# LANGUAGE CPP #-}</span>
-<a name="line-2"></a><span class='hs-comment'>{-# LANGUAGE DeriveDataTypeable #-}</span>
-<a name="line-3"></a><span class='hs-comment'>{-# LANGUAGE ExistentialQuantification #-}</span>
-<a name="line-4"></a><span class='hs-comment'>{-# LANGUAGE FlexibleInstances #-}</span>
-<a name="line-5"></a><span class='hs-comment'>{-# LANGUAGE RankNTypes #-}</span>
-<a name="line-6"></a><span class='hs-comment'>{-# LANGUAGE FunctionalDependencies #-}</span>
-<a name="line-7"></a><span class='hs-comment'>{-# LANGUAGE MultiParamTypeClasses #-}</span>
-<a name="line-8"></a><span class='hs-comment'>{-# LANGUAGE TypeFamilies #-}</span>
-<a name="line-9"></a><span class='hs-comment'>{-# LANGUAGE GADTs #-}</span>
-<a name="line-10"></a><span class='hs-comment'>--------------------------------------------------------------------</span>
-<a name="line-11"></a><span class='hs-comment'>-- |</span>
-<a name="line-12"></a><span class='hs-comment'>-- Copyright :  (c) Edward Kmett 2013</span>
-<a name="line-13"></a><span class='hs-comment'>-- License   :  BSD3</span>
-<a name="line-14"></a><span class='hs-comment'>-- Maintainer:  Edward Kmett &lt;ekmett@gmail.com&gt;</span>
-<a name="line-15"></a><span class='hs-comment'>-- Stability :  experimental</span>
-<a name="line-16"></a><span class='hs-comment'>-- Portability: non-portable</span>
-<a name="line-17"></a><span class='hs-comment'>--</span>
-<a name="line-18"></a><span class='hs-comment'>--------------------------------------------------------------------</span>
-<a name="line-19"></a><span class='hs-keyword'>module</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Analytics</span><span class='hs-varop'>.</span><span class='hs-conid'>Datalog</span><span class='hs-varop'>.</span><span class='hs-conid'>Atom</span>
-<a name="line-20"></a>  <span class='hs-layout'>(</span> <span class='hs-conid'>Atom</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
-<a name="line-21"></a>  <span class='hs-layout'>)</span> <span class='hs-keyword'>where</span>
-<a name="line-22"></a>
-<a name="line-23"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Analytics</span><span class='hs-varop'>.</span><span class='hs-conid'>Datalog</span><span class='hs-varop'>.</span><span class='hs-conid'>Row</span>
-<a name="line-24"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Analytics</span><span class='hs-varop'>.</span><span class='hs-conid'>Datalog</span><span class='hs-varop'>.</span><span class='hs-conid'>Term</span>
-<a name="line-25"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Typeable</span>
-<a name="line-26"></a>
-<a name="line-27"></a><a name="TermOf"></a><span class='hs-keyword'>data</span> <span class='hs-conid'>Atom</span> <span class='hs-keyglyph'>::</span> <span class='hs-varop'>*</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varop'>*</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varop'>*</span> <span class='hs-keyword'>where</span>
-<a name="line-28"></a>  <span class='hs-conid'>Atom</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Int</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Row</span> <span class='hs-layout'>(</span><span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>b</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Atom</span> <span class='hs-varid'>a</span> <span class='hs-varid'>b</span>
-<a name="line-29"></a>  <span class='hs-keyword'>deriving</span> <span class='hs-conid'>Typeable</span>
-<a name="line-30"></a>
-<a name="line-31"></a><span class='hs-keyword'>instance</span> <span class='hs-conid'>Term</span> <span class='hs-varid'>x</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-conid'>TermOf</span> <span class='hs-layout'>(</span><span class='hs-conid'>Atom</span> <span class='hs-varid'>a</span> <span class='hs-varid'>b</span><span class='hs-layout'>)</span> <span class='hs-varid'>x</span>
+<pre><a name="line-1"></a><span class='hs-comment'>{-# LANGUAGE MultiParamTypeClasses #-}</span>
+<a name="line-2"></a><span class='hs-comment'>{-# LANGUAGE FlexibleInstances #-}</span>
+<a name="line-3"></a><span class='hs-comment'>{-# LANGUAGE TypeFamilies #-}</span>
+<a name="line-4"></a><span class='hs-comment'>{-# LANGUAGE FunctionalDependencies #-}</span>
+<a name="line-5"></a><span class='hs-comment'>{-# LANGUAGE TemplateHaskell #-}</span>
+<a name="line-6"></a><span class='hs-comment'>{-# LANGUAGE DeriveDataTypeable #-}</span>
+<a name="line-7"></a><span class='hs-comment'>{-# LANGUAGE GADTs #-}</span>
+<a name="line-8"></a><span class='hs-comment'>--------------------------------------------------------------------</span>
+<a name="line-9"></a><span class='hs-comment'>-- |</span>
+<a name="line-10"></a><span class='hs-comment'>-- Copyright :  (c) Edward Kmett 2013</span>
+<a name="line-11"></a><span class='hs-comment'>-- License   :  BSD3</span>
+<a name="line-12"></a><span class='hs-comment'>-- Maintainer:  Edward Kmett &lt;ekmett@gmail.com&gt;</span>
+<a name="line-13"></a><span class='hs-comment'>-- Stability :  experimental</span>
+<a name="line-14"></a><span class='hs-comment'>-- Portability: non-portable</span>
+<a name="line-15"></a><span class='hs-comment'>--</span>
+<a name="line-16"></a><span class='hs-comment'>--------------------------------------------------------------------</span>
+<a name="line-17"></a><span class='hs-keyword'>module</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Analytics</span><span class='hs-varop'>.</span><span class='hs-conid'>Datalog</span><span class='hs-varop'>.</span><span class='hs-conid'>Atom</span>
+<a name="line-18"></a>  <span class='hs-layout'>(</span> <span class='hs-conid'>Atomic</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
+<a name="line-19"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>Atom</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
+<a name="line-20"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>Table</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
+<a name="line-21"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>tableId</span>
+<a name="line-22"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>tableRollup</span>
+<a name="line-23"></a>  <span class='hs-layout'>)</span> <span class='hs-keyword'>where</span>
+<a name="line-24"></a>
+<a name="line-25"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Control</span><span class='hs-varop'>.</span><span class='hs-conid'>Applicative</span>
+<a name="line-26"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Control</span><span class='hs-varop'>.</span><span class='hs-conid'>Monad</span>
+<a name="line-27"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Control</span><span class='hs-varop'>.</span><span class='hs-conid'>Lens</span>
+<a name="line-28"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Analytics</span><span class='hs-varop'>.</span><span class='hs-conid'>Datalog</span><span class='hs-varop'>.</span><span class='hs-conid'>Row</span>
+<a name="line-29"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Analytics</span><span class='hs-varop'>.</span><span class='hs-conid'>Datalog</span><span class='hs-varop'>.</span><span class='hs-conid'>Subst</span>
+<a name="line-30"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Analytics</span><span class='hs-varop'>.</span><span class='hs-conid'>Datalog</span><span class='hs-varop'>.</span><span class='hs-conid'>Term</span>
+<a name="line-31"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Typeable</span>
+<a name="line-32"></a>
+<a name="line-33"></a><a name="Table"></a><span class='hs-keyword'>data</span> <span class='hs-conid'>Table</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Table</span>
+<a name="line-34"></a>  <span class='hs-layout'>{</span> <span class='hs-sel'>_tableId</span> <span class='hs-keyglyph'>::</span> <span class='hs-comment'>{-# UNPACK #-}</span> <span class='hs-varop'>!</span><span class='hs-conid'>Int</span>
+<a name="line-35"></a>  <span class='hs-layout'>,</span> <span class='hs-sel'>_tableRollup</span> <span class='hs-keyglyph'>::</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>a</span>
+<a name="line-36"></a>  <span class='hs-layout'>}</span> <span class='hs-keyword'>deriving</span> <span class='hs-conid'>Typeable</span>
+<a name="line-37"></a>
+<a name="line-38"></a><a name="makeLenses"></a><span class='hs-definition'>makeLenses</span> <span class='hs-chr'>'</span><span class='hs-chr'>'</span><span class='hs-conid'>Table</span>
+<a name="line-39"></a>
+<a name="line-40"></a><a name="Atom"></a><span class='hs-keyword'>data</span> <span class='hs-conid'>Atom</span> <span class='hs-keyglyph'>::</span> <span class='hs-varop'>*</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varop'>*</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varop'>*</span> <span class='hs-keyword'>where</span>
+<a name="line-41"></a>  <span class='hs-conid'>Atom</span> <span class='hs-keyglyph'>::</span> <span class='hs-varop'>!</span><span class='hs-layout'>(</span><span class='hs-conid'>Table</span> <span class='hs-varid'>a</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varop'>!</span><span class='hs-layout'>(</span><span class='hs-conid'>Row</span> <span class='hs-layout'>(</span><span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>b</span><span class='hs-layout'>)</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Atom</span> <span class='hs-varid'>a</span> <span class='hs-varid'>b</span>
+<a name="line-42"></a>  <span class='hs-keyword'>deriving</span> <span class='hs-conid'>Typeable</span>
+<a name="line-43"></a>
+<a name="line-44"></a><span class='hs-keyword'>instance</span> <span class='hs-conid'>HasVars</span> <span class='hs-layout'>(</span><span class='hs-conid'>Atom</span> <span class='hs-varid'>a</span> <span class='hs-varid'>b</span><span class='hs-layout'>)</span> <span class='hs-keyword'>where</span>
+<a name="line-45"></a>  <span class='hs-varid'>applyM</span> <span class='hs-varid'>s</span> <span class='hs-layout'>(</span><span class='hs-conid'>Atom</span> <span class='hs-varid'>t</span> <span class='hs-varid'>r</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Atom</span> <span class='hs-varid'>t</span> <span class='hs-varop'>`liftM`</span> <span class='hs-varid'>applyM</span> <span class='hs-varid'>s</span> <span class='hs-varid'>r</span>
+<a name="line-46"></a>  <span class='hs-comment'>{-# INLINEABLE applyM #-}</span>
+<a name="line-47"></a>
+<a name="line-48"></a>  <span class='hs-varid'>vars</span> <span class='hs-varid'>f</span> <span class='hs-layout'>(</span><span class='hs-conid'>Atom</span> <span class='hs-varid'>l</span> <span class='hs-varid'>r</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Atom</span> <span class='hs-varid'>l</span> <span class='hs-varop'>&lt;$&gt;</span> <span class='hs-varid'>vars</span> <span class='hs-varid'>f</span> <span class='hs-varid'>r</span>
+<a name="line-49"></a>  <span class='hs-comment'>{-# INLINEABLE vars #-}</span>
+<a name="line-50"></a>
+<a name="line-51"></a><span class='hs-keyword'>instance</span> <span class='hs-conid'>Term</span> <span class='hs-varid'>x</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-conid'>TermOf</span> <span class='hs-layout'>(</span><span class='hs-conid'>Atom</span> <span class='hs-varid'>a</span> <span class='hs-varid'>b</span><span class='hs-layout'>)</span> <span class='hs-varid'>x</span>
+<a name="line-52"></a>
+<a name="line-53"></a><a name="Atomic"></a><span class='hs-keyword'>class</span> <span class='hs-conid'>Atomic</span> <span class='hs-varid'>r</span> <span class='hs-varid'>a</span> <span class='hs-varid'>b</span> <span class='hs-keyword'>where</span>
+<a name="line-54"></a>  <span class='hs-varid'>atom</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Table</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Row</span> <span class='hs-layout'>(</span><span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>b</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>r</span>
+<a name="line-55"></a>
+<a name="line-56"></a><span class='hs-keyword'>instance</span> <span class='hs-layout'>(</span><span class='hs-varid'>a</span> <span class='hs-keyglyph'>~</span> <span class='hs-varid'>c</span><span class='hs-layout'>,</span> <span class='hs-varid'>b</span> <span class='hs-keyglyph'>~</span> <span class='hs-varid'>d</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-conid'>Atomic</span> <span class='hs-layout'>(</span><span class='hs-conid'>Atom</span> <span class='hs-varid'>a</span> <span class='hs-varid'>b</span><span class='hs-layout'>)</span> <span class='hs-varid'>c</span> <span class='hs-varid'>d</span> <span class='hs-keyword'>where</span>
+<a name="line-57"></a>  <span class='hs-varid'>atom</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Atom</span>
+<a name="line-58"></a>
 </pre></body>
 </html>
