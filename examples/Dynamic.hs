@@ -13,7 +13,7 @@ instance Term NV where type Entity NV = Node; term = var
 
 data Edge = Edge Node Node {-# UNPACK #-} !Int deriving (Show,Eq,Ord,Typeable)
 
-test :: Datalog [Edge]
+test :: Datalog [Int]
 test = do
   T2 edge <- table Edge min
   T2 tc   <- table Edge min
@@ -22,4 +22,5 @@ test = do
   edge B A :- 6
   tc X Y :- edge X Y
   tc X Z :- tc X Y + edge Y Z
-  query $ row (tc A X) <* no (edge X C)
+  query $ edge B X
+  -- query $ row (tc A X) <* no (edge X C)

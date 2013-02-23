@@ -128,7 +128,7 @@ matches a b = has _Just $ evalStateT (match a b) (mempty :: Subst)
 match :: (MonadState s m, HasSubst s, MonadPlus m) => Row a -> Row b -> m (Row a)
 match (RowAp l r) (RowAp l' r')   = liftM2 RowAp (match l l') (match r r')
 match (RowMap f x) (RowMap _ y)   = RowMap f `liftM` match x y
-match (RowPure a) RowPure{}       = return (RowPure a)
+match (RowPure a) RowPure{}       = return $ RowPure a
 match l@(RowArg t) r@(RowArg t')  = case term `withArgType` t of
   IsVar -> do
     u <- use subst

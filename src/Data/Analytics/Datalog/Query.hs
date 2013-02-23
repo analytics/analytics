@@ -112,6 +112,7 @@ instance Term x => TermOf (Query a) x
 
 instance (Typeable b, Typeable c, a ~ b) => Atomic (Query a) b c where
   atom t a = Value (atom t a)
+  {-# INLINE atom #-}
 
 -- | Stratified negation.
 no :: (Typeable a, Typeable b) => Atom a b -> Query ()
@@ -129,6 +130,3 @@ key = Key
 value :: (Typeable a, Typeable b) => Atom a b -> Query a
 value = Value
 {-# INLINE value #-}
-
-
-

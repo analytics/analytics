@@ -7,7 +7,7 @@
 {-# LANGUAGE ExistentialQuantification #-}
 module Data.Analytics.Datalog.Evaluation.Naive
   ( Relation(..)
-  , rows
+  , rows, bodyRows
   , insert
   , eval
   , Env(..)
@@ -40,7 +40,7 @@ rows (Atom i r) m = case m^.at (i^.tableId) of
   Nothing -> mzero
   Just (Relation rl) -> do
      (r', a) <- lift $ Map.toList rl
-     r'' <- match r r'
+     r'' <- match r' r
      f <- lift $ maybeToList (runRow r'' >>= cast)
      a' <- lift $ maybeToList $ cast a
      return (a', f a)
@@ -52,7 +52,7 @@ insert' (Atom i r) a m = at (i^.tableId) ?? m $ \ys -> case ys of
     rn <- cast rm
     fmap (Just . Relation) $ at r ?? rn $ \xs -> case xs of
       Nothing -> Just $! Just $! a
-      Just r  -> Nothing -- we should update using an omega-continuous semiring.
+      Just _  -> Nothing -- we should update using an omega-continuous semiring.
 
 insert :: (Typeable a, Typeable b) => Atom a b -> a -> IntMap Relation -> (Any, IntMap Relation)
 insert a r m = case insert' a r m of
@@ -89,19 +89,23 @@ eval m = lift (promptT m) >>= \ s -> case s of
     _ -> do
       idb %= (Rule h b:)
       eval $ k ()
---  Query q :>>= k -> do
+  Query q :>>= k -> do
+    -- saturate
+    xs <- uses edb $ \db -> evalStateT (bodyRows db q) mempty
+    eval $ k xs
 --    saturate
 
 -- rows :: (HasSubst s, Typeable a, Typeable b) => Atom a b -> IntMap Relation -> StateT s [] b
 bodyRows :: IntMap Relation -> Query a -> StateT Subst [] a
 bodyRows db (Ap l r)  = bodyRows db l <*> bodyRows db r
 bodyRows db (Map f x) = f <$> bodyRows db x
-bodyRows db (Pure a)  = pure a
+bodyRows _  (Pure a)  = pure a
 bodyRows db (Alt l r) = bodyRows db l <|> bodyRows db r
-bodyRows db Empty     = Ap.empty
+bodyRows _  Empty     = Ap.empty
 bodyRows db (Row x)   = snd <$> rows x db
 bodyRows db (Value x) = fst <$> rows x db
--- bodyRows db (Key v) =
+bodyRows _  No{}      = Ap.empty -- we can't stratify in this mode
+bodyRows _  Key{}     = Ap.empty -- we can't read keys without shuffling the query around.
 
 {-
 saturate :: (MonadState s m, HasEnv s) => m ()
