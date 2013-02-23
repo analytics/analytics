@@ -48,9 +48,9 @@ type Datalog = DatalogT Identity
 
 -- | An @operational@ encoding of a 'Datalog' program with extra effects in @m@.
 data DatalogT :: (* -> *) -> * -> * where
-  (:-)   :: Atom a b -> Query Body a -> DatalogT m ()
+  (:-)   :: Atom a b -> Query a -> DatalogT m ()
   Fresh  :: DatalogT m Int
-  Query  :: Query Request a -> DatalogT m [a]
+  Query  :: Query a -> DatalogT m [a]
   Bind   :: DatalogT m a -> (a -> DatalogT m b) -> DatalogT m b
   Return :: a -> DatalogT m a
   Lift   :: m a -> DatalogT m a
@@ -117,6 +117,6 @@ instance MonadTrans DatalogT where
 instance (Term a, Entity a ~ a, u ~ ()) => TermOf (DatalogT m u) a
 
 -- | Perform a 'Query'.
-query :: Query Request a -> DatalogT m [a]
+query :: Query a -> DatalogT m [a]
 query = Query
 {-# INLINE query #-}

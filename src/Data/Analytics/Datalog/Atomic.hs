@@ -28,11 +28,8 @@ class Atomic r a b where
 instance (u ~ (), v ~ ()) => Atomic (DatalogT m u) v b where
   atom t a = atom t a :- pure ()
 
-instance a ~ b => Atomic (Query Body a) b c where
+instance a ~ b => Atomic (Query a) b c where
   atom t a = Value (atom t a)
-
-instance a ~ c => Atomic (Query Request a) b c where
-  atom t a = Row (atom t a)
 
 instance (a ~ c, b ~ d) => Atomic (Atom a b) c d where
   atom = Atom

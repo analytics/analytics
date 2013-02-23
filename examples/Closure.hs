@@ -24,4 +24,4 @@ test = do
   edge B A
   tc X Y :- edge X Y
   tc X Z :- tc X Y <* edge Y Z
-  query $ tc A X <* no (edge X C)
+  query $ row (tc A X) <* no (edge X C)
