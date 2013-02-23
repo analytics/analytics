@@ -86,10 +86,10 @@ times a b k =
 --
 -- Which is to say that @x@ is the floating point image of @(a * a)@ and
 -- @y@ stores the residual error term.
-square :: Compensable a => a -> a -> (a -> a -> r) -> r
+square :: Compensable a => a -> (a -> a -> r) -> r
 square a k =
   split a $ \a1 a2 ->
-  let x = a * a in k x (a2*a2 - ((x - a1*a1) - 2*a2*a1))
+  let x = a * a in k x (a2*a2 - ((x - a1*a1) - 2*(a2*a1)))
 {-# INLINE square #-}
 
 -- | error-free split of a floating point number into two parts.
@@ -488,30 +488,6 @@ instance (Compensable a, Precise a, Floating a) => Floating (Compensated a) wher
       xy1 = add (log a) (b/a) compensated
       xy2 = xy1 + m * exp (-xy1) - 1 -- Newton Raphson step 1
     in xy2 + m * exp (-xy2) - 1      -- Newton Raphson step 2
-{-
-  -- minor terms are dominated by the error from 'log'
-  log m   =
-    with m $ \ a b ->
-    split a $ \a0 a1 ->
-    add (log1p (a1/a0)) (log1p (b/a)) $ \x1 y1 ->
-    add x1 (log a0) $ \x2 y2 ->
-    add x2 (y1 + y2) compensated
-  {-# INLINE log #-}
--}
-
-  --log m   =
-  --  with m $ \ a b ->
-  --  add (b/a) (b*b/(2*a*a)) $ \x1 y1 ->
-  --  add x1 (log a) $ \x2 y2 ->
-  --  add x2 (y1 + y2) compensated
-
-  --log m   =
-  --  with m $ \ a b ->
-  --  add (log a) (log1p (b/a)) compensated
-
-  --log m   =
-  --  with m $ \ a b ->
-  --  add (log a) (b/a) compensated
 
   -- (**)    = error "TODO"
   -- sqrt    = error "TODO"
