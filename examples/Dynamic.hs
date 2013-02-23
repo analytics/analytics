@@ -22,5 +22,5 @@ test = do
   edge B A :- 6
   tc X Y :- edge X Y
   tc X Z :- tc X Y + edge Y Z
-  query $ edge B X
+  query $ tc A X
   -- query $ row (tc A X) <* no (edge X C)

@@ -90,12 +90,10 @@ eval m = lift (promptT m) >>= \ s -> case s of
       idb %= (Rule h b:)
       eval $ k ()
   Query q :>>= k -> do
-    -- saturate
+    saturate
     xs <- uses edb $ \db -> evalStateT (bodyRows db q) mempty
     eval $ k xs
---    saturate
 
--- rows :: (HasSubst s, Typeable a, Typeable b) => Atom a b -> IntMap Relation -> StateT s [] b
 bodyRows :: IntMap Relation -> Query a -> StateT Subst [] a
 bodyRows db (Ap l r)  = bodyRows db l <*> bodyRows db r
 bodyRows db (Map f x) = f <$> bodyRows db x
@@ -107,22 +105,17 @@ bodyRows db (Value x) = fst <$> rows x db
 bodyRows _  No{}      = Ap.empty -- we can't stratify in this mode
 bodyRows _  Key{}     = Ap.empty -- we can't read keys without shuffling the query around.
 
-{-
 saturate :: (MonadState s m, HasEnv s) => m ()
-saturate =
+saturate = do
   rules <- use idb
-  let go (Rule h b) (n,db) = foldr gogo (mempty,db) $ runStateT ?? mempty $ do
-        a <- bodyRows db b
-        Atom t r <- gets (`apply` h)
-        let (apply e h
+  let go :: Rule -> (Any, IntMap Relation) -> (Any, IntMap Relation)
+      go (Rule h b) (n,db) = case Prelude.foldr (goto h) (mempty,db) $ runStateT ?? mempty $ bodyRows db b of
+        (m, db') -> (n <> m, db')
+      goto :: (Typeable a, Typeable b) => Atom a b -> (a, Subst) -> (Any, IntMap Relation) -> (Any, IntMap Relation)
+      goto h (a, e) (n, db) | h' <- apply e h = case insert h' a db of
+        (m, db') -> (n <> m, db')
 
-      gogo (a, e) (n, db) = case apply e h of
-
-  Any interesting <- edb %%= \db -> foldr go (mempty,db) rules
-
-  interesting <- fmap (getAny . snd) $ runWriterT $ forM_ rules $ \(Rule h b) ->
-    edb %%= insert h a
-    db <- use edb
-
-  (Any interesting, ()) <- lift $ runStateT ?? (db,mempty) $ forM_ rules $ \(Rule h b) ->
--}
+  Any interesting <- edb %%= \db -> Prelude.foldr go (mempty,db) rules
+  if interesting
+    then saturate
+    else return ()
