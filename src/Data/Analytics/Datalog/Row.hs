@@ -141,7 +141,7 @@ match l@(RowArg t) r@(RowArg t')  = case term `withArgType` t of
          maybe (fail "broken row") return $ cast h
       Nothing -> do
          subst .= apply (t ~> t') u
-         return l
+         maybe (fail "broken row") return  $ cast (RowArg t')
   IsEntity -> case term `withArgType` t' of
     IsVar -> do
       u <- use subst
