@@ -50,6 +50,10 @@ instance Reifies n Int => Reifies (PD n) Int where
   reflect = retagPD reflect <&> \n -> n+n-1
   {-# INLINE reflect #-}
 
+-- | This can be used to generate a template haskell splice for a type level version of a given 'int'.
+--
+-- This does not use GHC TypeLits, instead it generates a numeric type by hand similar to the ones used
+-- in the \"Functional Pearl: Implicit Configurations\" paper by Oleg Kiselyov and Chung-Chieh Shan.
 int :: Int -> TypeQ
 int n = case quotRem n 2 of
   (0, 0) -> conT ''Z
@@ -58,6 +62,9 @@ int n = case quotRem n 2 of
   (q, 1) -> conT ''SD `appT` int q
   _     -> error "ghc is bad at math"
 
+-- | This is a restricted version of 'int' that can only generate natural numbers. Attempting to generate
+-- a negative number results in a compile time error. Also the resulting sequence will consist entirely of
+-- Z, D, and SD constructors representing the number in zeroless binary.
 nat :: Int -> TypeQ
 nat n
   | n >= 0 = int n
