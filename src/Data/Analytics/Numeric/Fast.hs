@@ -25,21 +25,19 @@ class Floating a => Fast a where
   -- | Calculate an approximate exp.
   fexp  :: a -> a
   -- | Calculate an approximate pow.
-  fpow  :: a -> a -> a
-  -- | Calculate an approximate pow with better accuracy.
-  fpow' :: a -> a -> a
+  fpow :: a -> a -> a
 
 instance Fast Float where
   flog  = logf_fast
   fexp  = expf_fast
-  fpow  = powf_fast
-  fpow' = powf_fast_precise
+  -- fpow  = powf_fast
+  fpow = powf_fast_precise
 
 instance Fast Double where
   flog  = log_fast
   fexp  = exp_fast
-  fpow  = pow_fast
-  fpow' = pow_fast_precise
+  -- fpow  = pow_fast
+  fpow = pow_fast_precise
 
 -- | Borchardt’s Algorithm from “Dead Reconing: Calculating without instruments”.
 --
