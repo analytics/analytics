@@ -22,6 +22,13 @@
 -- In general if @a@ has x bits of significand, @Compensated a@ gives
 -- you twice that. You can iterate this construction for arbitrary
 -- precision.
+--
+-- References:
+--
+-- * <http://web.mit.edu/tabbott/Public/quaddouble-debian/qd-2.3.4-old/docs/qd.pdf>
+-- * <http://www.ti3.tuhh.de/paper/rump/OgRuOi05.pdf>
+-- * Donald Knuth's \"The Art of Computer Programming, Volume 2: Seminumerical Algorithms\"
+-- * <http://en.wikipedia.org/wiki/Kahan_summation_algorithm>
 --------------------------------------------------------------------
 module Data.Analytics.Numeric.Compensated
   ( Compensable(..)
@@ -30,15 +37,12 @@ module Data.Analytics.Numeric.Compensated
   , primal
   , residual
   , uncompensated
-  , kahan
   , fadd
-  , add
-  , times
-  , divide
+  -- * lifting scalars
+  , add, times, squared, divide, split
+  , kahan, (+^), (*^)
+  -- * compensated operators
   , square
-  , split
-  , (+^)
-  , (*^)
   ) where
 
 import Control.Applicative
@@ -126,18 +130,28 @@ renorm a b c =
   fadd x2 (y1 + y2) compensated
 {-# INLINE renorm #-}
 
--- | @'square' a k@ computes @k x y@ such that
+-- | @'squared' a k@ computes @k x y@ such that
 --
 -- > x + y = a * a
 -- > x = fl(a * a)
 --
 -- Which is to say that @x@ is the floating point image of @(a * a)@ and
 -- @y@ stores the residual error term.
-square :: Compensable a => a -> (a -> a -> r) -> r
-square a k =
+squared :: Compensable a => a -> (a -> a -> r) -> r
+squared a k =
   split a $ \a1 a2 ->
   let x = a * a in k x (a2*a2 - ((x - a1*a1) - 2*(a2*a1)))
-{-# INLINEABLE square #-}
+{-# INLINE squared #-}
+
+-- | Calculate a fast square of a compensated number.
+square :: Compensable a => Compensated a -> Compensated a
+square m =
+  with m $ \a b ->
+  squared a $ \x1 y1 ->
+  times a b $ \x2 y2 ->
+  add y1 (x2*2) $ \x3 y3 ->
+  renorm x1 x3 (b*b + 2*y2 + y3)
+{-# INLINE square #-}
 
 -- | error-free split of a floating point number into two parts.
 --
@@ -153,23 +167,6 @@ split a k = k x y where
 (+^) :: Compensable a => a -> Compensated a -> Compensated a
 a +^ m = with m $ \b c -> let y = a - c; t = b + y in compensated t ((t - b) - y)
 {-# INLINE (+^) #-}
-
-{-
-c +^ m =
-  with m $ \a b ->
-  add a c $ \x1 y1 ->
-  add x1 b $ \x2 y2 ->
-  fadd x2 (y1 y2) compensated
-{-# INLINE (+^) #-}
--}
-
-{-
-c +^ m =
-  with m $ \ a b ->
-  add a c $ \x1 y1 ->
-  add b x1 $ \x2 y2 ->
-  add y1 y2 (renorm x2)
--}
 
 -- | Compute @a * 'Compensated' a@
 (*^) :: Compensable a => a -> Compensated a -> Compensated a
@@ -337,13 +334,15 @@ instance Compensable a => Monoid (Compensated a) where
 
 -- | Perform Kahan summation over a list.
 kahan :: (Foldable f, Compensable a) => f a -> Compensated a
-kahan = Foldable.foldr L.cons mempty
+kahan = Foldable.foldr (+^) mempty
 {-# INLINE kahan #-}
 
+-- (<|) = (+^)
 instance (Bifunctor p, Profunctor p, Functor f, Compensable a, a ~ b) => Cons p f (Compensated a) (Compensated b) a b where
   _Cons = unto $ \(a, e) -> with e $ \b c -> let y = a - c; t = b + y in compensated t ((t - b) - y)
   {-# INLINE _Cons #-}
 
+-- (|>) = (+^)
 instance (Bifunctor p, Profunctor p, Functor f, Compensable a, a ~ b) => Snoc p f (Compensated a) (Compensated b) a b where
   _Snoc = unto $ \(e, a) -> with e $ \b c -> let y = a - c; t = b + y in compensated t ((t - b) - y)
   {-# INLINE _Snoc #-}
@@ -363,51 +362,48 @@ instance Compensable a => Num (Compensated a) where
     times a c $ \x1 y1 ->
     times b c $ \x2 y2 ->
     times a d $ \x3 y3 ->
-    add x1 x2 $ \x4 y4 ->
+    add y1 x2 $ \x4 y4 ->
     add x3 x4 $ \x5 y5 ->
-    add y1 y4 $ \x6 y6 ->
-    add y5 x6 $ \x7 y7 ->
-    add x5 x7 $ \x8 y8 ->
-    add x8 (b*d + y2 + y3 + y6 + y7 + y8) compensated
-  -- -- {-# INLINE (*) #-}
+    renorm x1 x5 (b * d + y2 + y4 + y3 + y5)
+  {-# INLINE (*) #-}
 
   negate m = with m (on compensated negate)
   -- {-# INLINE negate #-}
 
   x - y = x + negate y
-  -- {-# INLINE (-) #-}
+  {-# INLINE (-) #-}
 
   signum m = with m $ \a _ -> compensated (signum a) 0
-  -- {-# INLINE signum #-}
+  {-# INLINE signum #-}
 
   abs m = with m $ \a b ->
     if a < 0
     then compensated (negate a) (negate b)
     else compensated a b
-  -- {-# INLINE abs #-}
+  {-# INLINE abs #-}
 
   fromInteger i = add x (fromInteger (i - round x)) compensated where
     x = fromInteger i
-  -- {-# INLINE fromInteger #-}
+  {-# INLINE fromInteger #-}
 
 instance Compensable a => Enum (Compensated a) where
   succ a = a + 1
-  -- {-# INLINE succ #-}
+  {-# INLINE succ #-}
   pred a = a - 1
-  -- {-# INLINE pred #-}
+  {-# INLINE pred #-}
   toEnum i = add x (fromIntegral (i - round x)) compensated where
     x = fromIntegral i
-  -- {-# INLINE toEnum #-}
+  {-# INLINE toEnum #-}
   fromEnum = round
-  -- {-# INLINE fromEnum #-}
+  {-# INLINE fromEnum #-}
   enumFrom a = a : Prelude.enumFrom (a + 1)
-  -- {-# INLINE enumFrom #-}
+  {-# INLINE enumFrom #-}
   enumFromThen a b = a : Prelude.enumFromThen b (b - a + b)
-  -- {-# INLINE enumFromThen #-}
+  {-# INLINE enumFromThen #-}
   enumFromTo a b
     | a <= b = a : Prelude.enumFromTo (a + 1) b
     | otherwise = []
-  -- {-# INLINE enumFromTo #-}
+  {-# INLINE enumFromTo #-}
   enumFromThenTo a b c
     | a <= b    = up a
     | otherwise = down a
@@ -417,18 +413,18 @@ instance Compensable a => Enum (Compensated a) where
           | otherwise = []
      down x | c <= x    = x : down (x + delta)
             | otherwise = []
-  -- {-# INLINE enumFromThenTo #-}
+  {-# INLINE enumFromThenTo #-}
 
 instance Compensable a => Fractional (Compensated a) where
   recip m = with m $ \a b -> add (recip a) (-b / (a * a)) compensated
-  -- {-# INLINE recip #-}
+  {-# INLINE recip #-}
 
   -- | A variant on a hardware division algorithm by Liddicoat and Flynn
   a / b = (a*x0) * (1+((m+mm)+m*mm)) where
     x0  = recip b
     m   = 1 - b*x0
     mm  = m*m
-  -- -- {-# INLINE (/) #-}
+  -- {-# INLINE (/) #-}
 
   fromRational r = fromInteger (numerator r) / fromInteger (denominator r)
   -- {-# INLINE fromRational #-}
@@ -474,52 +470,52 @@ newtype instance U.Vector (Compensated a) = V_Compensated (U.Vector (a, a))
 
 instance (Compensable a, Unbox a) => M.MVector U.MVector (Compensated a) where
   basicLength (MV_Compensated v) = M.basicLength v
-  -- {-# INLINE basicLength #-}
+  {-# INLINE basicLength #-}
   basicUnsafeSlice i n (MV_Compensated v) = MV_Compensated $ M.basicUnsafeSlice i n v
-  -- {-# INLINE basicUnsafeSlice #-}
+  {-# INLINE basicUnsafeSlice #-}
   basicOverlaps (MV_Compensated v1) (MV_Compensated v2) = M.basicOverlaps v1 v2
-  -- {-# INLINE basicOverlaps #-}
+  {-# INLINE basicOverlaps #-}
   basicUnsafeNew n = MV_Compensated `liftM` M.basicUnsafeNew n
-  -- {-# INLINE basicUnsafeNew #-}
+  {-# INLINE basicUnsafeNew #-}
   basicUnsafeReplicate n m = with m $ \x y -> MV_Compensated `liftM` M.basicUnsafeReplicate n (x,y)
-  -- {-# INLINE basicUnsafeReplicate #-}
+  {-# INLINE basicUnsafeReplicate #-}
   basicUnsafeRead (MV_Compensated v) i = uncurry compensated `liftM` M.basicUnsafeRead v i
-  -- {-# INLINE basicUnsafeRead #-}
+  {-# INLINE basicUnsafeRead #-}
   basicUnsafeWrite (MV_Compensated v) i m = with m $ \ x y -> M.basicUnsafeWrite v i (x,y)
-  -- {-# INLINE basicUnsafeWrite #-}
+  {-# INLINE basicUnsafeWrite #-}
   basicClear (MV_Compensated v) = M.basicClear v
-  -- {-# INLINE basicClear #-}
+  {-# INLINE basicClear #-}
   basicSet (MV_Compensated v) m = with m $ \ x y -> M.basicSet v (x,y)
-  -- {-# INLINE basicSet #-}
+  {-# INLINE basicSet #-}
   basicUnsafeCopy (MV_Compensated v1) (MV_Compensated v2) = M.basicUnsafeCopy v1 v2
-  -- {-# INLINE basicUnsafeCopy #-}
+  {-# INLINE basicUnsafeCopy #-}
   basicUnsafeMove (MV_Compensated v1) (MV_Compensated v2) = M.basicUnsafeMove v1 v2
-  -- {-# INLINE basicUnsafeMove #-}
+  {-# INLINE basicUnsafeMove #-}
   basicUnsafeGrow (MV_Compensated v) n = MV_Compensated `liftM` M.basicUnsafeGrow v n
-  -- {-# INLINE basicUnsafeGrow #-}
+  {-# INLINE basicUnsafeGrow #-}
 
 instance (Compensable a, Unbox a) => G.Vector U.Vector (Compensated a) where
   basicUnsafeFreeze (MV_Compensated v) = V_Compensated `liftM` G.basicUnsafeFreeze v
-  -- {-# INLINE basicUnsafeFreeze #-}
+  {-# INLINE basicUnsafeFreeze #-}
   basicUnsafeThaw (V_Compensated v) = MV_Compensated `liftM` G.basicUnsafeThaw v
-  -- {-# INLINE basicUnsafeThaw #-}
+  {-# INLINE basicUnsafeThaw #-}
   basicLength (V_Compensated v) = G.basicLength v
-  -- {-# INLINE basicLength #-}
+  {-# INLINE basicLength #-}
   basicUnsafeSlice i n (V_Compensated v) = V_Compensated $ G.basicUnsafeSlice i n v
-  -- {-# INLINE basicUnsafeSlice #-}
+  {-# INLINE basicUnsafeSlice #-}
   basicUnsafeIndexM (V_Compensated v) i
                 = uncurry compensated `liftM` G.basicUnsafeIndexM v i
-  -- {-# INLINE basicUnsafeIndexM #-}
+  {-# INLINE basicUnsafeIndexM #-}
   basicUnsafeCopy (MV_Compensated mv) (V_Compensated v)
                 = G.basicUnsafeCopy mv v
-  -- {-# INLINE basicUnsafeCopy #-}
+  {-# INLINE basicUnsafeCopy #-}
   elemseq _ m z = with m $ \x y -> G.elemseq (undefined :: U.Vector a) x
                                  $ G.elemseq (undefined :: U.Vector a) y z
-  -- {-# INLINE elemseq #-}
+  {-# INLINE elemseq #-}
 
--- | /NB:/ Experimental and partially implemented. 
+-- | /NB:/ Experimental and partially implemented.
 --
--- Other than sqrt, the accuracy of these is basically uncalculated! Patches and improvements are welcome.
+-- Other than sqrt, the accuracy of these is basically uncalculated! In fact many of these are known to be wrong! Patches and improvements are welcome.
 instance Compensable a => Floating (Compensated a) where
   exp m =
     with m $ \a b ->
