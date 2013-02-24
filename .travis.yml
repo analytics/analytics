@@ -9,12 +9,13 @@ before_install:
   - travis/cabal-apt-install --constraint='hashable >= 1.2' --constraint='vector >= 0.10.0.1'
   - cabal install
   - cd ..
-  - travis/cabal-apt-install $mode
+  - travis/cabal-apt-install --enable-tests
 
 install:
-  - cabal install $mode
+  - cabal install
 
 script:
+  - cabal install --enable-tests
   - hlint src --cpp-define HLINT
 
 notifications:
@@ -24,6 +25,3 @@ notifications:
     skip_join: true
     template:
       - "\x0313analytics\x03/\x0306%{branch}\x03 \x0314%{commit}\x03 %{build_url} %{message}"
-
-env:
-  - mode="--enable-tests"
