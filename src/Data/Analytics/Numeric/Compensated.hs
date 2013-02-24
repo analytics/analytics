@@ -3,6 +3,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) Edward Kmett 2013
@@ -43,13 +44,14 @@ import Data.Foldable as Foldable
 import Data.Function (on)
 import Data.Ratio
 import Data.Semigroup
+import Data.Vector.Unboxed as U
+import Data.Vector.Generic as G
+import Data.Vector.Generic.Mutable as M
+import Data.Data
 import Foreign.Ptr
 import Foreign.Storable
 import Text.Read as T
 import Text.Show as T
-import Data.Vector.Unboxed as U
-import Data.Vector.Generic as G
-import Data.Vector.Generic.Mutable as M
 
 {-# ANN module "hlint: ignore Use -" #-}
 {-# ANN module "hlint: ignore Use curry" #-}
@@ -146,12 +148,6 @@ class (RealFrac a, Precise a, Floating a) => Compensable a where
   -- them separately without losing precision in 'times'.
   magic :: a
 
--- | This provides the isomorphism between the compact representation we store these in internally
--- and the naive pair of the 'primal' and 'residual' components.
-_Compensated :: Compensable a => Iso' (Compensated a) (a, a)
-_Compensated = iso (`with` (,)) (uncurry compensated)
--- {-# INLINE _Compensated #-}
-
 instance Compensable Double where
   data Compensated Double = CD {-# UNPACK #-} !Double {-# UNPACK #-} !Double
   with (CD a b) k = k a b
@@ -179,7 +175,26 @@ instance Compensable a => Compensable (Compensated a) where
   magic = times (magic - 1) (magic - 1) $ \ x y -> compensated x (y + 1)
   {-# INLINE magic #-}
 
-type Overcompensated a = Compensated (Compensated a)
+
+instance Typeable1 Compensated where
+  typeOf1 _ = mkTyConApp (mkTyCon3 "analytics" "Data.Analytics.Numeric.Compensated" "Compensated") []
+
+instance (Compensable a, Data a) => Data (Compensated a) where
+  gfoldl f z m = with m $ \a b -> z compensated `f` a `f` b
+  toConstr _ = compensatedConstr
+  gunfold k z c = case constrIndex c of
+    1 -> k (k (z compensated))
+    _ -> error "gunfold"
+  dataTypeOf _ = compensatedDataType
+  dataCast1 f = gcast1 f
+
+compensatedConstr :: Constr
+compensatedConstr = mkConstr compensatedDataType "compensated" [] Prefix
+{-# NOINLINE compensatedConstr #-}
+
+compensatedDataType :: DataType
+compensatedDataType = mkDataType "Data.Analytics.Numeric.Compensated" [compensatedConstr]
+{-# NOINLINE compensatedDataType #-}
 
 instance (Compensable a, Show a) => Show (Compensated a) where
   showsPrec d m = with m $ \a b -> showParen (d > 10) $
@@ -191,6 +206,14 @@ instance (Compensable a, Read a) => Read (Compensated a) where
     a <- step T.readPrec
     b <- step T.readPrec
     return $ compensated a b
+
+type Overcompensated a = Compensated (Compensated a)
+
+-- | This provides the isomorphism between the compact representation we store these in internally
+-- and the naive pair of the 'primal' and 'residual' components.
+_Compensated :: Compensable a => Iso' (Compensated a) (a, a)
+_Compensated = iso (`with` (,)) (uncurry compensated)
+{-# INLINE _Compensated #-}
 
 -- | This 'Lens' lets us edit the 'primal' directly, leaving the 'residual' untouched.
 primal :: Compensable a => Lens' (Compensated a) a
