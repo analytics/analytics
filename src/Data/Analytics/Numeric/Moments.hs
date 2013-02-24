@@ -24,6 +24,7 @@ module Data.Analytics.Numeric.Moments
   , dim
   , variances, variance
   , stddevs, stddev
+  , skewnesses, skewness
   , trimmed
   -- , skewness
   -- , kurtosis
@@ -182,6 +183,33 @@ stddev :: (HasMoments t a, Unbox a, Floating a) => Int -> IndexedTraversal' Int 
 stddev k = variance k . root
 {-# INLINE stddev #-}
 
+-- | Calculate 'skewness'.
+--  This is a 'Fold' because 'skewness' may not be defined for some combinations of 'Moments'.
+skewnesses :: (HasMoments t a, Unbox a, Floating a, Ord a) => IndexedFold Int t a
+skewnesses f = moments ago where
+  ago NoMoments = pure NoMoments
+  ago (Moments n _ bs _ cs _) = coerce $ each (Indexed go) $ U.zip bs cs where
+    sqn = sqrt (fromIntegral n)
+    go i (b,c)
+      | ood >= 1e12 = pure 0 -- TODO: condition the epsilon better
+      | otherwise   = L.indexed f i (sqn * c * ood)
+      where ood = b ** (-1.5)
+{-# INLINE skewnesses #-}
+
+-- | Calculate a 'skewness'.
+--
+-- This is a 'Fold' because 'skewness' may not be defined for some combinations of 'Moments'.
+skewness :: (HasMoments t a, Unbox a, Floating a, Ord a) => Int -> IndexedFold Int t a
+skewness k f = moments ago where
+  ago NoMoments = pure NoMoments
+  ago (Moments n _ bs _ cs _) = coerce $ go (bs U.! k) (cs U.! k) where
+    sqn = sqrt (fromIntegral n)
+    go b c
+      | ood >= 1e12 = pure 0 -- TODO: condition the epsilon better
+      | otherwise   = L.indexed f k (sqn * c * ood)
+      where ood = b ** (-1.5)
+{-# INLINE skewness #-}
+
 {-
 covariances :: HasMoments t => Traversal' t (U.Array (Int,Int) Double)
 covariances f = moments ago where
@@ -208,16 +236,6 @@ covariance i j = case compare i j of
 -}
 
 {-
--- | Calculate 'skewness'.
---  This is a 'Fold' because 'skewness' may not be defined for some combinations of 'Moments'.
-skewness :: HasMoments t => Int -> Fold t Double
-skewness f = moments go where
-  go (Moments i _ bs cs _)
-    | abs denom <= 1e-12 = coerce $ pure ()
-    | otherwise = coerce $ f (sqrt (fromIntegral i) * c / denom)
-    where denom = b**1.5
-{-# INLINE skewness #-}
-
 -- | Calculate 'kurtosis'.
 -- This is a 'Fold' because 'kurtosis' may not be defined for some combinations of 'Moments'.
 kurtosis :: HasMoments t => Fold t Double
@@ -227,7 +245,9 @@ kurtosis f = moments go where
     | otherwise = coerce $ f (fromIntegral i * d / denom - 3)
     where denom = b*b
 {-# INLINE kurtosis #-}
+-}
 
+{-
 instance Field1 Moments Moments Double Double where
   _1 f (Moments i a b c d) = indexed f (1 :: Int) a <&> \a' -> Moments i a' b c d
   {-# INLINE _1 #-}
