@@ -12,10 +12,12 @@
 -- Stability :  experimental
 -- Portability: non-portable
 --
--- Compensated floating point summation based on Knuth's error free
--- transformation, various algorithms by Ogita, Rump and Oishi and
--- Kahan summation, with custom compensated arithetic circuits to
--- do multiplication, division, etc. of compensated numbers.
+-- This module provides a fairly extensive API for compensated
+-- floating point arithmetic based on Knuth's error free
+-- transformation, various algorithms by Ogita, Rump and Oishi,
+-- Hida, Li and Bailey, Kahan summation, etc. with custom compensated
+-- arithetic circuits to do multiplication, division, etc. of compensated
+-- numbers.
 --
 -- In general if @a@ has x bits of significand, @Compensated a@ gives
 -- you twice that. You can iterate this construction for arbitrary
@@ -29,11 +31,14 @@ module Data.Analytics.Numeric.Compensated
   , residual
   , uncompensated
   , kahan
+  , fadd
   , add
   , times
   , divide
   , square
   , split
+  , (+^)
+  , (*^)
   ) where
 
 import Control.Applicative
@@ -70,6 +75,21 @@ add a b k = k x y where
   y = (a - (x - z)) + (b - z)
 {-# INLINE add #-}
 
+-- | @'fadd' a b k@ computes @k x y@ such that
+--
+-- > x + y = a + b
+-- > x = fl(a + b)
+--
+-- but only under the assumption that @'abs' a '>=' 'abs' b@. If you
+-- aren't sure, use 'add'.
+--
+-- Which is to say that @x@ is the floating point image of @(a + b)@ and
+-- @y@ stores the residual error term.
+fadd :: Num a => a -> a -> (a -> a -> r) -> r
+fadd a b k = k x (b - (x - a)) where
+  x = a + b
+{-# INLINE fadd #-}
+
 -- | @'times' a b k@ computes @k x y@ such that
 --
 -- > x + y = a * b
@@ -77,11 +97,13 @@ add a b k = k x y where
 --
 -- Which is to say that @x@ is the floating point image of @(a * b)@ and
 -- @y@ stores the residual error term.
+--
+-- This could be nicer if we had access to a hardware fused multiply-add.
 times :: Compensable a => a -> a -> (a -> a -> r) -> r
 times a b k =
   split a $ \a1 a2 ->
   split b $ \b1 b2 ->
-  let x = a * b in k x (a2*b2 - (((x - a1*b1) - a2*b1) - a1*b2))
+  let x = a * b in k x (((a1*b1-x)+a1*b2+b2*b1)+a2*b2)
 {-# INLINEABLE times #-}
 
 -- this is a variant on a division algorithm by Liddicoat and Flynn
@@ -93,10 +115,16 @@ divide a b = with (aX * ms) where
   mm   = m*m
   ms   = 1+((m+mm)+m*mm)
 {-# INLINEABLE divide #-}
--- {-# SPECIALIZE divide :: Float -> Float -> (Float -> Float -> r) -> r #-}
--- {-# SPECIALIZE divide :: Double -> Double -> (Double -> Double -> r) -> r #-}
--- {-# SPECIALIZE divide :: Compensable a => Compensated a -> Compensated a -> (Compensated a -> Compensated a -> r) -> r #-}
 
+-- | Priest's renormalization algorithm
+--
+-- @renorm a b c@ generates a 'Compensated' number assuming @a '>=' b '>=' c@.
+renorm :: Compensable a => a -> a -> a -> Compensated a
+renorm a b c =
+  fadd b c $ \x1 y1 ->
+  fadd a x1 $ \x2 y2 ->
+  fadd x2 (y1 + y2) compensated
+{-# INLINE renorm #-}
 
 -- | @'square' a k@ computes @k x y@ such that
 --
@@ -120,6 +148,39 @@ split a k = k x y where
   x = c - (c - a)
   y = a - x
 {-# INLINEABLE split #-}
+
+-- | Calculate a scalar + compensated sum with Kahan summation.
+(+^) :: Compensable a => a -> Compensated a -> Compensated a
+a +^ m = with m $ \b c -> let y = a - c; t = b + y in compensated t ((t - b) - y)
+{-# INLINE (+^) #-}
+
+{-
+c +^ m =
+  with m $ \a b ->
+  add a c $ \x1 y1 ->
+  add x1 b $ \x2 y2 ->
+  fadd x2 (y1 y2) compensated
+{-# INLINE (+^) #-}
+-}
+
+{-
+c +^ m =
+  with m $ \ a b ->
+  add a c $ \x1 y1 ->
+  add b x1 $ \x2 y2 ->
+  add y1 y2 (renorm x2)
+-}
+
+-- | Compute @a * 'Compensated' a@
+(*^) :: Compensable a => a -> Compensated a -> Compensated a
+c *^ m =
+  with m $ \ a b ->
+  times c a $ \x1 y1 ->
+  times c b $ \x2 y2 ->
+  fadd x1 x2 $ \x3 y3 ->
+  add y1 y3 $ \x4 y4 ->
+  renorm x3 x4 (y4 + y2)
+{-# INLINE (*^) #-}
 
 class (RealFrac a, Precise a, Floating a) => Compensable a where
   -- | This provides a numeric data type with effectively doubled precision by
@@ -174,7 +235,6 @@ instance Compensable a => Compensable (Compensated a) where
   {-# INLINE compensated #-}
   magic = times (magic - 1) (magic - 1) $ \ x y -> compensated x (y + 1)
   {-# INLINE magic #-}
-
 
 instance Typeable1 Compensated where
   typeOf1 _ = mkTyConApp (mkTyCon3 "analytics" "Data.Analytics.Numeric.Compensated" "Compensated") []
@@ -290,14 +350,12 @@ instance (Bifunctor p, Profunctor p, Functor f, Compensable a, a ~ b) => Snoc p 
 
 instance Compensable a => Num (Compensated a) where
   m + n =
-    with m $ \a  b  ->
+    with m $ \a b ->
     with n $ \c d ->
-    add  a  c $ \x1 y1 ->
-    add y1  d $ \x2 y2 ->
-    add  b x2 $ \x3 y3 ->
-    add x1 x3 $ \x4 y4 ->
-    add x4 (y2 + y3 + y4) compensated
-  -- {-# INLINE (+) #-}
+    add a c $ \x1 y1 ->
+    add b d $ \x2 y2 ->
+    renorm x1 x2 (y1 + y2)
+  {-# INLINE (+) #-}
 
   m * n =
     with m $ \a b ->
