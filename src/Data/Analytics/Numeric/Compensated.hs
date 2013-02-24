@@ -65,7 +65,7 @@ add a b k = k x y where
   x = a + b
   z = x - a
   y = (a - (x - z)) + (b - z)
--- {-# INLINE add #-}
+{-# INLINE add #-}
 
 -- | @'times' a b k@ computes @k x y@ such that
 --
@@ -79,7 +79,7 @@ times a b k =
   split a $ \a1 a2 ->
   split b $ \b1 b2 ->
   let x = a * b in k x (a2*b2 - (((x - a1*b1) - a2*b1) - a1*b2))
--- -- {-# INLINE times #-}
+{-# INLINEABLE times #-}
 
 -- this is a variant on a division algorithm by Liddicoat and Flynn
 divide :: Compensable a => a -> a -> (a -> a -> r) -> r
@@ -89,6 +89,7 @@ divide a b = with (aX * ms) where
   m    = 1 <| negate (times b x0 compensated)
   mm   = m*m
   ms   = 1+((m+mm)+m*mm)
+{-# INLINEABLE divide #-}
 -- {-# SPECIALIZE divide :: Float -> Float -> (Float -> Float -> r) -> r #-}
 -- {-# SPECIALIZE divide :: Double -> Double -> (Double -> Double -> r) -> r #-}
 -- {-# SPECIALIZE divide :: Compensable a => Compensated a -> Compensated a -> (Compensated a -> Compensated a -> r) -> r #-}
@@ -105,7 +106,7 @@ square :: Compensable a => a -> (a -> a -> r) -> r
 square a k =
   split a $ \a1 a2 ->
   let x = a * a in k x (a2*a2 - ((x - a1*a1) - 2*(a2*a1)))
--- {-# INLINE square #-}
+{-# INLINEABLE square #-}
 
 -- | error-free split of a floating point number into two parts.
 --
@@ -115,7 +116,7 @@ split a k = k x y where
   c = magic*a
   x = c - (c - a)
   y = a - x
--- {-# INLINE split #-}
+{-# INLINEABLE split #-}
 
 class (RealFrac a, Precise a, Floating a) => Compensable a where
   -- | This provides a numeric data type with effectively doubled precision by
@@ -153,30 +154,29 @@ _Compensated = iso (`with` (,)) (uncurry compensated)
 instance Compensable Double where
   data Compensated Double = CD {-# UNPACK #-} !Double {-# UNPACK #-} !Double
   with (CD a b) k = k a b
-  -- {-# INLINE with #-}
+  {-# INLINE with #-}
   compensated = CD
-  -- {-# INLINE compensated #-}
+  {-# INLINE compensated #-}
   magic = 134217729
-  -- {-# INLINE magic #-}
+  {-# INLINE magic #-}
 
 instance Compensable Float where
   data Compensated Float = CF {-# UNPACK #-} !Float {-# UNPACK #-} !Float
   with (CF a b) k = k a b
-  -- {-# INLINE with #-}
+  {-# INLINE with #-}
   compensated = CF
-  -- {-# INLINE compensated #-}
+  {-# INLINE compensated #-}
   magic = 4097
-  -- {-# INLINE magic #-}
+  {-# INLINE magic #-}
 
 instance Compensable a => Compensable (Compensated a) where
   data Compensated (Compensated a) = CC !(Compensated a) !(Compensated a)
   with (CC a b) k = k a b
-  -- {-# INLINE with #-}
+  {-# INLINE with #-}
   compensated = CC
-  -- {-# INLINE compensated #-}
+  {-# INLINE compensated #-}
   magic = times (magic - 1) (magic - 1) $ \ x y -> compensated x (y + 1)
-  -- magic = times magic magic compensated
-  -- {-# INLINE magic #-}
+  {-# INLINE magic #-}
 
 type Overcompensated a = Compensated (Compensated a)
 
@@ -194,78 +194,75 @@ instance (Compensable a, Read a) => Read (Compensated a) where
 -- | This 'Lens' lets us edit the 'primal' directly, leaving the 'residual' untouched.
 primal :: Compensable a => Lens' (Compensated a) a
 primal f c = with c $ \a b -> f a <&> \a' -> compensated a' b
--- {-# INLINE primal #-}
+{-# INLINE primal #-}
 
 -- | This 'Lens' lets us edit the 'residual' directly, leaving the 'primal' untouched.
 residual :: Compensable a => Lens' (Compensated a) a
 residual f c = with c $ \a b -> compensated a <$> f b
--- {-# INLINE residual #-}
+{-# INLINE residual #-}
 
 -- | Extract the 'primal' component of a 'compensated' value, when and if compensation
 -- is no longer required.
 uncompensated :: Compensable a => Compensated a -> a
 uncompensated c = with c const
--- {-# INLINE uncompensated #-}
+{-# INLINE uncompensated #-}
 
 type instance Index (Compensated a) = Int
 instance (Applicative f, Compensable a, Compensable b) => Each f (Compensated a) (Compensated b) a b where
   each f m = with m $ \a b -> compensated <$> L.indexed f (0 :: Int) a <*> L.indexed f (1 :: Int) b
-  -- {-# INLINE each #-}
+  {-# INLINE each #-}
 
 instance Compensable a => Eq (Compensated a) where
   m == n = with m $ \a b -> with n $ \c d -> a == c && b == d
   m /= n = with m $ \a b -> with n $ \c d -> a /= c && b /= d
-  -- {-# INLINE (==) #-}
+  {-# INLINE (==) #-}
 
 instance Compensable a => Ord (Compensated a) where
   compare m n = with m $ \a b -> with n $ \c d -> compare a c <> compare b d
-  -- {-# INLINE compare #-}
+  {-# INLINE compare #-}
   m <= n = with m $ \a b -> with n $ \c d -> case compare a c of
     LT -> True
     EQ -> b <= d
     GT -> False
-  -- {-# INLINE (<=) #-}
+  {-# INLINE (<=) #-}
   m >= n = with m $ \a b -> with n $ \c d -> case compare a c of
     LT -> False
     EQ -> b >= d
     GT -> a >= c -- @compare x NaN@ and @compare naN x@ always return 'GT', but @m >= n@ should be 'False'
-  -- {-# INLINE (>=) #-}
+  {-# INLINE (>=) #-}
   m > n = with m $ \a b -> with n $ \c d -> case compare a c of
     LT -> False
     EQ -> b > d
     GT -> a > c -- @compare x NaN@ and @compare naN x@ always return 'GT', but @m >= n@ should be 'False'
-  -- {-# INLINE (>) #-}
+  {-# INLINE (>) #-}
   m < n = with m $ \a b -> with n $ \c d -> case compare a c of
     LT -> True
     EQ -> b < d
     GT -> False
-  -- {-# INLINE (<) #-}
+  {-# INLINE (<) #-}
 
 instance Compensable a => Semigroup (Compensated a) where
   (<>) = (+)
-  -- {-# INLINE (<>) #-}
+  {-# INLINE (<>) #-}
 
 instance Compensable a => Monoid (Compensated a) where
   mempty = compensated 0 0
-  -- {-# INLINE mempty #-}
+  {-# INLINE mempty #-}
   mappend = (+)
-  -- {-# INLINE mappend #-}
+  {-# INLINE mappend #-}
 
 -- | Perform Kahan summation over a list.
 kahan :: (Foldable f, Compensable a) => f a -> Compensated a
 kahan = Foldable.foldr L.cons mempty
--- {-# INLINE kahan #-}
-
--- dot :: Vector v a => v a -> v a -> Compensated a
--- dot = Generic.zipWith
+{-# INLINE kahan #-}
 
 instance (Bifunctor p, Profunctor p, Functor f, Compensable a, a ~ b) => Cons p f (Compensated a) (Compensated b) a b where
   _Cons = unto $ \(a, e) -> with e $ \b c -> let y = a - c; t = b + y in compensated t ((t - b) - y)
-  -- {-# INLINE _Cons #-}
+  {-# INLINE _Cons #-}
 
 instance (Bifunctor p, Profunctor p, Functor f, Compensable a, a ~ b) => Snoc p f (Compensated a) (Compensated b) a b where
   _Snoc = unto $ \(e, a) -> with e $ \b c -> let y = a - c; t = b + y in compensated t ((t - b) - y)
-  -- {-# INLINE _Snoc #-}
+  {-# INLINE _Snoc #-}
 
 instance Compensable a => Num (Compensated a) where
   m + n =
@@ -438,7 +435,9 @@ instance (Compensable a, Unbox a) => G.Vector U.Vector (Compensated a) where
                                  $ G.elemseq (undefined :: U.Vector a) y z
   -- {-# INLINE elemseq #-}
 
--- | /NB:/ Experimental and partially implemented. The accuracy of these is basically uncalculated! Patches and improvements are welcome.
+-- | /NB:/ Experimental and partially implemented. 
+--
+-- Other than sqrt, the accuracy of these is basically uncalculated! Patches and improvements are welcome.
 instance Compensable a => Floating (Compensated a) where
   exp m =
     with m $ \a b ->
@@ -509,7 +508,7 @@ instance Compensable a => Floating (Compensated a) where
   -- -- {-# INLINE log #-}
   -- {-# SPECIALIZE log :: Compensated Double -> Compensated Double #-}
   -- {-# SPECIALIZE log :: Compensated Float -> Compensated Float #-}
-  --{-# SPECIALIZE log :: Compensable a => Compensated (Compensated a) -> Compensated (Compensated a) #-}
+  -- {-# SPECIALIZE log :: Compensable a => Compensated (Compensated a) -> Compensated (Compensated a) #-}
 
   -- | Hardware sqrt improved by the Babylonian algorithm (Newton Raphson)
   sqrt m = with (z4 + m/z4) $ on compensated (/2) where
@@ -534,4 +533,6 @@ instance Compensable a => Floating (Compensated a) where
 -- | TODO: do this right!
 instance (Compensable a, Precise a) => Precise (Compensated a) where
   log1p a = log (1 + a)
+  {-# INLINE log1p #-}
   expm1 a = exp a - 1
+  {-# INLINE expm1 #-}
