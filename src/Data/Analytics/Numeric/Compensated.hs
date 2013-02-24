@@ -503,14 +503,19 @@ instance (Compensable a, Precise a, Floating a) => Floating (Compensated a) wher
       xy1 = add (log a) (b/a) compensated
       xy2 = xy1 + m * exp (-xy1) - 1 -- Newton Raphson step 1
     in xy2 + m * exp (-xy2) - 1      -- Newton Raphson step 2
+  -- {-# INLINE log #-}
+  {-# SPECIALIZE log :: Compensated Double -> Compensated Double #-}
+  {-# SPECIALIZE log :: Compensated Float -> Compensated Float #-}
+  -- {-# SPECIALIZE log :: Compensated (Compensated Double) -> Compensated (Compensated Double) #-}
 
-  -- | Improved by the Babylonian algorithm (Newton Raphson)
+  -- | Hardware sqrt improved by the Babylonian algorithm (Newton Raphson)
   sqrt m = with (z4 + m/z4) $ on compensated (/2) where
     z0 = sqrt (m^.primal)
     z1 = with (z0 <| (m / compensated z0 0)) $ on compensated (/2)
     z2 = with (z1 + m/z1) $ on compensated (/2)
     z3 = with (z2 + m/z2) $ on compensated (/2)
     z4 = with (z3 + m/z3) $ on compensated (/2)
+  {-# INLINE sqrt #-}
 
   -- (**)    = error "TODO"
   pi      = error "TODO"
