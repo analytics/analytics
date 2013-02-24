@@ -47,8 +47,8 @@ instance Fast Double where
 blog :: Floating a => a -> a
 blog x = 6 * (x - 1) / (x + 1 + 4 * sqrt(x));
 
-foreign import ccall unsafe pow_fast  :: Double -> Double -> Double
-foreign import ccall unsafe powf_fast :: Float -> Float -> Float
+-- foreign import ccall unsafe pow_fast  :: Double -> Double -> Double
+-- foreign import ccall unsafe powf_fast :: Float -> Float -> Float
 foreign import ccall unsafe pow_fast_precise  :: Double -> Double -> Double
 foreign import ccall unsafe powf_fast_precise :: Float -> Float -> Float
 foreign import ccall unsafe exp_fast  :: Double -> Double
