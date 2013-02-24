@@ -51,12 +51,12 @@ data Query :: * -> * where
 instance Show (Query a) where
   showsPrec d (Ap l r) = showParen (d > 4) $
     showsPrec 4 l . showString " <*> " . showsPrec 5 r
-  showsPrec d (Map l r) = showParen (d > 4) $
+  showsPrec d (Map _ r) = showParen (d > 4) $
     showString ".. <$> " . showsPrec 5 r
-  showsPrec d (Pure a) = showParen (d > 10) $ showString "pure .."
+  showsPrec d (Pure _) = showParen (d > 10) $ showString "pure .."
   showsPrec d (Alt l r) = showParen (d > 3) $
     showsPrec 3 l . showString " <|> " . showsPrec 4 r
-  showsPrec d Empty = showString "empty"
+  showsPrec _ Empty = showString "empty"
   showsPrec d (Value a) = showParen (d > 10) $
     showString "value " . showsPrec 11 a
   showsPrec d (Row a) = showParen (d > 10) $

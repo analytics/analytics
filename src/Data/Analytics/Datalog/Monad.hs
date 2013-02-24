@@ -59,15 +59,15 @@ data DatalogT :: (* -> *) -> * -> * where
 instance Show (DatalogT m a) where
   showsPrec d (h :- b) = showParen (d > 0) $
     showsPrec 1 h . showString " :- " . showsPrec 0 b
-  showsPrec d (Fresh f) = showParen (d > 10) $
+  showsPrec d (Fresh _) = showParen (d > 10) $
     showString "Fresh .."
   showsPrec d (Query q) = showParen (d > 10) $
     showString "Query " . showsPrec 11 q
-  showsPrec d (Bind m k) = showParen (d > 10) $
+  showsPrec d (Bind m _) = showParen (d > 10) $
     showString "Bind " . showsPrec 11 m . showString " .."
-  showsPrec d (Return a) = showParen (d > 10) $
+  showsPrec d (Return _) = showParen (d > 10) $
     showString "return .."
-  showsPrec d (Lift m) = showParen (d > 10) $
+  showsPrec d (Lift _) = showParen (d > 10) $
     showString "lift .."
 
 instance Functor (DatalogT m) where
