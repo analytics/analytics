@@ -29,6 +29,7 @@ module Data.Analytics.Numeric.Moments
   -- , kurtosis
   , singleton
   , momentsOf
+  , combinedMean
   ) where
 
 import Control.Applicative
@@ -46,21 +47,21 @@ import qualified Data.Vector as V
 -- | The first few central moments and covariances
 
 -- TODO: Consider storing intermediate results in compensated form for better precision
-data Moments
+data Moments a
   = NoMoments -- this has no shape information
   | Moments
   { _rawCount       :: {-# UNPACK #-} !Int64 -- when 0, this may still carry shape information from 'dim' or from trimming the vector to remove skewness and kurtoses we don't want
-  , _rawMeans       :: !(U.Vector Double) -- means
-  , _rawVariances   :: !(U.Vector Double) -- variances
-  , _rawCovariances :: {-# UNPACK #-} !(V.Vector (U.Vector Double)) -- covariances
-  , _rawSkewnesses  :: !(U.Vector Double) -- skews
-  , _rawKurtoses    :: !(U.Vector Double) -- kurtoses
+  , _rawMeans       :: !(U.Vector a) -- means
+  , _rawVariances   :: !(U.Vector a) -- variances
+  , _rawCovariances :: {-# UNPACK #-} !(V.Vector (U.Vector a)) -- covariances
+  , _rawSkewnesses  :: !(U.Vector a) -- skews
+  , _rawKurtoses    :: !(U.Vector a) -- kurtoses
   } deriving (Show,Read,Data,Typeable,Generic)
 
 makePrisms ''Moments
 makeClassy ''Moments
 
-instance Monoid Moments where
+instance (Unbox a, Fractional a, Ord a) => Monoid (Moments a) where
   mempty = NoMoments
   {-# INLINE mempty #-}
   NoMoments `mappend` x = x
@@ -88,12 +89,12 @@ instance Monoid Moments where
           calcKurtosis2 !ka !kb !dk = ka + kb + dk
   {-# INLINE mappend #-}
 
-instance Semigroup Moments where
+instance (Unbox a, Fractional a, Ord a) => Semigroup (Moments a) where
   (<>) = mappend
   {-# INLINE (<>) #-}
 
--- | Aggregate weighted mean.
-combinedMean :: Int64 -> Int64 -> Double -> Double -> Double
+-- | Calculate an aggregate weighted mean.
+combinedMean :: (Fractional a, Ord a) => Int64 -> Int64 -> a -> a -> a
 combinedMean !m !n
   | m <= n    = inline go m n
   | otherwise = flip (inline go n m)
@@ -107,7 +108,7 @@ combinedMean !m !n
             threshold = 0.1
 {-# INLINE combinedMean #-}
 
-row :: U.Vector Double -> Moments
+row :: (Unbox a, Num a) => U.Vector a -> Moments a
 row as = Moments 1 as zs cvs zs zs where
   !n = U.length as
   !cvs = V.generate n (\i -> U.take i zs) -- upper triangular
@@ -115,17 +116,19 @@ row as = Moments 1 as zs cvs zs zs where
 {-# INLINE row #-}
 
 -- | Generate an empty set of moments for a restricted number of dimensions
-dim :: Int -> Moments
+dim :: (Unbox a, Num a) => Int -> Moments a
 dim n = Moments 0 zs zs cvs zs zs where
   !cvs = V.generate n (\i -> U.take i zs) -- upper triangular
   !zs = U.replicate n 0
 
-momentsOf :: Foldable f => Getting Moments s (f Double) -> s -> Moments
+momentsOf :: (Foldable f, Unbox a, Num a) => Getting (Moments a) s (f a) -> s -> Moments a
 momentsOf l = foldMapOf l (row . U.fromList . F.toList)
 {-# INLINE momentsOf #-}
 
--- | @'trimmed' n v@ will insert the vector @v@ into 'Moments'. If 'Moments' summarizes at least @n@ elements, this will start rejecting extreme components of the vector, replacing them with the @mean@.
-trimmed :: Int64 -> U.Vector Double -> Moments -> Moments
+-- | @'trimmed' n v@ will insert the vector @v@ into 'Moments'.
+-- If 'Moments' summarizes at least @n@ elements, this will start rejecting
+-- extreme components of the vector, replacing them with the @mean@.
+trimmed :: (Unbox a, Floating a, Ord a) => Int64 -> U.Vector a -> Moments a -> Moments a
 trimmed k as r@(Moments n ms vs _ _ _)
   | n >= k = U.zipWith3 go as ms vs <| r where
   n' = fromIntegral n
@@ -135,12 +138,12 @@ trimmed k as r@(Moments n ms vs _ _ _)
 trimmed _ as r = as <| r
 
 -- this lets us use 'cons' to add a moment to the mix.
-instance (Bifunctor p, Profunctor p, Functor f) => Cons p f Moments Moments (U.Vector Double) (U.Vector Double) where
+instance (Bifunctor p, Profunctor p, Functor f, Unbox a, Fractional a, Ord a) => Cons p f (Moments a) (Moments a) (U.Vector a) (U.Vector a) where
   -- TODO: Use Welford's algorithm directly (extended by Terriberry)
   _Cons = unto $ \(d,m) -> row d <> m
   {-# INLINE _Cons #-}
 
-instance (Bifunctor p, Profunctor p, Functor f) => Snoc p f Moments Moments (U.Vector Double) (U.Vector Double) where
+instance (Bifunctor p, Profunctor p, Functor f, Unbox a, Fractional a, Ord a) => Snoc p f (Moments a) (Moments a) (U.Vector a) (U.Vector a) where
   -- TODO: Use Welford's algorithm directly (extended by Terriberry)
   _Snoc = unto $ \(m,d) -> m <> row d
   {-# INLINE _Snoc #-}
@@ -155,14 +158,14 @@ root = iso sqrt (\x -> x * x)
 --
 -- /NB:/ setting this will render the higher 'Moments' inconsistent.
 --
-variances :: HasMoments t => IndexedTraversal' Int t Double
+variances :: (HasMoments t a, Unbox a, Fractional a) => IndexedTraversal' Int t a
 variances f = moments ago where
   ago NoMoments                   = pure NoMoments
   ago m@(Moments 0 _ _ _ _ _)     = pure m
   ago (Moments i ms vs cvs ss ks) = each (dividedBy (fromIntegral i) f) vs <&> \us -> Moments i ms us cvs ss ks
 {-# INLINE variances #-}
 
-variance :: HasMoments t => Int -> IndexedTraversal' Int t Double
+variance :: (HasMoments t a, Unbox a, Fractional a) => Int -> IndexedTraversal' Int t a
 variance k f = moments ago where
   ago NoMoments               = pure NoMoments
   ago m@(Moments 0 _ _ _ _ _) = pure m
@@ -170,12 +173,12 @@ variance k f = moments ago where
 {-# INLINE variance #-}
 
 -- | /NB:/ setting this will render the higher 'Moments' inconsistent.
-stddevs :: HasMoments t => IndexedTraversal' Int t Double
+stddevs :: (HasMoments t a, Unbox a, Floating a) => IndexedTraversal' Int t a
 stddevs = variances.root
 {-# INLINE stddevs #-}
 
 -- | Retrieve the nth std deviation from our set.
-stddev :: HasMoments t => Int -> IndexedTraversal' Int t Double
+stddev :: (HasMoments t a, Unbox a, Floating a) => Int -> IndexedTraversal' Int t a
 stddev k = variance k . root
 {-# INLINE stddev #-}
 
