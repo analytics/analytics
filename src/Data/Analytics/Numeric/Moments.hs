@@ -130,8 +130,8 @@ trimmed k as r@(Moments n ms vs _ _ _)
   | n >= k = U.zipWith3 go as ms vs <| r where
   n' = fromIntegral n
   go a m v
-    | tsd <- 3*sqrt (v/n'), a >= m + tsd || a <= m - tsd = m -- clamp instead?
-    | otherwise                    = a
+    | amm <- a - m, n'*amm*amm >= 9*v = m
+    | otherwise = a
 trimmed _ as r = as <| r
 
 -- this lets us use 'cons' to add a moment to the mix.
