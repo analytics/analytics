@@ -59,8 +59,8 @@ instance HasVars (Atom a b) where
 instance Term x => TermOf (Atom a b) x
 
 class Atomic r a b where
-  atom :: Table a -> Row (a -> b) -> r
+  atom :: Atom a b -> r
 
 instance (Typeable c, Show c, Typeable d, a ~ c, b ~ d) => Atomic (Atom a b) c d where
-  atom = Atom
+  atom = id
 

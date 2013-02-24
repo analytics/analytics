@@ -39,7 +39,7 @@ instance Show Relation where
   showsPrec d (Relation m) = showParen (d > 10) $
     showString "Relation " . showsPrec 11 m
 
-rows :: (HasSubst s, Typeable a, Typeable b) => Atom a b -> IntMap Relation -> StateT s [] (a, b)
+rows :: HasSubst s => Atom a b -> IntMap Relation -> StateT s [] (a, b)
 rows (Atom i r) m = case m^.at (i^.tableId) of
   Nothing -> mzero
   Just (Relation rl) -> do

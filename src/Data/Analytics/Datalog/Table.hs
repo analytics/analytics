@@ -1,4 +1,4 @@
-{-# LANGUAGE Rank2Types, MultiParamTypeClasses, TypeFamilies, FunctionalDependencies, FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE Rank2Types, MultiParamTypeClasses, TypeFamilies, FunctionalDependencies, FlexibleInstances, UndecidableInstances, DeriveDataTypeable #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) Edward Kmett 2013
@@ -31,6 +31,7 @@ import Data.Analytics.Datalog.Atom
 import Data.Analytics.Datalog.Monad
 import Data.Analytics.Datalog.Row
 import Data.Analytics.Datalog.Term
+import Data.Typeable
 
 type T0 o m         = forall r.          Atomic r m o
                       => r
@@ -43,20 +44,20 @@ type T3 o x y z m   = forall r a b c.   (Atomic r m o, TermOf r a, Entity a ~ x,
 type T4 o w x y z m = forall r a b c d. (Atomic r m o, TermOf r a, Entity a ~ w, TermOf r b, Entity b ~ x, TermOf r c, Entity c ~ y, TermOf r d, Entity d ~ z)
                       => a -> b -> c -> d -> r
 
-t0 :: Table m -> (m -> o) -> T0 o m
-t0 t o = atom t $ pure o
+t0 :: (Typeable m, Show m, Typeable o) => Table m -> (m -> o) -> T0 o m
+t0 t o = atom $ Atom t $ pure o
 
-t1 :: Table m -> (x -> m -> o) -> T1 o x m
-t1 t f a = atom t $ f <$> arg a
+t1 :: (Typeable m, Show m, Typeable o) => Table m -> (x -> m -> o) -> T1 o x m
+t1 t f a = atom $ Atom t $ f <$> arg a
 
-t2 :: Table m -> (x -> y -> m -> o) -> T2 o x y m
-t2 t f a b = atom t $ f <$> arg a <*> arg b
+t2 :: (Typeable m, Show m, Typeable o) => Table m -> (x -> y -> m -> o) -> T2 o x y m
+t2 t f a b = atom $ Atom t $ f <$> arg a <*> arg b
 
-t3 :: Table m -> (x -> y -> z -> m -> o) -> T3 o x y z m
-t3 t f a b c = atom t $ f <$> arg a <*> arg b <*> arg c
+t3 :: (Typeable m, Show m, Typeable o) => Table m -> (x -> y -> z -> m -> o) -> T3 o x y z m
+t3 t f a b c = atom $ Atom t $ f <$> arg a <*> arg b <*> arg c
 
-t4 :: Table m -> (w -> x -> y -> z -> m -> o) -> T4 o w x y z m
-t4 t f a b c d = atom t $ f <$> arg a <*> arg b <*> arg c <*> arg d
+t4 :: (Typeable m, Show m, Typeable o) => Table m -> (w -> x -> y -> z -> m -> o) -> T4 o w x y z m
+t4 t f a b c d = atom $ Atom t $ f <$> arg a <*> arg b <*> arg c <*> arg d
 
 ------------------------------------------------------------------------------
 -- Useful for returning t0..t4 in a 'Monad' without @ImpredicativeTypes@.
@@ -76,19 +77,19 @@ data Table4 o w x y z m = T4 (T4 o w x y z m)
 class Tabled k n r | r -> n k where
   table :: MonadTable m => k -> (n -> n -> n) -> m r
 
-instance Tabled (n -> k) n (Table0 k n) where
+instance (Show n, Typeable n, Typeable k) => Tabled (n -> k) n (Table0 k n) where
   table k = freshTable >=> \t -> return $ T0 (t0 t k)
 
-instance Tabled (x -> n -> k) n (Table1 k x n) where
+instance (Show n, Typeable n, Typeable k) => Tabled (x -> n -> k) n (Table1 k x n) where
   table k = freshTable >=> \t -> return $ T1 (t1 t k)
 
-instance Tabled (x -> y -> n -> k) n (Table2 k x y n) where
+instance (Show n, Typeable n, Typeable k) => Tabled (x -> y -> n -> k) n (Table2 k x y n) where
   table k = freshTable >=> \t -> return $ T2 (t2 t k)
 
-instance Tabled (x -> y -> z -> n -> k) n (Table3 k x y z n) where
+instance (Show n, Typeable n, Typeable k) => Tabled (x -> y -> z -> n -> k) n (Table3 k x y z n) where
   table k = freshTable >=> \t -> return $ T3 (t3 t k)
 
-instance Tabled (w -> x -> y -> z -> n -> k) n (Table4 k w x y z n) where
+instance (Show n, Typeable n, Typeable k) => Tabled (w -> x -> y -> z -> n -> k) n (Table4 k w x y z n) where
   table k = freshTable >=> \t -> return $ T4 (t4 t k)
 
 ------------------------------------------------------------------------------

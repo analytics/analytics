@@ -138,4 +138,4 @@ query = Query
 
 -- All Terms are forced to be Entities
 instance (u ~ (), v ~ (), Typeable b) => Atomic (DatalogT m u) v b where
-  atom t a = atom t a :- pure ()
+  atom a = a :- pure ()

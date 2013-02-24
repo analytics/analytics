@@ -36,7 +36,6 @@ import Data.Maybe
 import Data.Semigroup
 import Data.Traversable as Traversable
 import Data.Typeable
-import Unsafe.Coerce
 import Prelude
 
 data Var where
@@ -85,9 +84,9 @@ instance HasVars ATerm where
     Just t'@(AnEntity _) -> do
       tell (Any True)
       return t'
-    Just v -> do
+    Just u -> do
       tell (Any True)
-      applyM s v
+      applyM s u
     Nothing -> return t
   applyM _ t = return t
   {-# INLINE applyM #-}
@@ -127,7 +126,7 @@ instance HasVars Subst where
   {-# INLINE vars #-}
 
 instance Semigroup Subst where
-  s@(Subst l) <> Subst m = Subst (apply s m <> l)
+  s@(Subst l) <> Subst m = Subst (l <> apply s m) --  <> l)
   {-# INLINE (<>) #-}
 
 instance Monoid Subst where
