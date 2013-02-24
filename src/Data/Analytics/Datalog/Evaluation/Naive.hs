@@ -82,6 +82,7 @@ defacto (Alt l r) = defacto l ++ defacto r
 defacto _         = []
 
 -- eval :: (Monad m, HasEnv s) => DatalogT m a -> StateT s m a
+eval :: HasEnv s => DatalogT IO a -> StateT s IO a
 eval m = lift (promptT m) >>= \ s -> case s of
   Done a -> return a
   Fresh f :>>= k -> do

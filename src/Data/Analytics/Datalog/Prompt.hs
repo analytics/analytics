@@ -36,7 +36,6 @@ import Data.Analytics.Datalog.Monad hiding (Query, (:-), Fresh)
 import Data.Analytics.Datalog.Query
 import Data.Analytics.Datalog.Table
 import Data.Functor.Identity
-import Data.Typeable
 
 infixr 0 :-
 infixl 1 :>>=
