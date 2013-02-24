@@ -25,9 +25,8 @@ module Data.Analytics.Numeric.Moments
   , variances, variance
   , stddevs, stddev
   , skewnesses, skewness
+  , kurtoses, kurtosis
   , trimmed
-  -- , skewness
-  -- , kurtosis
   , singleton
   , momentsOf
   , combinedMean
@@ -159,27 +158,25 @@ root = iso sqrt (\x -> x * x)
 --
 -- /NB:/ setting this will render the higher 'Moments' inconsistent.
 --
-variances :: (HasMoments t a, Unbox a, Fractional a) => IndexedTraversal' Int t a
+variances :: (HasMoments t a, Unbox a, Fractional a) => IndexedFold Int t a
 variances f = moments ago where
-  ago NoMoments                   = pure NoMoments
-  ago m@(Moments 0 _ _ _ _ _)     = pure m
-  ago (Moments i ms vs cvs ss ks) = each (dividedBy (fromIntegral i) f) vs <&> \us -> Moments i ms us cvs ss ks
+  ago (Moments i _ vs _ _ _) | i > 0 = coerce $ each (dividedBy (fromIntegral i) f) vs
+  ago m = pure m
 {-# INLINE variances #-}
 
-variance :: (HasMoments t a, Unbox a, Fractional a) => Int -> IndexedTraversal' Int t a
+variance :: (HasMoments t a, Unbox a, Fractional a) => Int -> IndexedFold Int t a
 variance k f = moments ago where
-  ago NoMoments               = pure NoMoments
-  ago m@(Moments 0 _ _ _ _ _) = pure m
-  ago (Moments i ms vs cvs ss ks) = L.indexed f k ((vs U.! k) / fromIntegral i) <&> \v -> Moments i ms (vs U.// [(k,v*fromIntegral i)]) cvs ss ks
+  ago (Moments i _ vs _ _ _) | i > 0, k >= 0 && k < U.length vs = coerce $ L.indexed f k ((vs U.! k) / fromIntegral i)
+  ago m = pure m
 {-# INLINE variance #-}
 
 -- | /NB:/ setting this will render the higher 'Moments' inconsistent.
-stddevs :: (HasMoments t a, Unbox a, Floating a) => IndexedTraversal' Int t a
+stddevs :: (HasMoments t a, Unbox a, Floating a) => IndexedFold Int t a
 stddevs = variances.root
 {-# INLINE stddevs #-}
 
 -- | Retrieve the nth std deviation from our set.
-stddev :: (HasMoments t a, Unbox a, Floating a) => Int -> IndexedTraversal' Int t a
+stddev :: (HasMoments t a, Unbox a, Floating a) => Int -> IndexedFold Int t a
 stddev k = variance k . root
 {-# INLINE stddev #-}
 
@@ -187,13 +184,13 @@ stddev k = variance k . root
 --  This is a 'Fold' because 'skewness' may not be defined for some combinations of 'Moments'.
 skewnesses :: (HasMoments t a, Unbox a, Floating a, Ord a) => IndexedFold Int t a
 skewnesses f = moments ago where
-  ago NoMoments = pure NoMoments
-  ago (Moments n _ bs _ cs _) = coerce $ each (Indexed go) $ U.zip bs cs where
+  ago (Moments n _ bs _ cs _) | n > 0 = coerce $ each (Indexed go) $ U.zip bs cs where
     sqn = sqrt (fromIntegral n)
     go i (b,c)
       | ood >= 1e12 = pure 0 -- TODO: condition the epsilon better
       | otherwise   = L.indexed f i (sqn * c * ood)
       where ood = b ** (-1.5)
+  ago m = pure m
 {-# INLINE skewnesses #-}
 
 -- | Calculate a 'skewness'.
@@ -201,14 +198,38 @@ skewnesses f = moments ago where
 -- This is a 'Fold' because 'skewness' may not be defined for some combinations of 'Moments'.
 skewness :: (HasMoments t a, Unbox a, Floating a, Ord a) => Int -> IndexedFold Int t a
 skewness k f = moments ago where
-  ago NoMoments = pure NoMoments
-  ago (Moments n _ bs _ cs _) = coerce $ go (bs U.! k) (cs U.! k) where
+  ago (Moments n _ bs _ cs _) | k >= 0, k < min (U.length bs) (U.length cs) = coerce $ go (bs U.! k) (cs U.! k) where
     sqn = sqrt (fromIntegral n)
     go b c
       | ood >= 1e12 = pure 0 -- TODO: condition the epsilon better
       | otherwise   = L.indexed f k (sqn * c * ood)
-      where ood = b ** (-1.5)
+      where !ood = b ** (-1.5)
+  ago m = pure m
 {-# INLINE skewness #-}
+
+-- | Calculate 'kurtosis'.
+-- This is a 'Fold' because 'kurtosis' may not be defined for some combinations of 'Moments'.
+kurtoses :: (HasMoments t a, Unbox a, Floating a, Ord a) => IndexedFold Int t a
+kurtoses f = moments ago where
+  ago NoMoments = pure NoMoments
+  ago (Moments n _ bs _ _ ds) = coerce $ each (Indexed go) $ U.zip bs ds where
+    !m = fromIntegral n
+    go i (b,d)
+      | b <= 1e-6 = pure 0
+      | otherwise = L.indexed f i (m*d/(b*b) - 3)
+{-# INLINE kurtoses #-}
+
+-- | Calculate 'kurtosis'.
+-- This is a 'Fold' because 'kurtosis' may not be defined for some combinations of 'Moments'.
+kurtosis :: (HasMoments t a, Unbox a, Floating a, Ord a) => Int -> IndexedFold Int t a
+kurtosis k f = moments ago where
+  ago (Moments n _ bs _ _ ds) | k >= 0 && k < min (U.length bs) (U.length ds) = coerce $ go (bs U.! k) (ds U.! k) where
+    !m = fromIntegral n
+    go b d
+      | b <= 1e-6 = pure 0
+      | otherwise = L.indexed f k (m*d/(b*b) - 3)
+  ago m = pure m
+{-# INLINE kurtosis #-}
 
 {-
 covariances :: HasMoments t => Traversal' t (U.Array (Int,Int) Double)
@@ -233,56 +254,4 @@ covariance i j = case compare i j of
     go _  _  _ NoMoments = pure NoMoments
     go lo hi f (Moments i ms vs cvs ss ks) = (ix hi<.>ix lo.oi) cvs <&> \cvs' -> Moments i ms vs cvs' ss ks
       where oi = iso (/fromIntegral i) (*fromIntegral i)
--}
-
-{-
--- | Calculate 'kurtosis'.
--- This is a 'Fold' because 'kurtosis' may not be defined for some combinations of 'Moments'.
-kurtosis :: HasMoments t => Fold t Double
-kurtosis f = moments go where
-  go (Moments i _ b _ d)
-    | abs denom <= 1e-12 = coerce $ pure ()
-    | otherwise = coerce $ f (fromIntegral i * d / denom - 3)
-    where denom = b*b
-{-# INLINE kurtosis #-}
--}
-
-{-
-instance Field1 Moments Moments Double Double where
-  _1 f (Moments i a b c d) = indexed f (1 :: Int) a <&> \a' -> Moments i a' b c d
-  {-# INLINE _1 #-}
-
-instance Field2 Moments Moments Double Double where
-  _2 f (Moments i a b c d) = indexed f (2 :: Int) b <&> \b' -> Moments i a b' c d
-  {-# INLINE _2 #-}
-
-instance Field3 Moments Moments Double Double where
-  _3 f (Moments i a b c d) = indexed f (3 :: Int) c <&> \c' -> Moments i a b c' d
-  {-# INLINE _3 #-}
-
-instance Field4 Moments Moments Double Double where
-  _4 f (Moments i a b c d) = indexed f (4 :: Int) d <&> \d' -> Moments i a b c d'
-  {-# INLINE _4 #-}
-
-type instance Index Moments = Int
-
-instance (Contravariant f, Applicative f) => Each f Moments Moments Double Double where
-  each f (Moments i a b c d) = coerce $ indexed f (1 :: Int) (fromIntegral i) *> indexed f (1 :: Int) a *> indexed f (2 :: Int) b *> indexed f (3 :: Int) c *> indexed f (4 :: Int) d
-  {-# INLINE each #-}
-
-type instance IxValue Moments = Double
-
-instance (Contravariant f, Applicative f) => Ixed f Moments where
-  ix 0 = \f (Moments i _ _ _ _) -> coerce $ indexed f (0 :: Int) (fromIntegral i :: Double)
-  ix 1 = \f (Moments _ a _ _ _) -> coerce $ indexed f (1 :: Int) a
-  ix 2 = \f (Moments _ _ b _ _) -> coerce $ indexed f (2 :: Int) b
-  ix 3 = \f (Moments _ _ _ c _) -> coerce $ indexed f (3 :: Int) c
-  ix 4 = \f (Moments _ _ _ _ d) -> coerce $ indexed f (4 :: Int) d
-  ix _ = \_ _                   -> coerce $ pure ()
-  {-# INLINE ix #-}
-
-instance (Contravariant f, Applicative f) => Contains f Moments where
-  contains = containsN 5
-  {-# INLINE contains #-}
-
 -}
