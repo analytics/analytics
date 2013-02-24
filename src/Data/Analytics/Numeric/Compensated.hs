@@ -30,6 +30,7 @@ module Data.Analytics.Numeric.Compensated
   , kahan
   , add
   , times
+  , divide
   , square
   , split
   ) where
@@ -37,8 +38,9 @@ module Data.Analytics.Numeric.Compensated
 import Control.Applicative
 import Control.Lens as L
 import Control.Monad
-import Data.Foldable as Foldable
 import Data.Analytics.Numeric.Log
+import Data.Foldable as Foldable
+import Data.Function (on)
 import Data.Ratio
 import Data.Semigroup
 import Foreign.Ptr
@@ -78,6 +80,17 @@ times a b k =
   split b $ \b1 b2 ->
   let x = a * b in k x (a2*b2 - (((x - a1*b1) - a2*b1) - a1*b2))
 {-# INLINE times #-}
+
+-- this is a variant on a division algorithm by Liddicoat and Flynn
+divide :: Compensable a => a -> a -> (a -> a -> r) -> r
+divide a b = with (aX * ms) where
+  x0   = recip b
+  aX   = times a x0 compensated -- calculate aX
+  m    = 1 <| negate (times b x0 compensated)
+  mm   = m*m
+  ms   = 1+((m+mm)+m*mm)
+{-# INLINE divide #-}
+
 
 -- | @'square' a k@ computes @k x y@ such that
 --
@@ -191,6 +204,10 @@ residual f c = with c $ \a b -> compensated a <$> f b
 uncompensated :: Compensable a => Compensated a -> a
 uncompensated c = with c const
 {-# INLINE uncompensated #-}
+
+type instance Index (Compensated a) = Int
+instance (Applicative f, Compensable a, Compensable b) => Each f (Compensated a) (Compensated b) a b where
+  each f m = with m $ \a b -> compensated <$> L.indexed f (0 :: Int) a <*> L.indexed f (1 :: Int) b
 
 instance Compensable a => Eq (Compensated a) where
   m == n = with m $ \a b -> with n $ \c d -> a == c && b == d
@@ -324,13 +341,11 @@ instance Compensable a => Fractional (Compensated a) where
   recip m = with m $ \a b -> add (recip a) (-b / (a * a)) compensated
   {-# INLINE recip #-}
 
-  m / n =
-    with m $ \a b ->
-    with n $ \c d ->
-    times (a/c) (d/c) $ \x1 y1 ->
-    add x1 (b/c) $ \x2 y2 ->
-    add x2 (a/c) $ \x3 y3 ->
-    add x3 (y1 + y2 + y3) compensated
+  -- | A variant on a hardware division algorithm by Liddicoat and Flynn
+  a / b = (a*x0) * (1+((m+mm)+m*mm)) where
+    x0  = recip b
+    m   = 1 - b*x0
+    mm  = m*m
   {-# INLINE (/) #-}
 
   fromRational r = fromInteger (numerator r) / fromInteger (denominator r)
@@ -489,8 +504,15 @@ instance (Compensable a, Precise a, Floating a) => Floating (Compensated a) wher
       xy2 = xy1 + m * exp (-xy1) - 1 -- Newton Raphson step 1
     in xy2 + m * exp (-xy2) - 1      -- Newton Raphson step 2
 
+  -- | Improved by the Babylonian algorithm (Newton Raphson)
+  sqrt m = with (z4 + m/z4) $ on compensated (/2) where
+    z0 = sqrt (m^.primal)
+    z1 = with (z0 <| (m / compensated z0 0)) $ on compensated (/2)
+    z2 = with (z1 + m/z1) $ on compensated (/2)
+    z3 = with (z2 + m/z2) $ on compensated (/2)
+    z4 = with (z3 + m/z3) $ on compensated (/2)
+
   -- (**)    = error "TODO"
-  -- sqrt    = error "TODO"
   pi      = error "TODO"
   asin    = error "TODO"
   atan    = error "TODO"
