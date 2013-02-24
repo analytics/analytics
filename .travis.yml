@@ -12,11 +12,10 @@ before_install:
   - travis/cabal-apt-install $mode
 
 install:
-  - cabal configure $mode
-  - cabal build
+  - cabal install $mode
 
 script:
-  - $script && hlint src --cpp-define HLINT
+  - hlint src --cpp-define HLINT
 
 notifications:
   irc:
@@ -25,6 +24,3 @@ notifications:
     skip_join: true
     template:
       - "\x0313analytics\x03/\x0306%{branch}\x03 \x0314%{commit}\x03 %{build_url} %{message}"
-
-env:
-  - mode="--enable-tests -v" script="cabal test"
