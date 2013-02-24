@@ -58,7 +58,7 @@ data DatalogT :: (* -> *) -> * -> * where
 
 instance Show (DatalogT m a) where
   showsPrec d (h :- b) = showParen (d > 0) $
-    showsPrec 1 h . showString " :- " . showsPrec 0 b
+    showsPrec 1 h . showString " :- " . shows b
   showsPrec d (Fresh _) = showParen (d > 10) $
     showString "Fresh .."
   showsPrec d (Query q) = showParen (d > 10) $

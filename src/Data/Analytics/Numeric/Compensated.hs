@@ -52,6 +52,7 @@ import Data.Vector.Generic as G
 import Data.Vector.Generic.Mutable as M
 
 {-# ANN module "hlint: ignore Use -" #-}
+{-# ANN module "hlint: ignore Use curry" #-}
 
 -- | @'add' a b k@ computes @k x y@ such that
 --
@@ -289,7 +290,7 @@ instance Compensable a => Num (Compensated a) where
     add x8 (b*d + y2 + y3 + y6 + y7 + y8) compensated
   -- -- {-# INLINE (*) #-}
 
-  negate m = with m $ \a b -> compensated (negate a) (negate b)
+  negate m = with m (on compensated negate)
   -- {-# INLINE negate #-}
 
   x - y = x + negate y
@@ -352,7 +353,7 @@ instance Compensable a => Fractional (Compensated a) where
   -- {-# INLINE fromRational #-}
 
 instance Compensable a => Real (Compensated a) where
-  toRational m = with m $ \a b -> toRational a + toRational b
+  toRational m = with m (on (+) toRational)
   -- {-# INLINE toRational #-}
 
 instance Compensable a => RealFrac (Compensated a) where

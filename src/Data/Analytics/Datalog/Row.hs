@@ -1,11 +1,12 @@
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE ExistentialQuantification #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) Edward Kmett 2013
@@ -52,12 +53,14 @@ instance Ord ARow where
 
 -- | A relation with free variables of type @a@. This is used to represent
 -- the head of a datalog rule and is used by 'no'.
+#ifndef HLINT
 data Row a where
   RowAp   :: !(Row (a -> b)) -> !(Row a) -> Row b
   RowMap  :: (a -> b) -> !(Row a) -> Row b
   RowPure :: a -> Row a
   RowArg  :: Term a => a -> Row (Entity a)
   deriving Typeable
+#endif
 
 instance Show (Row a) where
   showsPrec d (RowAp l r) = showParen (d > 10) $

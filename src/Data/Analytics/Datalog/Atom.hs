@@ -1,10 +1,11 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FunctionalDependencies #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) Edward Kmett 2013
@@ -41,9 +42,11 @@ instance Show (Table a) where
 
 makeLenses ''Table
 
+#ifndef HLINT
 data Atom :: * -> * -> * where
   Atom :: (Typeable a, Show a, Typeable b) => !(Table a) -> !(Row (a -> b)) -> Atom a b
   deriving Typeable
+#endif
 
 instance Show (Atom a b) where
   showsPrec d (Atom (Table i _) r) = showParen (d > 10) $

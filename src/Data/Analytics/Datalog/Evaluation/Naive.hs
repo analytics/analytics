@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveDataTypeable #-}
@@ -31,9 +32,11 @@ import Data.IntMap as IntMap hiding (insert)
 import Data.Map as Map hiding (insert)
 import Data.Typeable
 
+#ifndef HLINT
 data Relation where
   Relation :: (Typeable a, Show a, Typeable b) => !(Map (Row (a -> b)) a) -> Relation
   deriving Typeable
+#endif
 
 instance Show Relation where
   showsPrec d (Relation m) = showParen (d > 10) $
@@ -123,6 +126,4 @@ saturate = do
         (m, db') -> (n <> m, db')
 
   Any interesting <- edb %%= \db -> Prelude.foldr go (mempty,db) rules
-  if interesting
-    then saturate
-    else return ()
+  when interesting saturate
