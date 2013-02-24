@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -517,10 +518,15 @@ instance (Compensable a, Unbox a) => G.Vector U.Vector (Compensated a) where
 --
 -- Other than sqrt, the accuracy of these is basically uncalculated! In fact many of these are known to be wrong! Patches and improvements are welcome.
 instance Compensable a => Floating (Compensated a) where
+#ifdef SPECIALIZE_INSTANCES
+  {-# SPECIALIZE instance Floating (Compensated Double) #-}
+  {-# SPECIALIZE instance Floating (Compensated Float) #-}
+  {-# SPECIALIZE instance Compensable a => Floating (Compensated (Compensated a)) #-}
+#endif
+
   exp m =
     with m $ \a b ->
     times (exp a) (exp b) compensated
-  -- {-# INLINE exp #-}
 
   sin m =
     with m $ \a b ->
@@ -531,7 +537,6 @@ instance Compensable a => Floating (Compensated a) where
     add x4 y3 $ \x5 y5 ->
     add x5 x3 $ \x6 y6 ->
     add (y4 + y5 + y6) x6 compensated
-  -- {-# INLINE sin #-}
 
   cos m =
     with m $ \a b ->
@@ -542,13 +547,11 @@ instance Compensable a => Floating (Compensated a) where
     add x4 y3 $ \x5 y5 ->
     add x5 x3 $ \x6 y6 ->
     add (y4 + y5 + y6) x6 compensated
-  -- {-# INLINE cos #-}
 
   tan m =
     with m $ \a b ->
     add (tan a) (tan b) compensated /
     (1 <| times (tan a) (tan b) compensated)
-  -- {-# INLINE tan #-}
 
   sinh m =
     with m $ \a b ->
@@ -559,7 +562,6 @@ instance Compensable a => Floating (Compensated a) where
     add x4 y3 $ \x5 y5 ->
     add x5 x3 $ \x6 y6 ->
     add (y4 + y5 + y6) x6 compensated
-  -- {-# INLINE sinh #-}
 
   cosh m =
     with m $ \a b ->
@@ -570,23 +572,18 @@ instance Compensable a => Floating (Compensated a) where
     add x4 y3 $ \x5 y5 ->
     add x5 x3 $ \x6 y6 ->
     add (y4 + y5 + y6) x6 compensated
-  -- {-# INLINE cosh #-}
 
   tanh m =
     with m $ \a b ->
     add (tanh a) (tanh b) compensated /
-    (1 <| times (tanh a) (tanh b) compensated)
-  -- {-# INLINE tanh #-}
+    (1 +^ times (tanh a) (tanh b) compensated)
 
+  -- This requires an accurate 'exp', which we currently lack.
   log m =
     with m $ \ a b -> let
       xy1 = add (log a) (b/a) compensated
       xy2 = xy1 + m * exp (-xy1) - 1 -- Newton Raphson step 1
     in xy2 + m * exp (-xy2) - 1      -- Newton Raphson step 2
-  -- -- {-# INLINE log #-}
-  -- {-# SPECIALIZE log :: Compensated Double -> Compensated Double #-}
-  -- {-# SPECIALIZE log :: Compensated Float -> Compensated Float #-}
-  -- {-# SPECIALIZE log :: Compensable a => Compensated (Compensated a) -> Compensated (Compensated a) #-}
 
   -- | Hardware sqrt improved by the Babylonian algorithm (Newton Raphson)
   sqrt m = with (z4 + m/z4) $ on compensated (/2) where
@@ -595,9 +592,6 @@ instance Compensable a => Floating (Compensated a) where
     z2 = with (z1 + m/z1) $ on compensated (/2)
     z3 = with (z2 + m/z2) $ on compensated (/2)
     z4 = with (z3 + m/z3) $ on compensated (/2)
-  -- {-# SPECIALIZE sqrt :: Compensated Double -> Compensated Double #-}
-  -- {-# SPECIALIZE sqrt :: Compensated Float -> Compensated Float #-}
-  -- {-# SPECIALIZE sqrt :: Compensable a => Compensated (Compensated a) -> Compensated (Compensated a) #-}
 
   -- (**)    = error "TODO"
   pi      = error "TODO"
