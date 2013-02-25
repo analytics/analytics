@@ -57,6 +57,8 @@ library
     cpp-options: -DOS_WINDOWS=1
 
   exposed-modules:
+    Data.Analytics.Active.Observer
+    Data.Analytics.Active.Task
     Data.Analytics.Approximate
     Data.Analytics.Approximate.HyperLogLog
     Data.Analytics.Approximate.HyperLogLog.Config
@@ -101,6 +103,7 @@ library
     cereal-vector             >= 0.2     && < 0.3,
     optparse-applicative      >= 0.5     && < 0.6,
     comonad                   >= 3       && < 4,
+    configurator              >= 0.2.0.2 && < 0.3,
     containers                >= 0.4.2   && < 0.6,
     contravariant             >= 0.4     && < 0.6,
     data-default              >= 0.5     && < 0.6,
