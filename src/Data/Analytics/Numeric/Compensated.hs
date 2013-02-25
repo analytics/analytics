@@ -369,6 +369,21 @@ instance Compensable a => Num (Compensated a) where
   {-# INLINE (+) #-}
 -}
 
+
+  m * n =
+    with m $ \a b ->
+    with n $ \c d ->
+    times a c $ \x1 y1 ->
+    times b c $ \x2 y2 ->
+    times a d $ \x3 y3 ->
+    add x1 x2 $ \x4 y4 ->
+    add x3 x4 $ \x5 y5 ->
+    add y1 y4 $ \x6 y6 ->
+    add y5 x6 $ \x7 y7 ->
+    add x5 x7 $ \x8 y8 ->
+    add x8 (b*d + y2 + y3 + y6 + y7 + y8) compensated
+  {-# INLINE (*) #-}
+
 {-
   m * n =
     with m $ \a b ->
