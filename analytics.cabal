@@ -59,6 +59,7 @@ library
   exposed-modules:
     Data.Analytics.Active
     Data.Analytics.Active.Event
+    Data.Analytics.Active.Observable
     Data.Analytics.Active.Observer
     Data.Analytics.Active.STM
     Data.Analytics.Active.Subscription

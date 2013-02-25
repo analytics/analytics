@@ -17,9 +17,9 @@ import Control.Monad.State.Strict as Strict
 import Control.Monad.Writer.Lazy as Lazy
 import Control.Monad.Writer.Strict as Strict
 import Control.Monad.Reader as Reader
+import Data.Analytics.Active.STM
 import Data.Typeable
 import Data.IORef
-
 
 -- | Eventually we can do work stealing. For now we just push work onto a banker's queue
 -- and take the next item.
@@ -43,6 +43,7 @@ instance Applicative Task where
     mf q <*> ma q
   {-# INLINE (<*>) #-}
 
+
 instance Monad Task where
   return = Task . const . return
   {-# INLINE return #-}
@@ -55,6 +56,20 @@ instance Monad Task where
 instance MonadIO Task where
   liftIO = Task . const
   {-# INLINE liftIO #-}
+
+instance MonadSTM Task where
+  stm = liftIO . stm
+  {-# INLINE stm #-}
+  newTV = liftIO . newTV
+  {-# INLINE newTV #-}
+  readTV = liftIO . readTV
+  {-# INLINE readTV #-}
+  newTMV = liftIO . newTMV
+  {-# INLINE newTMV #-}
+  newEmptyTMV = liftIO newEmptyTMV
+  {-# INLINE newEmptyTMV #-}
+  newTC = liftIO newTC
+  {-# INLINE newTC #-}
 
 class MonadIO m => MonadTask m where
   spawn :: Task () -> m ()
