@@ -58,7 +58,9 @@ library
 
   exposed-modules:
     Data.Analytics.Active
+    Data.Analytics.Active.Event
     Data.Analytics.Active.Observer
+    Data.Analytics.Active.STM
     Data.Analytics.Active.Subscription
     Data.Analytics.Active.Task
     Data.Analytics.Approximate
@@ -124,6 +126,7 @@ library
     reflection                >= 1.1.6   && < 2,
     semigroupoids             == 3.*,
     semigroups                >= 0.9     && < 1,
+    stm                       >= 2.3     && < 2.5,
     tagged                    >= 0.4.4   && < 1,
     template-haskell,
     transformers              >= 0.2     && < 0.4,
