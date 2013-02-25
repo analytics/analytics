@@ -11,9 +11,11 @@ module Data.Analytics.Active.Task
   ) where
 
 import Control.Applicative
+import Control.Concurrent.MVar
 import Control.Lens
 import Control.Lens.Internal.Deque
 import Control.Monad.CatchIO as E
+import Control.Monad.Cont
 import Control.Monad.State.Lazy as Lazy
 import Control.Monad.State.Strict as Strict
 import Control.Monad.Writer.Lazy as Lazy
@@ -28,13 +30,15 @@ import Data.IORef
 run :: MonadIO m => Task a -> m a
 run t0 = liftIO $ do
   q <- newIORef (mempty :: Deque (Task ()))
-  let enq t = atomicModifyIORef q $ \pq -> let pq' = snoc pq t in pq' `seq` (pq', ())
-      loop = join $ atomicModifyIORef q $ \pq -> case uncons pq of
+  result <- newEmptyMVar
+  let enq t = liftIO $ atomicModifyIORef q $ \pq -> let pq' = snoc pq t in pq' `seq` (pq', ())
+      loop = join $ liftIO $ atomicModifyIORef q $ \pq -> case uncons pq of
           Nothing       -> (pq , return ())
           Just (r, pq') -> (pq', runTask r enq >> loop)
-  runTask t0 enq <* loop
+  runContT (runTask t0 enq <* loop) (putMVar result)
+  takeMVar result
 
-data Task a = Task { runTask :: (Task () -> IO ()) -> IO a }
+data Task a = Task { runTask :: (Task () -> ContT () IO ()) -> ContT () IO a }
   deriving (Functor, Typeable)
 
 instance Applicative Task where
@@ -63,7 +67,7 @@ instance MonadCatchIO Task where
   {-# INLINE unblock #-}
 
 instance MonadIO Task where
-  liftIO = Task . const
+  liftIO = Task . const . liftIO
   {-# INLINE liftIO #-}
 
 instance MonadSTM Task where
@@ -79,6 +83,12 @@ instance MonadSTM Task where
   {-# INLINE newEmptyTMV #-}
   newTC = liftIO newTC
   {-# INLINE newTC #-}
+
+instance MonadCont Task where
+  callCC f = Task $ \ r ->
+    callCC $ \ c ->
+    runTask (f (Task . const . c)) r
+  {-# INLINE callCC #-}
 
 class MonadIO m => MonadTask m where
   spawn :: Task () -> m ()
@@ -100,3 +110,4 @@ instance MonadTask m => MonadTask (Lazy.StateT s m)
 instance MonadTask m => MonadTask (ReaderT e m)
 instance (MonadTask m, Monoid w) => MonadTask (Strict.WriterT w m)
 instance (MonadTask m, Monoid w) => MonadTask (Lazy.WriterT w m)
+instance MonadTask m => MonadTask (ContT r m)
