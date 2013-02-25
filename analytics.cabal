@@ -68,6 +68,7 @@ library
     Data.Analytics.Approximate.Mass
     Data.Analytics.Approximate.Type
     Data.Analytics.Bits
+    Data.Analytics.Combinators
     Data.Analytics.Console
     Data.Analytics.Console.Options
     Data.Analytics.Console.Unicode
