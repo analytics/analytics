@@ -10,9 +10,11 @@ import Data.Functor.Contravariant
 import Data.Monoid
 import Data.Typeable
 
+infixl 1 !
+
 data Observer a = Observer
   { (!) :: a -> Task ()
-  , err :: SomeException -> Task ()
+  , kill :: SomeException -> Task ()
   , complete :: Task ()
   } deriving Typeable
 
@@ -25,6 +27,6 @@ instance Monoid (Observer a) where
   {-# INLINE mempty #-}
   p `mappend` q = Observer
     (\a -> do spawn (p ! a); q ! a)
-    (\e -> err p e |>> err q e)
+    (\e -> kill p e |>> kill q e)
     (complete p |>> complete q)
   {-# INLINE mappend #-}
