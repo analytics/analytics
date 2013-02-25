@@ -32,7 +32,7 @@
 module Data.Analytics.Approximate.HyperLogLog.Config
   (
   -- * Config
-    Config(..)
+    Config
   , HasConfig(..)
   , hll
   , numBits, numBuckets, smallRange, interRange, rawFact, alpha, bucketMask
