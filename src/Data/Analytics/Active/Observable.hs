@@ -4,18 +4,21 @@ module Data.Analytics.Active.Observable
   , fby
   , sub
   , never
+  , observe
   ) where
 
 import Control.Applicative
-import Control.Exception
+import Control.Exception (SomeException)
 import Control.Lens
 import Control.Monad
+import Control.Monad.CatchIO
 import Data.Analytics.Active.Event
 import Data.Analytics.Active.Observer
 import Data.Analytics.Active.Task
 import Data.Analytics.Active.STM
 import Data.Analytics.Active.Subscription
 import Data.Analytics.Combinators
+import Data.Foldable as Foldable
 import Data.Functor.Alt
 import Data.Functor.Extend
 import Data.Monoid
@@ -63,6 +66,16 @@ safe p = Observable $ \o -> do
 never :: Observable a
 never = Observable $ \ _ -> return mempty
 {-# INLINE never #-}
+
+observe :: Foldable f => f a -> Observable a
+observe t = Observable $ \o -> do
+  ev <- newEvent
+  spawn $ do
+    ea <- try $ Foldable.forM_ t $ \a -> before ev >>= \b -> when b (o ! a)
+    case ea of
+      Left e   -> before ev >>= \ b -> when b $ kill o e
+      Right () -> before ev >>= \ b -> when b $ complete o
+  return $ Subscription (() <$ causing ev ())
 
 instance Monoid (Observable a) where
   mempty = Observable $ \o -> mempty <$ spawn (complete o)

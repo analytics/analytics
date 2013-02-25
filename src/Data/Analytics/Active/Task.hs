@@ -13,6 +13,7 @@ module Data.Analytics.Active.Task
 import Control.Applicative
 import Control.Lens
 import Control.Lens.Internal.Deque
+import Control.Monad.CatchIO as E
 import Control.Monad.State.Lazy as Lazy
 import Control.Monad.State.Strict as Strict
 import Control.Monad.Writer.Lazy as Lazy
@@ -44,7 +45,6 @@ instance Applicative Task where
     mf q <*> ma q
   {-# INLINE (<*>) #-}
 
-
 instance Monad Task where
   return = Task . const . return
   {-# INLINE return #-}
@@ -53,6 +53,14 @@ instance Monad Task where
     a <- m q
     runTask (k a) q
   {-# INLINE (>>=) #-}
+
+instance MonadCatchIO Task where
+  Task m `catch` k = Task $ \ q -> m q `E.catch` \a -> runTask (k a) q
+  {-# INLINE catch #-}
+  block (Task m) = Task (block . m)
+  {-# INLINE block #-}
+  unblock (Task m) = Task (unblock . m)
+  {-# INLINE unblock #-}
 
 instance MonadIO Task where
   liftIO = Task . const
