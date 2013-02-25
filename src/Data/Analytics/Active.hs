@@ -7,6 +7,7 @@ module Data.Analytics.Active
   , (|>>)
   -- * Observer
   , Observer(..)
+  , foreach
   -- * Observable
   , Observable(..)
   , safe, fby, never, observe
