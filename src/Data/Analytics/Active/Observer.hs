@@ -1,11 +1,13 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 module Data.Analytics.Active.Observer
   ( Observer(..)
+  , foreach
   ) where
 
 import Control.Exception
 import Control.Monad.IO.Class
 import Data.Analytics.Active.Task
+import Data.Functor
 import Data.Functor.Contravariant
 import Data.Monoid
 import Data.Typeable
@@ -30,3 +32,7 @@ instance Monoid (Observer a) where
     (\e -> kill p e |>> kill q e)
     (complete p |>> complete q)
   {-# INLINE mappend #-}
+
+foreach :: (a -> Task b) -> Observer a
+foreach t = Observer (\a -> () <$ t a) (\_ -> return ()) (return ())
+{-# INLINE foreach #-}
