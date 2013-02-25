@@ -350,13 +350,26 @@ instance (Bifunctor p, Profunctor p, Functor f, Compensable a, a ~ b) => Snoc p 
 
 instance Compensable a => Num (Compensated a) where
   m + n =
+    with m $ \a  b  ->
+    with n $ \c d ->
+    add  a  c $ \x1 y1 ->
+    add y1  d $ \x2 y2 ->
+    add  b x2 $ \x3 y3 ->
+    add x1 x3 $ \x4 y4 ->
+    add x4 (y2 + y3 + y4) compensated
+  {-# INLINE (+) #-}
+
+{-
+  m + n =
     with m $ \a b ->
     with n $ \c d ->
     add a c $ \x1 y1 ->
     add b d $ \x2 y2 ->
     renorm x1 x2 (y1 + y2)
   {-# INLINE (+) #-}
+-}
 
+{-
   m * n =
     with m $ \a b ->
     with n $ \c d ->
@@ -367,6 +380,7 @@ instance Compensable a => Num (Compensated a) where
     add x3 x4 $ \x5 y5 ->
     renorm x1 x5 (b * d + y2 + y4 + y3 + y5)
   {-# INLINE (*) #-}
+-}
 
   negate m = with m (on compensated negate)
   -- {-# INLINE negate #-}
