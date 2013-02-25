@@ -6,6 +6,7 @@ module Data.Analytics.Active.Task
   ( Task(..)
   , MonadTask(..)
   , run
+  , (|>>)
   ) where
 
 import Control.Applicative
@@ -18,6 +19,7 @@ import Control.Monad.Writer.Strict as Strict
 import Control.Monad.Reader as Reader
 import Data.Typeable
 import Data.IORef
+
 
 -- | Eventually we can do work stealing. For now we just push work onto a banker's queue
 -- and take the next item.
@@ -58,6 +60,10 @@ class MonadIO m => MonadTask m where
   spawn :: Task () -> m ()
   default spawn :: (MonadTrans t, MonadTask n, m ~ t n) => Task () -> t n ()
   spawn = lift . spawn
+
+-- | Spawn a background task and continue
+(|>>) :: Task a -> Task b -> Task b
+m |>> r = spawn (() <$ m) >> r
 
 instance MonadTask Task where
   spawn t = Task $ \ q -> q t

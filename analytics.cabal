@@ -57,7 +57,9 @@ library
     cpp-options: -DOS_WINDOWS=1
 
   exposed-modules:
+    Data.Analytics.Active
     Data.Analytics.Active.Observer
+    Data.Analytics.Active.Subscription
     Data.Analytics.Active.Task
     Data.Analytics.Approximate
     Data.Analytics.Approximate.HyperLogLog
