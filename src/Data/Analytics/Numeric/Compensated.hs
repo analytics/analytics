@@ -551,7 +551,7 @@ instance Compensable a => Floating (Compensated a) where
   tan m =
     with m $ \a b ->
     add (tan a) (tan b) compensated /
-    (1 <| times (tan a) (tan b) compensated)
+    (1 +^ times (tan a) (tan b) compensated)
 
   sinh m =
     with m $ \a b ->
@@ -575,7 +575,7 @@ instance Compensable a => Floating (Compensated a) where
 
   tanh m =
     with m $ \a b ->
-    add (tanh a) (tanh b) compensated /
+    fadd (tanh a) (tanh b) compensated /
     (1 +^ times (tanh a) (tanh b) compensated)
 
   -- This requires an accurate 'exp', which we currently lack.
