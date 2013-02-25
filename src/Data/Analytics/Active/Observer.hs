@@ -12,6 +12,9 @@ import Data.Functor.Contravariant
 import Data.Monoid
 import Data.Typeable
 
+-- $setup
+-- >>> import Data.Analytics.Active
+
 infixl 1 !
 
 data Observer a = Observer
@@ -33,6 +36,9 @@ instance Monoid (Observer a) where
     (complete p |>> complete q)
   {-# INLINE mappend #-}
 
+-- | Perform an action for each
+--
+-- >>> run $  subscribe (observe [1..10]) $ foreach (liftIO . print)
 foreach :: (a -> Task b) -> Observer a
 foreach t = Observer (\a -> () <$ t a) (\_ -> return ()) (return ())
 {-# INLINE foreach #-}
