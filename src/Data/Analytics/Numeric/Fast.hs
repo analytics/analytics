@@ -39,7 +39,7 @@ instance Fast Double where
   -- fpow  = pow_fast
   fpow = pow_fast_precise
 
--- | Borchardt’s Algorithm from “Dead Reconing: Calculating without instruments”.
+-- | Borchardt’s Algorithm from “Dead Reckoning: Calculating without instruments”.
 --
 -- This is a remarkably bad approximate logarithm.
 --
