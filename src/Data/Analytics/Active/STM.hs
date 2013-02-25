@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE TypeFamilies #-}
 module Data.Analytics.Active.STM
@@ -13,33 +14,45 @@ import Control.Monad.Writer.Strict as Strict
 
 class Monad m => MonadSTM m where
   stm :: STM a -> m a
+#ifndef HLINT
   default stm :: (MonadTrans t, MonadSTM n, m ~ t n) => STM a -> m a
   stm = lift . stm
   {-# INLINE stm #-}
+#endif
 
   newTV :: a -> m (TVar a)
+#ifndef HLINT
   default newTV :: (MonadTrans t, MonadSTM n, m ~ t n) => a -> m (TVar a)
   newTV = lift . newTV
+#endif
   {-# INLINE newTV #-}
 
   readTV :: TVar a -> m a
+#ifndef HLINT
   default readTV :: (MonadTrans t, MonadSTM n, m ~ t n) => TVar a -> m a
   readTV = lift . readTV
+#endif
   {-# INLINE readTV #-}
 
   newTMV :: a -> m (TMVar a)
+#ifndef HLINT
   default newTMV :: (MonadTrans t, MonadSTM n, m ~ t n) => a -> m (TMVar a)
   newTMV = lift . newTMV
+#endif
   {-# INLINE newTMV #-}
 
   newEmptyTMV :: m (TMVar a)
+#ifndef HLINT
   default newEmptyTMV :: (MonadTrans t, MonadSTM n, m ~ t n) => m (TMVar a)
   newEmptyTMV = lift newEmptyTMV
+#endif
   {-# INLINE newEmptyTMV #-}
 
   newTC :: m (TChan a)
+#ifndef HLINT
   default newTC :: (MonadTrans t, MonadSTM n, m ~ t n) => m (TChan a)
   newTC = lift newTC
+#endif
   {-# INLINE newTC #-}
 
 instance MonadSTM STM where

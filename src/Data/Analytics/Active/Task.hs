@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -73,8 +74,10 @@ instance MonadSTM Task where
 
 class MonadIO m => MonadTask m where
   spawn :: Task () -> m ()
+#ifndef HLINT
   default spawn :: (MonadTrans t, MonadTask n, m ~ t n) => Task () -> t n ()
   spawn = lift . spawn
+#endif
 
 -- | Spawn a background task and continue
 (|>>) :: Task a -> Task b -> Task b
