@@ -117,7 +117,7 @@ class ReifiesConfig o where
 
 #ifdef USE_TYPE_LITS
 instance SingRep n Integer => ReifiesConfig (n :: Nat) where
-  reflectConfig = hll $ fromInteger $ withSing $ \(x :: Sing n) -> fromSing x
+  reflectConfig _ = hll $ fromInteger $ withSing $ \(x :: Sing n) -> fromSing x
   {-# INLINE reflectConfig #-}
 #endif
 
@@ -131,10 +131,11 @@ instance Reifies s Config => ReifiesConfig (ReifiedConfig s) where
   reflectConfig = retagReifiedConfig reflect
   {-# INLINE reflectConfig #-}
 
-reifyConfig :: Int -> (forall o. ReifiesConfig o => Proxy o -> r) -> r
+reifyConfig :: Int -> (forall (o :: *). ReifiesConfig o => Proxy o -> r) -> r
 reifyConfig i f = reify (hll i) (go f) where
   go :: Reifies o Config => (Proxy (ReifiedConfig o) -> a) -> proxy o -> a
   go g _ = g Proxy
+
 {-# INLINE reifyConfig #-}
 
 instance Reifies n Int => ReifiesConfig (D n) where
