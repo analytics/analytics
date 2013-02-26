@@ -11,6 +11,7 @@ import Control.Monad.State.Strict as Strict
 import Control.Monad.Reader
 import Control.Monad.Writer.Lazy as Lazy
 import Control.Monad.Writer.Strict as Strict
+import Control.Monad.Cont
 
 class Monad m => MonadSTM m where
   stm :: STM a -> m a
@@ -88,3 +89,4 @@ instance MonadSTM m => MonadSTM (Strict.StateT s m)
 instance MonadSTM m => MonadSTM (ReaderT e m)
 instance (MonadSTM m, Monoid w) => MonadSTM (Lazy.WriterT w m)
 instance (MonadSTM m, Monoid w) => MonadSTM (Strict.WriterT w m)
+instance MonadSTM m => MonadSTM (ContT r m)

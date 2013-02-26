@@ -105,15 +105,16 @@ eval m = lift (promptT m) >>= \ s -> case s of
     eval $ k xs
 
 bodyRows :: IntMap Relation -> Query a -> StateT Subst [] a
-bodyRows db (Ap l r)  = bodyRows db l <*> bodyRows db r
-bodyRows db (Map f x) = f <$> bodyRows db x
-bodyRows _  (Pure a)  = pure a
-bodyRows db (Alt l r) = bodyRows db l <|> bodyRows db r
-bodyRows _  Empty     = Ap.empty
-bodyRows db (Row x)   = snd <$> rows x db
-bodyRows db (Value x) = fst <$> rows x db
-bodyRows _  No{}      = Ap.empty -- we can't stratify in this mode
-bodyRows _  Key{}     = Ap.empty -- we can't read keys without shuffling the query around.
+bodyRows db (Ap l r)        = bodyRows db l <*> bodyRows db r
+bodyRows db (Map f x)       = f <$> bodyRows db x
+bodyRows _  (Pure a)        = pure a
+bodyRows db (Alt l r)       = bodyRows db l <|> bodyRows db r
+bodyRows _  Empty           = Ap.empty
+bodyRows db (Row x)         = snd <$> rows x db
+bodyRows db (Value x)       = fst <$> rows x db
+bodyRows _  No{}            = Ap.empty -- we can't stratify in this mode
+bodyRows _  Key{}           = Ap.empty -- we can't read keys without shuffling the query around.
+bodyRows db (Filtering t a) = Ap.empty
 
 saturate :: (MonadState s m, HasEnv s) => m ()
 saturate = do

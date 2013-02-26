@@ -17,7 +17,7 @@
 --------------------------------------------------------------------
 module Data.Analytics.Datalog.Query
   ( Query(..)
-  , no, key, row, value
+  , no, key, row, value, filtering
   ) where
 
 import Data.Analytics.Datalog.Atom
@@ -37,15 +37,16 @@ import Data.Typeable
 -- The 'Query' itself forms an 'Alternative', letting you combine them to make a robust
 -- 'Data.Analytics.Datalog.query' language.
 data Query :: * -> * where
-  Ap    :: Query (a -> b) -> Query a -> Query b
-  Map   :: (a -> b) -> Query a -> Query b
-  Pure  :: a -> Query a
-  Alt   :: Query a -> Query a -> Query a
-  Empty :: Query a
-  Value :: Atom a b -> Query a
-  Row   :: Atom a b -> Query b
-  Key   :: Term a => a -> Query (Entity a)
-  No    :: Atom a b -> Query ()
+  Ap        :: Query (a -> b) -> Query a -> Query b
+  Map       :: (a -> b) -> Query a -> Query b
+  Pure      :: a -> Query a
+  Alt       :: Query a -> Query a -> Query a
+  Empty     :: Query a
+  Value     :: Atom a b -> Query a
+  Row       :: Atom a b -> Query b
+  Key       :: Term a => a -> Query (Entity a)
+  No        :: Atom a b -> Query ()
+  Filtering :: Term a => a -> (Entity a -> Bool) -> Query ()
   deriving Typeable
 
 instance Show (Query a) where
@@ -65,6 +66,8 @@ instance Show (Query a) where
     showString "key " . showsPrec 11 a
   showsPrec d (No a) = showParen (d > 10) $
     showString "no " . showsPrec 11 a
+  showsPrec d (Filtering t _) = showParen (d > 10) $
+    showString "filtering " . showsPrec 11 t . showString " .."
 
 instance Num a => Num (Query a) where
   (+) = liftA2 (+)
@@ -148,3 +151,7 @@ key = Key
 value :: Atom a b -> Query a
 value = Value
 {-# INLINE value #-}
+
+filtering :: Term a => a -> (Entity a -> Bool) -> Query ()
+filtering = Filtering
+{-# INLINE filtering #-}

@@ -3,17 +3,19 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE Trustworthy #-}
 module Data.Analytics.Active.Task
   ( Task(..)
   , MonadTask(..)
   , run
   , (|>>)
+  , Job
   ) where
 
 import Control.Applicative
 import Control.Concurrent.MVar
+import Control.Concurrent.STM.TChan
 import Control.Lens
-import Control.Lens.Internal.Deque
 import Control.Monad.CatchIO as E
 import Control.Monad.Cont
 import Control.Monad.State.Lazy as Lazy
@@ -24,10 +26,30 @@ import Control.Monad.Reader as Reader
 import Data.Analytics.Active.STM
 import Data.Typeable
 import Data.IORef
+import System.IO.Unsafe
 
--- | Eventually we can do work stealing. For now we just push work onto a banker's queue
--- and take the next item.
+type Job = Task ()
+
+jobs :: TChan Job
+jobs = unsafePerformIO newTChanIO
+{-# NOINLINE jobs #-}
+
+q = stm . writeTChan jobs
+
+-- | Eventually we can do work stealing. For now we just push work onto the channel
+-- and keep taking the next item. Other workers can take from the job pool too
 run :: MonadIO m => Task a -> m a
+run t0 = liftIO $ do
+  result <- newEmptyMVar
+  let 
+
+      trampoline = stm (tryReadTChan jobs) >>= \ma -> case ma of
+        Nothing -> return ()
+        Just r -> runTask r q >> trampoline
+  runContT (runTask t0 q <* trampoline) (putMVar result)
+  takeMVar result
+
+{-
 run t0 = liftIO $ do
   q <- newIORef (mempty :: Deque (Task ()))
   result <- newEmptyMVar
@@ -37,8 +59,11 @@ run t0 = liftIO $ do
           Just (r, pq') -> (pq', runTask r enq >> loop)
   runContT (runTask t0 enq <* loop) (putMVar result)
   takeMVar result
+-}
 
-data Task a = Task { runTask :: (Task () -> ContT () IO ()) -> ContT () IO a }
+data Task a = Task
+  { runTask :: (Job -> ContT () IO ()) -> ContT () IO a
+  }
   deriving (Functor, Typeable)
 
 instance Applicative Task where
