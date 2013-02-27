@@ -35,7 +35,6 @@ import Data.Map as Map
 import Data.Maybe
 import Data.Semigroup
 import Data.Traversable as Traversable
-import Data.Typeable
 import Prelude
 
 data Var where

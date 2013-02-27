@@ -47,7 +47,6 @@ import           Data.Hashable
 import           Data.Proxy
 import           Data.Semigroup
 import           Data.Serialize
-import           Data.Vector.Serialize
 import qualified Data.Vector.Unboxed                           as V
 import qualified Data.Vector.Unboxed.Mutable                   as MV
 import           Generics.Deriving                             hiding (D, to)

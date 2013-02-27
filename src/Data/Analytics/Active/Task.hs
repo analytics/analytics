@@ -15,7 +15,6 @@ module Data.Analytics.Active.Task
 import Control.Applicative
 import Control.Concurrent.MVar
 import Control.Concurrent.STM.TChan
-import Control.Lens
 import Control.Monad.CatchIO as E
 import Control.Monad.Cont
 import Control.Monad.State.Lazy as Lazy
@@ -25,7 +24,6 @@ import Control.Monad.Writer.Strict as Strict
 import Control.Monad.Reader as Reader
 import Data.Analytics.Active.STM
 import Data.Typeable
-import Data.IORef
 import System.IO.Unsafe
 
 type Job = Task ()
@@ -34,7 +32,8 @@ jobs :: TChan Job
 jobs = unsafePerformIO newTChanIO
 {-# NOINLINE jobs #-}
 
-q = stm . writeTChan jobs
+theQ :: Job -> ContT () IO ()
+theQ = stm . writeTChan jobs
 
 -- | Eventually we can do work stealing. For now we just push work onto the channel
 -- and keep taking the next item. Other workers can take from the job pool too
@@ -45,8 +44,8 @@ run t0 = liftIO $ do
 
       trampoline = stm (tryReadTChan jobs) >>= \ma -> case ma of
         Nothing -> return ()
-        Just r -> runTask r q >> trampoline
-  runContT (runTask t0 q <* trampoline) (putMVar result)
+        Just r -> runTask r theQ >> trampoline
+  runContT (runTask t0 theQ <* trampoline) (putMVar result)
   takeMVar result
 
 {-
