@@ -47,7 +47,7 @@ data Query :: * -> * where
   Value     :: Atom a b -> Query a
   Row       :: Atom a b -> Query b
   Key       :: Term a => a -> Query (Entity a)
-  No        :: Atom a b -> Query ()
+  No        :: Query a -> Query ()
   Filtering :: Term a => a -> (Entity a -> Bool) -> Query (Entity a)
   deriving Typeable
 
@@ -151,7 +151,7 @@ instance a ~ b => Atomic (Query a) b c where
 
 
 -- | Stratified negation.
-no :: Atom a b -> Query ()
+no :: Query a -> Query ()
 no = No
 {-# INLINE no #-}
 

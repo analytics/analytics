@@ -172,7 +172,7 @@ finish db u (Ap l r)  = finish db u l <*> finish db u r
 finish db u (Map f x) = f <$> finish db u x
 finish _  _ (Pure a)  = pure a
 finish db u (No x)
-  | Prelude.null $ runStateT (rows x db) u = pure ()
+  | Prelude.null $ runStateT (bodyRows db x) u = pure ()
   | otherwise = Ap.empty
 finish _  u (Key t) = case term `withArgType` t of
   IsEntity -> pure t
