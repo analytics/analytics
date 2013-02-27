@@ -116,15 +116,17 @@ instance HasVars (Row a) where
   applyM s (RowAp l r)  = liftM2 RowAp (applyM s l) (applyM s r)
   applyM s (RowMap f x) = liftM (RowMap f) (applyM s x)
   applyM _ (RowPure a)  = return (RowPure a)
-  applyM s (RowArg v)   = case s^.mgu.at (Var v) of
-    Nothing -> return $ RowArg v
-    Just (AVar v')    -> case gcast (RowArg v') of
+  applyM s r@(RowArg v) = case s^.mgu.at (Var v) of
+    Nothing -> return r
+    Just (AVar v')    -> case cast (RowArg v') of
       Just h  -> do
         tell (Any True)
-        applyM s h
+        return h
       Nothing -> error "PANIC: illegal substitution"
-    Just (AnEntity t) -> case gcast (RowArg t) of
-      Just h -> return h
+    Just (AnEntity t) -> case cast (RowArg t) of
+      Just h -> do
+        tell (Any True)
+        return h
       Nothing -> error "PANIC: illegal substitution"
   {-# INLINEABLE applyM #-}
 
@@ -153,7 +155,7 @@ match l@(RowArg t) r@(RowArg t')  = case term `withArgType` t of
          h <- match (RowArg t'') r
          maybe (error "broken row") return $ cast h
       Nothing -> do
-         unless (eqTerm t t') $ subst %= apply (t ~> t')
+         unless (eqTerm t t') $ subst %= \x -> (t ~> t') <> x
          maybe (error "broken row") return  $ cast (RowArg t')
   IsEntity -> case term `withArgType` t' of
     IsVar -> do
@@ -162,7 +164,7 @@ match l@(RowArg t) r@(RowArg t')  = case term `withArgType` t of
         Just (AVar t'')     -> match l (RowArg t'')
         Just (AnEntity t'') -> match l (RowArg t'')
         Nothing -> do
-          unless (eqTerm t t') $ subst %= apply (t' ~> t)
+          unless (eqTerm t t') $ subst %= \x -> (t' ~> t) <> x
           return l
     IsEntity
        | cast t == Just t' -> return l

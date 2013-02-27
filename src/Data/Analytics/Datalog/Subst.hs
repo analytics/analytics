@@ -42,19 +42,30 @@ data Var where
   Var :: Term t => t -> Var
 
 instance Eq Var where
-  Var x == Var y = maybe False (==y) (cast x)
+  Var x == Var y = eqTerm x y
   {-# INLINE (==) #-}
 
 instance Ord Var where
   Var x `compare` Var y = compareTerm x y
   {-# INLINE compare #-}
 
+instance Show Var where
+  showsPrec d (Var v) = showParen (d > 10) $
+    showString "Var " . showsPrec 11 v
+
 data ATerm where
   AVar     :: Term t => t -> ATerm
   AnEntity :: (Term t, t ~ Entity t) => t -> ATerm
 
+instance Show ATerm where
+  showsPrec d (AVar a) = showParen (d > 10) $
+    showString "AVar " . showsPrec 11 a
+  showsPrec d (AnEntity a) = showParen (d > 10) $
+    showString "AnEntity " . showsPrec 11 a
+
 -- TODO: instance At, Contains, Ix
 newtype Subst = Subst { _mgu :: Map Var ATerm }
+  deriving Show
 
 (~>) :: forall a b. (Term a, Term b) => a -> b -> Subst
 a ~> b = Subst $ Map.singleton (Var a) $ case term :: Handler b of
@@ -70,7 +81,7 @@ class HasVars t where
 applyN :: (HasVars t, MonadWriter Any m) => Subst -> t -> m t
 applyN s t = do
   (t', Any b) <- listen (applyM s t)
-  return $ if b then t' else t
+  return $ if b then t' else t -- t
 {-# INLINE applyN #-}
 
 apply :: HasVars t => Subst -> t -> t
@@ -126,7 +137,7 @@ instance HasVars Subst where
   {-# INLINE vars #-}
 
 instance Semigroup Subst where
-  s@(Subst l) <> Subst m = Subst (l <> apply s m) --  <> l)
+  s@(Subst l) <> Subst m = Subst (l <> apply s m)
   {-# INLINE (<>) #-}
 
 instance Monoid Subst where

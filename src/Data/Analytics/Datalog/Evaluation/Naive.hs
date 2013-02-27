@@ -114,7 +114,7 @@ bodyRows db (Row x)         = snd <$> rows x db
 bodyRows db (Value x)       = fst <$> rows x db
 bodyRows _  No{}            = Ap.empty -- we can't stratify in this mode
 bodyRows _  Key{}           = Ap.empty -- we can't read keys without shuffling the query around.
-bodyRows db (Filtering t a) = Ap.empty
+bodyRows _  (Filtering _ _) = Ap.empty
 
 saturate :: (MonadState s m, HasEnv s) => m ()
 saturate = do
