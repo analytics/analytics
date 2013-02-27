@@ -11,6 +11,10 @@
  TODO: Incorporate the changes suggested by Nic Schraudolph to Ankerl's inversion:
 
  "You can get a much better approximation (piecewise rational instead of linear) at the cost of a single floating-point division by using better_exp(x) = exp(x/2)/exp(-x/2), where exp() is my published approximation but you don't need the additive constant anymore, you can use c=0. On machines with hardware division this is very attractive." -- Nic Schraudolph
+
+ TODO: Incorporate the techniques from https://code.google.com/p/fastapprox/ to enable us
+to calculate more interesting approximate functions. They might need to be generalized to work on
+Double values where appropriate I suppose.
 */
 
 double pow_fast(double a, double b) {
@@ -23,7 +27,7 @@ double pow_fast(double a, double b) {
   return u.d;
 }
 
-/* 
+/*
   "I have used the same trick for float, not double, with some slight modification to the constants to suite IEEE754 float format. The first constant for float is 1<<23/log(2) and the second is 127<<23 (for double they are 1<<20/log(2) and 1023<<20)." -- John
 
  double approximation: round(1<<20/log(2)) = 1512775, 1023<<20 = 1072693248

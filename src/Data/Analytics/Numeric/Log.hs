@@ -21,12 +21,19 @@ import Data.Functor.Apply
 import Data.Traversable
 import Data.Data
 import Generics.Deriving
+import Text.Read
 
 -- | @data Log@ has no connection to 'Data.Analytics.Datalog'.
 --
 -- Errors should be resolved by taking the answer to negative infinity where possible
 -- as this is typically used as the lower bound on a confidence level.
-newtype Log a = Log a deriving (Eq,Ord,Show,Read,Data,Typeable,Generic)
+newtype Log a = Log a deriving (Eq,Ord,Data,Typeable,Generic)
+
+instance (Floating a, Show a) => Show (Log a) where
+  showsPrec d (Log a) = showsPrec d (exp a)
+
+instance (Floating a, Read a) => Read (Log a) where
+  readPrec = Log . log <$> step readPrec
 
 runLog :: Log a -> a
 runLog (Log a) = a
