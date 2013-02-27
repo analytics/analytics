@@ -14,20 +14,23 @@ instance Term StringVar where
 
 userRole, roleRole, rolePermissions, userPermissions :: T2 (String, String) String String ()
 userRole        = t2 (Table 0 const) (\x y () -> (x :: String,y :: String))
-roleRole        = t2 (Table 3 const) (\x y () -> (x :: String,y :: String))
-rolePermissions = t2 (Table 1 const) (\x y () -> (x :: String,y :: String))
-userPermissions = t2 (Table 2 const) (\x y () -> (x :: String,y :: String))
+roleRole        = t2 (Table 1 const) (\x y () -> (x :: String,y :: String))
+rolePermissions = t2 (Table 2 const) (\x y () -> (x :: String,y :: String))
+userPermissions = t2 (Table 3 const) (\x y () -> (x :: String,y :: String))
 
 test :: Monad m => DatalogT m [(String,String)]
 test = do
   userRole "Oz"    "Admin"
   userRole "Doug"  "Lackey"
+
   roleRole "Admin" "Lackey"
 
   rolePermissions "Lackey" "ScrubToilets"
   rolePermissions "Admin" "MakeMoney"
 
-  userRole U S :- userRole U R <* roleRole R S
+  userPermissions "Oz" "DoubleSecretAccess"
+
+  userRole U S        :- userRole U R <* roleRole R S
   userPermissions U P :- userRole U R <* rolePermissions R P
   rolePermissions R P :- roleRole R S <* rolePermissions S P
 
