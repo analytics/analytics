@@ -39,6 +39,16 @@ instance Monoid (Observer a) where
 -- | Perform an action for each
 --
 -- >>> run $  subscribe (observe [1..10]) $ foreach (liftIO . print)
+-- 1
+-- 2
+-- 3
+-- 4
+-- 5
+-- 6
+-- 7
+-- 8
+-- 9
+-- 10
 foreach :: (a -> Task b) -> Observer a
 foreach t = Observer (\a -> () <$ t a) (\_ -> return ()) (return ())
 {-# INLINE foreach #-}
