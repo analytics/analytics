@@ -1,20 +1,20 @@
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE BangPatterns              #-}
+{-# LANGUAGE CPP                       #-}
+{-# LANGUAGE DeriveGeneric             #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE RankNTypes                #-}
+{-# LANGUAGE RecordWildCards           #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TemplateHaskell           #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 #if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 706
-{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE PolyKinds                 #-}
 #endif
 
 --------------------------------------------------------------------
@@ -36,34 +36,65 @@ module Data.Analytics.Approximate.HyperLogLog.Type
   , cast
   ) where
 
-import Control.Applicative
-import Control.Lens
-import Control.Monad
-import Data.Analytics.Approximate.HyperLogLog.Config
-import Data.Analytics.Approximate.Type
-import Data.Analytics.Bits
-import Data.Bits
-import Data.Hashable
-import Data.Proxy
-import Data.Semigroup
-import Data.Serialize
-import Data.Vector.Serialize ()
-import Data.Vector.Unboxed as V
-import Data.Vector.Unboxed.Mutable as MV
-import GHC.Int
-import Generics.Deriving hiding (to, D)
+import           Control.Applicative
+import           Control.Lens
+import           Control.Monad
+import           Data.Analytics.Approximate.HyperLogLog.Config
+import           Data.Analytics.Approximate.Type
+import           Data.Analytics.Bits
+import           Data.Bits
+import           Data.Hashable
+import           Data.Proxy
+import           Data.Semigroup
+import           Data.Serialize
+import           Data.Vector.Serialize
+import qualified Data.Vector.Unboxed                           as V
+import qualified Data.Vector.Unboxed.Mutable                   as MV
+import           Generics.Deriving                             hiding (D, to)
+import           GHC.Int
 
 ------------------------------------------------------------------------------
 -- HyperLogLog
 ------------------------------------------------------------------------------
 
-newtype HyperLogLog p = HyperLogLog { runHyperLogLog :: Vector Rank }  deriving (Eq, Show, Generic)
+
+-- | An approximate streaming (constant space) unique object counter.
+--
+-- See paper for details:
+-- @http:\/\/algo.inria.fr\/flajolet\/Publications\/FlFuGaMe07.pdf@
+--
+-- Usage:
+--
+-- >>> :set -XTemplateHaskell
+-- >>> import Control.Lens
+-- >>> import Data.Analytics.Approximate.HyperLogLog
+-- >>> import Data.Analytics.Reflection
+-- >>> import Data.Monoid
+--
+-- Initialize a new counter:
+--
+-- >>> mempty :: HyperLogLog $(nat 3)
+-- HyperLogLog {runHyperLogLog = fromList [0,0,0,0,0,0,0,0]}
+--
+-- Please note how you specify a counter size with the @$(nat n)@
+-- invocation. Sizes of up to 16 are valid, with 7 being a
+-- likely good minimum for decent accuracy.
+--
+-- Let's count a list of unique items and get the latest estimate:
+--
+-- >>> size $ foldr cons (mempty :: HyperLogLog $(nat 4)) [1..10]
+-- Approximate {_confidence = Log (-2.8039273327342593e-3), _lo = 2, _estimate = 11, _hi = 20}
+--
+-- Note how 'cons' can be used to add new observations to the
+-- approximate counter.
+newtype HyperLogLog p = HyperLogLog { runHyperLogLog :: V.Vector Rank }
+    deriving (Eq, Show, Generic)
 
 instance Serialize (HyperLogLog p)
 
 makeClassy ''HyperLogLog
 
-_HyperLogLog :: Iso' (HyperLogLog p) (Vector Rank)
+_HyperLogLog :: Iso' (HyperLogLog p) (V.Vector Rank)
 _HyperLogLog = iso runHyperLogLog HyperLogLog
 {-# INLINE _HyperLogLog #-}
 
