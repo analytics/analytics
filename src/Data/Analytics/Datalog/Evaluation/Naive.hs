@@ -27,6 +27,7 @@ import Data.Analytics.Datalog.Prompt
 import Data.Analytics.Datalog.Query
 import Data.Analytics.Datalog.Row
 import Data.Analytics.Datalog.Subst
+import Data.Analytics.Datalog.Term
 import Data.Maybe
 import Data.IntMap as IntMap hiding (insert)
 import Data.Map as Map hiding (insert)
@@ -69,11 +70,15 @@ insert a r m = case insert' a r m of
 data Rule where
   Rule :: Atom a b -> Query a -> Rule
 
+instance Show Rule where
+  showsPrec d (Rule a b) = showParen (d > 0) $
+    shows a . showString " :- " . showsPrec 1 b
+
 data Env = Env
   { _envFresh :: {-# UNPACK #-} !Int
   , _edb      :: IntMap Relation
   , _idb      :: [Rule]
-  } deriving Typeable
+  } deriving (Show, Typeable)
 
 makeClassy ''Env
 
@@ -84,8 +89,7 @@ defacto (Pure a)  = [a]
 defacto (Alt l r) = defacto l ++ defacto r
 defacto _         = []
 
--- eval :: (Monad m, HasEnv s) => DatalogT m a -> StateT s m a
-eval :: HasEnv s => DatalogT IO a -> StateT s IO a
+eval :: (Monad m, HasEnv s) => DatalogT m a -> StateT s m a
 eval m = lift (promptT m) >>= \ s -> case s of
   Done a -> return a
   Fresh f :>>= k -> do
@@ -100,7 +104,6 @@ eval m = lift (promptT m) >>= \ s -> case s of
       eval $ k ()
   Query q :>>= k -> do
     saturate
-    use edb >>= lift . print
     xs <- uses edb $ \db -> evalStateT (bodyRows db q) mempty
     eval $ k xs
 
@@ -112,8 +115,17 @@ bodyRows db (Alt l r)       = bodyRows db l <|> bodyRows db r
 bodyRows _  Empty           = Ap.empty
 bodyRows db (Row x)         = snd <$> rows x db
 bodyRows db (Value x)       = fst <$> rows x db
-bodyRows _  No{}            = Ap.empty -- we can't stratify in this mode
-bodyRows _  Key{}           = Ap.empty -- we can't read keys without shuffling the query around.
+bodyRows db (No x)          = do
+  u <- use subst
+  guard $ Prelude.null $ runStateT (rows x db) u
+bodyRows _  (Key t)         = case term `withArgType` t of
+  IsEntity -> pure t
+  IsVar -> use (subst.mgu.at (Var t)) >>= \mv -> case mv of
+    Just (AVar _) -> error "Variable 'key': You probably want to move it to the right of the query!"
+    Just (AnEntity t') -> case cast t' of
+      Just t'' -> return t''
+      Nothing -> error "bodyRows: Mismatched type"
+    Nothing -> error "Variable 'key': You probably want to move it to the right of the query!"
 bodyRows _  (Filtering _ _) = Ap.empty
 
 saturate :: (MonadState s m, HasEnv s) => m ()
@@ -128,3 +140,6 @@ saturate = do
 
   Any interesting <- edb %%= \db -> Prelude.foldr go (mempty,db) rules
   when interesting saturate
+
+withArgType :: t a -> a -> t a
+withArgType = const
