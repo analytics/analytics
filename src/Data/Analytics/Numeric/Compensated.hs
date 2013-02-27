@@ -108,7 +108,8 @@ times :: Compensable a => a -> a -> (a -> a -> r) -> r
 times a b k =
   split a $ \a1 a2 ->
   split b $ \b1 b2 ->
-  let x = a * b in k x (((a1*b1-x)+a1*b2+b2*b1)+a2*b2)
+  let x = a * b in k x (a2*b2 - (((x - a1*b1) - a2*b1) - a1*b2))
+  -- let x = a * b in k x (((a1*b1-x)+a1*b2+b2*b1)+a2*b2)
 {-# INLINEABLE times #-}
 
 -- this is a variant on a division algorithm by Liddicoat and Flynn
