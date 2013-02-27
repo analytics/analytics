@@ -138,12 +138,12 @@ reifyConfig i f = reify (hll i) (go f) where
 {-# INLINE reifyConfig #-}
 
 instance Reifies n Int => ReifiesConfig (D n) where
-  reflectConfig = hll <$> reflect
+  reflectConfig = hll . reflect
   {-# INLINE reflectConfig #-}
 
 -- this way we only get instances for positive natural numbers
 instance Reifies n Int => ReifiesConfig (SD n) where
-  reflectConfig = hll <$> reflect
+  reflectConfig = hll . reflect
   {-# INLINE reflectConfig #-}
 
 ------------------------------------------------------------------------------
