@@ -126,7 +126,18 @@ bodyRows _  (Key t)         = case term `withArgType` t of
       Just t'' -> return t''
       Nothing -> error "bodyRows: Mismatched type"
     Nothing -> error "Variable 'key': You probably want to move it to the right of the query!"
-bodyRows _  (Filtering _ _) = Ap.empty
+bodyRows _  (Filtering t p) = case term `withArgType` t of
+  IsEntity -> do
+    guard (p t)
+    return t
+  IsVar -> use (subst.mgu.at (Var t)) >>= \mv -> case mv of
+    Just (AVar _) -> error "Variable 'key': You probably want to move it to the right of the query!"
+    Just (AnEntity t') -> case cast t' of
+      Just t'' -> do
+        guard (p t'')
+        return t''
+      Nothing -> error "bodyRows: Mismatched type"
+    Nothing -> error "Variable 'key': You probably want to move it to the right of the query!"
 
 saturate :: (MonadState s m, HasEnv s) => m ()
 saturate = do

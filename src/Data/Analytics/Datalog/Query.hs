@@ -46,7 +46,7 @@ data Query :: * -> * where
   Row       :: Atom a b -> Query b
   Key       :: Term a => a -> Query (Entity a)
   No        :: Atom a b -> Query ()
-  Filtering :: Term a => a -> (Entity a -> Bool) -> Query ()
+  Filtering :: Term a => a -> (Entity a -> Bool) -> Query (Entity a)
   deriving Typeable
 
 instance Show (Query a) where
@@ -152,6 +152,6 @@ value :: Atom a b -> Query a
 value = Value
 {-# INLINE value #-}
 
-filtering :: Term a => a -> (Entity a -> Bool) -> Query ()
+filtering :: Term a => a -> (Entity a -> Bool) -> Query (Entity a)
 filtering = Filtering
 {-# INLINE filtering #-}
