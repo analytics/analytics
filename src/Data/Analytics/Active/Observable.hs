@@ -57,10 +57,11 @@ instance Extend Observable where
 safe :: Observable a -> Observable a
 safe p = Observable $ \o -> do
   death <- newEvent
-  sub p
+  Subscription t <- sub p
     (\a -> before death >>= \b -> when b $ o ! a)
     (\e -> causing death () >>= \b -> when b $ kill o e)
     (causing death () >>= \b -> when b $ complete o)
+  return $ Subscription (causing death () >> t)
 {-# INLINE safe #-}
 
 never :: Observable a

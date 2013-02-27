@@ -58,6 +58,6 @@ compareTerm x y = case typeOf x `compare` typeOf y of
 {-# INLINE compareTerm #-}
 
 eqTerm :: (Term a, Term b) => a -> b -> Bool
-eqTerm a b = cast a == Just b
+eqTerm a b = maybe False (== b) (cast a)
 
 class Term a => TermOf r a

@@ -17,14 +17,16 @@
 --------------------------------------------------------------------
 module Data.Analytics.Datalog.Query
   ( Query(..)
-  , no, key, row, value, filtering
+  , no, key, row, value, filtering, tables
   ) where
 
 import Data.Analytics.Datalog.Atom
 import Data.Analytics.Datalog.Term
 import Control.Applicative
+import Control.Lens
 import Data.Functor.Bind
 import Data.Functor.Plus
+import Data.IntSet
 import Data.Semigroup
 import Data.Typeable
 
@@ -45,9 +47,21 @@ data Query :: * -> * where
   Value     :: Atom a b -> Query a
   Row       :: Atom a b -> Query b
   Key       :: Term a => a -> Query (Entity a)
-  No        :: Atom a b -> Query ()
-  Filtering :: Term a => a -> (Entity a -> Bool) -> Query ()
+  No        :: Query a -> Query ()
+  Filtering :: Term a => a -> (Entity a -> Bool) -> Query (Entity a)
   deriving Typeable
+
+tables :: Query a -> IntSet
+tables (Ap l r)  = tables l <> tables r
+tables (Map _ x) = tables x
+tables (Alt x y) = tables x <> tables y
+tables (Value (Atom t _)) = singleton (t^.tableId)
+tables (Row (Atom t _))   = singleton (t^.tableId)
+tables Pure{}      = mempty
+tables Empty       = mempty
+tables Key{}       = mempty
+tables No{}        = mempty
+tables Filtering{} = mempty
 
 instance Show (Query a) where
   showsPrec d (Ap l r) = showParen (d > 4) $
@@ -135,8 +149,9 @@ instance a ~ b => Atomic (Query a) b c where
   atom = Value
   {-# INLINE atom #-}
 
+
 -- | Stratified negation.
-no :: Atom a b -> Query ()
+no :: Query a -> Query ()
 no = No
 {-# INLINE no #-}
 
@@ -152,6 +167,6 @@ value :: Atom a b -> Query a
 value = Value
 {-# INLINE value #-}
 
-filtering :: Term a => a -> (Entity a -> Bool) -> Query ()
+filtering :: Term a => a -> (Entity a -> Bool) -> Query (Entity a)
 filtering = Filtering
 {-# INLINE filtering #-}
