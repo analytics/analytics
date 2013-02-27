@@ -53,10 +53,6 @@ test = do
   rolePermissions (Role "Admin") (Permission "MakeMoney")
 
   userPermissions U P :- userRole U R <* rolePermissions R P
-  rolePermissions R P :- roleRole R S <* rolePermissions S P -- <* filtering R (\(Role r) -> length r >= 4)
+  rolePermissions R P :- roleRole R S <* rolePermissions S P
 
-  -- query $ row (userRole (User "Oz") R)
   query $ row (userPermissions U (Permission "ScrubToilets"))
-
-test' :: Datalog [(User,Permission)]
-test' = test

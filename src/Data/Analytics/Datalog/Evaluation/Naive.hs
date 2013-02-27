@@ -10,7 +10,7 @@ module Data.Analytics.Datalog.Evaluation.Naive
   ( Relation(..)
   , rows, bodyRows
   , insert
-  , eval
+  , naive, stratified
   , Env(..)
   , HasEnv(..)
   , Rule(..)
@@ -28,9 +28,14 @@ import Data.Analytics.Datalog.Query
 import Data.Analytics.Datalog.Row
 import Data.Analytics.Datalog.Subst
 import Data.Analytics.Datalog.Term
-import Data.Maybe
+import Data.Array
+import Data.Foldable as Foldable
+import Data.Graph
 import Data.IntMap as IntMap hiding (insert)
+import qualified Data.IntSet as IntSet
 import Data.Map as Map hiding (insert)
+import Data.Maybe
+import Data.Sequence as Seq
 import Data.Typeable
 
 #ifndef HLINT
@@ -89,55 +94,107 @@ defacto (Pure a)  = [a]
 defacto (Alt l r) = defacto l ++ defacto r
 defacto _         = []
 
-eval :: (Monad m, HasEnv s) => DatalogT m a -> StateT s m a
-eval m = lift (promptT m) >>= \ s -> case s of
+naive :: (Monad m, HasEnv s) => DatalogT m a -> StateT s m a
+naive m = lift (promptT m) >>= \ s -> case s of
   Done a -> return a
   Fresh f :>>= k -> do
     i <- envFresh <+= 1
-    eval $ k $ Table i f
+    naive $ k $ Table i f
   (h :- b) :>>= k -> case defacto b of
     [a] -> do
       _ <- edb %%= insert h a
-      eval $ k ()
+      naive $ k ()
     _ -> do
       idb %= (Rule h b:)
-      eval $ k ()
+      naive $ k ()
   Query q :>>= k -> do
     saturate
     xs <- uses edb $ \db -> evalStateT (bodyRows db q) mempty
-    eval $ k xs
+    naive $ k xs
+
+stratified :: (Monad m, HasEnv s) => DatalogT m a -> StateT s m a
+stratified m = lift (promptT m) >>= \ s -> case s of
+  Done a -> return a
+  Fresh f :>>= k -> do
+    i <- envFresh <+= 1
+    stratified $ k $ Table i f
+  (h :- b) :>>= k -> case defacto b of
+    [a] -> do
+      _ <- edb %%= insert h a
+      stratified $ k ()
+    _ -> do
+      idb %= (Rule h b:)
+      stratified $ k ()
+  Query q :>>= k -> do
+    rules <- use idb
+    Foldable.forM_ (stratifying rules) $ \stratum -> do
+       idb .= stratum
+       saturate
+    idb .= rules
+    xs <- uses edb $ \db -> evalStateT (bodyRows db q) mempty
+    stratified $ k xs
+
+stratifying :: [Rule] -> [[Rule]]
+stratifying rules = Prelude.filter (not . Prelude.null) $ do
+   t <- scc arr
+   return $ do
+     r <- Foldable.toList t
+     guard (r >= nts)
+     return $ Seq.index rs (r - nts)
+  where
+    rs  = Seq.fromList rules
+    ts  = Foldable.fold [ IntSet.insert (i^.tableId) (tables b) | Rule (Atom i _) b <- rules ]
+    nts = IntSet.size ts
+    tm  = IntMap.fromList $ Prelude.zip (IntSet.toList ts) [0..]
+    nrs = Prelude.length rules
+    arr = accumArray (flip (:)) [] (0,nts+nrs-1) $ do
+      (r, Rule (Atom i _) b) <- Prelude.zip [nts..] rules
+      (tm IntMap.! (i^.tableId), r) : [ (r, tm IntMap.! j) | j <- IntSet.toList (tables b)]
 
 bodyRows :: IntMap Relation -> Query a -> StateT Subst [] a
-bodyRows db (Ap l r)        = bodyRows db l <*> bodyRows db r
-bodyRows db (Map f x)       = f <$> bodyRows db x
-bodyRows _  (Pure a)        = pure a
-bodyRows db (Alt l r)       = bodyRows db l <|> bodyRows db r
-bodyRows _  Empty           = Ap.empty
-bodyRows db (Row x)         = snd <$> rows x db
-bodyRows db (Value x)       = fst <$> rows x db
-bodyRows db (No x)          = do
+bodyRows db q = do
+  q' <- prepare db q
   u <- use subst
-  guard $ Prelude.null $ runStateT (rows x db) u
-bodyRows _  (Key t)         = case term `withArgType` t of
+  finish db u q'
+
+prepare :: IntMap Relation -> Query a -> StateT Subst [] (Query a)
+prepare db (Ap l r)        = Ap <$> prepare db l <*> prepare db r
+prepare db (Map f x)       = Map f <$> prepare db x
+prepare _  (Pure a)        = pure (Pure a)
+prepare db (Alt l r)       = prepare db l <|> prepare db r
+prepare _  Empty           = Ap.empty
+prepare db (Row x)         = pure . snd <$> rows x db
+prepare db (Value x)       = pure . fst <$> rows x db
+prepare _  q               = return q
+
+finish :: Alternative m => IntMap Relation -> Subst -> Query a -> m a
+finish db u (Ap l r)  = finish db u l <*> finish db u r
+finish db u (Map f x) = f <$> finish db u x
+finish _  _ (Pure a)  = pure a
+finish db u (No x)
+  | Prelude.null $ runStateT (rows x db) u = pure ()
+  | otherwise = Ap.empty
+finish _  u (Key t) = case term `withArgType` t of
   IsEntity -> pure t
-  IsVar -> use (subst.mgu.at (Var t)) >>= \mv -> case mv of
+  IsVar -> case u^.mgu.at (Var t) of
     Just (AVar _) -> error "Variable 'key': You probably want to move it to the right of the query!"
     Just (AnEntity t') -> case cast t' of
-      Just t'' -> return t''
-      Nothing -> error "bodyRows: Mismatched type"
+      Just t'' -> pure t''
+      Nothing -> error "finish: Mismatched type"
     Nothing -> error "Variable 'key': You probably want to move it to the right of the query!"
-bodyRows _  (Filtering t p) = case term `withArgType` t of
-  IsEntity -> do
-    guard (p t)
-    return t
-  IsVar -> use (subst.mgu.at (Var t)) >>= \mv -> case mv of
+finish _  u (Filtering t p) = case term `withArgType` t of
+  IsEntity
+    | p t -> pure t
+    | otherwise -> Ap.empty
+  IsVar -> case u^.mgu.at (Var t) of
     Just (AVar _) -> error "Variable 'key': You probably want to move it to the right of the query!"
     Just (AnEntity t') -> case cast t' of
-      Just t'' -> do
-        guard (p t'')
-        return t''
-      Nothing -> error "bodyRows: Mismatched type"
+      Just t''
+        | p t'' -> pure t''
+        | otherwise -> Ap.empty
+      Nothing -> error "finish: Mismatched type"
     Nothing -> error "Variable 'key': You probably want to move it to the right of the query!"
+finish _ _ _ = error "wibble"
 
 saturate :: (MonadState s m, HasEnv s) => m ()
 saturate = do
