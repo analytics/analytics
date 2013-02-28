@@ -38,3 +38,7 @@
 ```
 * [Provenance Semirings](http://db.cis.upenn.edu/DL/07/pods07.pdf)
 * [Weighted Datalog and Levels of Trust](http://dl.acm.org/citation.cfm?id=1371966)
+
+# Consistency and distribution
+
+* [Distributed Algorithms in NoSQL Databases](http://highlyscalable.wordpress.com/2012/09/18/distributed-algorithms-in-nosql-databases/)
