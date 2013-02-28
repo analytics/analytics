@@ -9,7 +9,6 @@ module Data.Analytics.Active.Observable
 
 import Control.Applicative
 import Control.Exception (SomeException)
-import Control.Lens
 import Control.Monad
 import Control.Monad.CatchIO
 import Data.Analytics.Active.Event
@@ -20,6 +19,7 @@ import Data.Analytics.Active.Subscription
 import Data.Analytics.Combinators
 import Data.Foldable as Foldable
 import Data.Functor.Alt
+import Data.Functor.Contravariant (contramap)
 import Data.Functor.Extend
 import Data.Monoid
 

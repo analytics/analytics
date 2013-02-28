@@ -5,13 +5,13 @@ module Data.Analytics.Active.Promise
   , future
   ) where
 
-import Control.Concurrent.STM
-import Control.Monad
-import Control.Monad.Cont
-import Data.Analytics.Active.STM
+-- import Control.Concurrent.STM
+-- import Control.Monad
+-- import Control.Monad.Cont
+-- import Data.Analytics.Active.STM
 import Data.Analytics.Active.Task
 import Data.Profunctor
-import Data.Traversable
+-- import Data.Traversable
 import Data.Typeable
 
 data Promise a b = Promise
