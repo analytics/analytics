@@ -112,8 +112,6 @@ double pow_fast_precise_smooth(double a, double b) {
     long long x;
   } u = { a };
   u.x = (long long)((b - e) * (u.x - 0x3fef127e83d16f12LL) + 0x3fef127e83d16f12LL);
-  // u.x[1] = (int)((b - e) * (u.x[1] - 1072632447) + 1072632447);
-  // u.x[0] = 0;
 
   double r = 1.0;
   while (e) {
@@ -158,6 +156,20 @@ float powf_fast_precise(float a, float b) {
   return flipped ? 1.0f/r : r;
 }
 
+/* Schraudolph's published algorithm extended into the least significant bits to avoid the stair step.
+ double long long approximation: round 1<<52/log(2) 6497320848556798,
+  mask = 0x3ff0000000000000LL = 4607182418800017408LL
+ double approximation: round(1<<20/log(2)) = 1512775, 1023<<20 = 1072693248
+*/
+double exp_fast_smooth(double a) {
+  union {
+    double d;
+    long long x;
+  } u;
+  u.x = (long long)(6497320848556798LL * a + 0x3fef127e83d16f12LL);
+  return u.d;
+}
+
 /* Schraudolph's published algorithm */
 double exp_fast(double a) {
   union {
@@ -169,19 +181,6 @@ double exp_fast(double a) {
   return u.d;
 }
 
-/* Schraudolph's published algorithm 
- double long long approximation: round 1<<52/log(2) 6497320848556798,
-  mask = 0x3ff0000000000000LL = 4607182418800017408LL
- double approximation: round(1<<20/log(2)) = 1512775, 1023<<20 = 1072693248
-*/
-double exp_fast_smooth(double a) {
-  union {
-    double d;
-    long long x;
-  } u;
-  u.x = (long long) (6497320848556798 * a + 0x3ff0000000000000LL);
-  return u.d;
-}
 
 /* Schraudolph's published algorithm with John's constants */
 float expf_fast(float a) {

@@ -20,6 +20,7 @@ module Data.Analytics.Numeric.Fast
   , pow_fast
   , pow_fast_smooth
   , pow_fast_precise
+  , exp_fast
   ) where
 
 class Floating a => Fast a where
@@ -37,7 +38,7 @@ instance Fast Float where
 
 instance Fast Double where
   flog  = log_fast
-  fexp  = exp_fast
+  fexp  = exp_fast_smooth
   fpow = pow_fast_precise_smooth
 
 -- | Borchardt’s Algorithm from “Dead Reckoning: Calculating without instruments”.
@@ -55,6 +56,7 @@ foreign import ccall unsafe pow_fast_precise  :: Double -> Double -> Double
 foreign import ccall unsafe pow_fast_precise_smooth  :: Double -> Double -> Double
 foreign import ccall unsafe powf_fast_precise :: Float -> Float -> Float
 foreign import ccall unsafe exp_fast  :: Double -> Double
+foreign import ccall unsafe exp_fast_smooth :: Double -> Double
 foreign import ccall unsafe expf_fast :: Float -> Float
 foreign import ccall unsafe log_fast  :: Double -> Double
 foreign import ccall unsafe logf_fast :: Float -> Float
