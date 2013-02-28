@@ -41,6 +41,8 @@ instance Fast Float where
   fexp_lb  = expf_fast_lb
   fexp_ub  = expf_fast_ub
   fpow     = powf_fast_precise
+  fpow_lb  = powf_fast_lb
+  fpow_ub  = powf_fast_ub
 
 instance Fast Double where
   flog     = log_fast
@@ -61,17 +63,19 @@ instance Fast Double where
 blog :: Floating a => a -> a
 blog x = 6 * (x - 1) / (x + 1 + 4 * sqrt(x));
 
-foreign import ccall unsafe pow_fast_lb             :: Double -> Double -> Double
-foreign import ccall unsafe pow_fast_ub             :: Double -> Double -> Double
-foreign import ccall unsafe pow_fast_precise        :: Double -> Double -> Double
-foreign import ccall unsafe powf_fast_precise       :: Float -> Float -> Float
+foreign import ccall unsafe pow_fast_lb       :: Double -> Double -> Double
+foreign import ccall unsafe pow_fast_ub       :: Double -> Double -> Double
+foreign import ccall unsafe pow_fast_precise  :: Double -> Double -> Double
+foreign import ccall unsafe powf_fast_lb      :: Float -> Float -> Float
+foreign import ccall unsafe powf_fast_ub      :: Float -> Float -> Float
+foreign import ccall unsafe powf_fast_precise :: Float -> Float -> Float
 
-foreign import ccall unsafe exp_fast             :: Double -> Double
-foreign import ccall unsafe exp_fast_lb          :: Double -> Double
-foreign import ccall unsafe exp_fast_ub          :: Double -> Double
-foreign import ccall unsafe expf_fast            :: Float -> Float
-foreign import ccall unsafe expf_fast_lb         :: Float -> Float
-foreign import ccall unsafe expf_fast_ub         :: Float -> Float
+foreign import ccall unsafe exp_fast          :: Double -> Double
+foreign import ccall unsafe exp_fast_lb       :: Double -> Double
+foreign import ccall unsafe exp_fast_ub       :: Double -> Double
+foreign import ccall unsafe expf_fast         :: Float -> Float
+foreign import ccall unsafe expf_fast_lb      :: Float -> Float
+foreign import ccall unsafe expf_fast_ub      :: Float -> Float
 
 foreign import ccall unsafe log_fast        :: Double -> Double
 foreign import ccall unsafe log_fast_lb     :: Double -> Double
@@ -84,5 +88,5 @@ foreign import ccall unsafe logf_fast_ub    :: Float -> Float
 -- foreign import ccall unsafe pow_fast_ankerl         :: Double -> Double -> Double
 -- foreign import ccall unsafe powf_fast               :: Float -> Float -> Float
 -- foreign import ccall unsafe pow_fast_precise_ankerl :: Double -> Double -> Double
--- foreign import ccall unsafe exp_fast_schraudolph :: Double -> Double
--- foreign import ccall unsafe log_fast_ankerl :: Double -> Double
+-- foreign import ccall unsafe exp_fast_schraudolph    :: Double -> Double
+-- foreign import ccall unsafe log_fast_ankerl         :: Double -> Double
