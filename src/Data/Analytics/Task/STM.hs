@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE TypeFamilies #-}
-module Data.Analytics.Active.STM
+module Data.Analytics.Task.STM
   ( MonadSTM(..)
   ) where
 

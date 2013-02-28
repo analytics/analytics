@@ -1,4 +1,4 @@
-module Data.Analytics.Active.Event
+module Data.Analytics.Task.Event
   ( Event(..)
   , newEvent
   , before
@@ -9,7 +9,7 @@ module Data.Analytics.Active.Event
 import Control.Monad
 import Control.Concurrent.STM
 import Control.Lens
-import Data.Analytics.Active.STM
+import Data.Analytics.Task.STM
 
 newtype Event a = Event { getEvent :: TVar (Maybe a) }
 

@@ -1,19 +1,19 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-module Data.Analytics.Active.Observer
+module Data.Analytics.Task.Observer
   ( Observer(..)
   , foreach
   ) where
 
 import Control.Exception
 import Control.Monad.IO.Class
-import Data.Analytics.Active.Task
+import Data.Analytics.Task.Monad
 import Data.Functor
 import Data.Functor.Contravariant
 import Data.Monoid
 import Data.Typeable
 
 -- $setup
--- >>> import Data.Analytics.Active
+-- >>> import Data.Analytics.Task
 
 infixl 1 !
 

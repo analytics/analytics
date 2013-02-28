@@ -1,9 +1,9 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-module Data.Analytics.Active.Subscription
+module Data.Analytics.Task.Subscription
   ( Subscription(..)
   ) where
 
-import Data.Analytics.Active.Task
+import Data.Analytics.Task.Monad
 import Data.Monoid
 import Data.Typeable
 

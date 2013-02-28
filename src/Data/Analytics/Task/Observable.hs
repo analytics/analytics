@@ -1,4 +1,4 @@
-module Data.Analytics.Active.Observable
+module Data.Analytics.Task.Observable
   ( Observable(..)
   , safe
   , fby
@@ -11,11 +11,11 @@ import Control.Applicative
 import Control.Exception (SomeException)
 import Control.Monad
 import Control.Monad.CatchIO
-import Data.Analytics.Active.Event
-import Data.Analytics.Active.Observer
-import Data.Analytics.Active.Task
-import Data.Analytics.Active.STM
-import Data.Analytics.Active.Subscription
+import Data.Analytics.Task.Event
+import Data.Analytics.Task.Observer
+import Data.Analytics.Task.Monad
+import Data.Analytics.Task.STM
+import Data.Analytics.Task.Subscription
 import Data.Analytics.Combinators
 import Data.Foldable as Foldable
 import Data.Functor.Alt

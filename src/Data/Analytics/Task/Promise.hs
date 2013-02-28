@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-module Data.Analytics.Active.Promise
+module Data.Analytics.Task.Promise
   ( Promise(..)
   , promise
   , future
@@ -8,8 +8,8 @@ module Data.Analytics.Active.Promise
 -- import Control.Concurrent.STM
 -- import Control.Monad
 -- import Control.Monad.Cont
--- import Data.Analytics.Active.STM
-import Data.Analytics.Active.Task
+-- import Data.Analytics.Task.STM
+import Data.Analytics.Task.Monad
 import Data.Profunctor
 -- import Data.Traversable
 import Data.Typeable
