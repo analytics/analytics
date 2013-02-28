@@ -82,7 +82,7 @@ import           GHC.Int
 -- Let's count a list of unique items and get the latest estimate:
 --
 -- >>> size $ foldr cons (mempty :: HyperLogLog $(nat 4)) [1..10]
--- Approximate {_confidence = Log (-2.8039273327342593e-3), _lo = 2, _estimate = 11, _hi = 20}
+-- Approximate {_confidence = 0.9972, _lo = 2, _estimate = 11, _hi = 20}
 --
 -- Note how 'cons' can be used to add new observations to the
 -- approximate counter.
