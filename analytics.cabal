@@ -92,6 +92,7 @@ library
     Data.Analytics.Numeric.Tropical
     Data.Analytics.Reflection
     Data.Analytics.Sharing
+    Data.Analytics.Task
     Data.Analytics.Task.Event
     Data.Analytics.Task.Monad
     Data.Analytics.Task.Observable
@@ -100,7 +101,6 @@ library
     Data.Analytics.Task.STM
     Data.Analytics.Task.Subscription
 
-    -- Data.Analytics.Task
   other-modules: Paths_analytics
 
   build-depends:
