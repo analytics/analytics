@@ -38,7 +38,7 @@
  */
 
 // Ankerl's version of Schraudolph's approximation.
-double pow_fast(double a, double b) {
+double pow_fast_ankerl(double a, double b) {
   union { double d; int x[2]; } u = { a };
   u.x[1] = (int)(b * (u.x[1] - 1072632447) + 1072632447);
   u.x[0] = 0;
@@ -69,26 +69,26 @@ float powf_fast(float a, float b) {
 
 */
 
-double pow_fast_smooth_upper_bound(double a, double b) {
+double pow_fast_ub(double a, double b) {
   union { double d; long long x; } u = { a };
   u.x = (long long)(b * (u.x - 4606794787981043020LL) + 4607182418800017409LL);
   return u.d;
 }
 
-double pow_fast_smooth(double a, double b) {
+double pow_fast(double a, double b) {
   union { double d; long long x; } u = { a };
   u.x = (long long)(b * (u.x - 4606921278410026770LL) + 4606921278410026770LL);
   return u.d;
 }
 
-double pow_fast_smooth_lower_bound(double a, double b) {
+double pow_fast_lb(double a, double b) {
   union { double d; long long x; } u = { a };
   u.x = (long long)(b * (u.x - 4607182418800017409LL) + 4606794787981043020LL);
   return u.d;
 }
 
 /* should be much more precise with large b, still ~3.3x faster. */
-double pow_fast_precise(double a, double b) {
+double pow_fast_precise_ankerl(double a, double b) {
   int flipped = 0;
   if (b < 0) {
     flipped = 1;
@@ -115,7 +115,7 @@ double pow_fast_precise(double a, double b) {
 }
 
 /* should be much more precise with large b, still ~3.3x faster. */
-double pow_fast_precise_smooth(double a, double b) {
+double pow_fast_precise(double a, double b) {
   int flipped = 0;
   if (b < 0) {
     flipped = 1;
@@ -185,70 +185,96 @@ The fudge factor for conservative lower bound adapted to full 64 bit precision:
 
 As a lower bound this is suitable for use when generating Mass and Precision estimates.
 */
-double exp_fast_smooth_lower_bound(double a) {
+double exp_fast_lb(double a) {
   union { double d; long long x; } u;
   u.x = (long long)(6497320848556798LL * a + 4606794787981043020);
   return u.d;
 }
 
 /* 4607182418800017408 + 1 */
-double exp_fast_smooth_upper_bound(double a) {
+double exp_fast_ub(double a) {
   union { double d; long long x; } u;
   u.x = (long long)(6497320848556798LL * a + 4607182418800017409);
   return u.d;
 }
 
-double exp_fast_smooth(double a) {
+double exp_fast(double a) {
   union { double d; long long x; } u;
   u.x = (long long)(6497320848556798LL * a + 0x3fef127e83d16f12LL);
   return u.d;
 }
 
 /* Schraudolph's published algorithm */
-double exp_fast(double a) {
+double exp_fast_schraudolph(double a) {
   union { double d; int x[2]; } u;
   u.x[1] = (int) (1512775 * a + 1072632447);
   u.x[0] = 0;
   return u.d;
 }
 
-
-/* Schraudolph's published algorithm with John's constants */
-float expf_fast(float a) {
+// 1065353216 + 1
+float expf_fast_ub(float a) {
   union { float f; int x; } u;
-  u.x = (int) (12102203 * a + 1065353216);
+  u.x = (int) (12102203 * a + 1065353217);
   return u.f;
 }
 
+/* Schraudolph's published algorithm with John's constants */
+// 1065353216 - 486411 = 1064866805
+float expf_fast(float a) {
+  union { float f; int x; } u;
+  u.x = (int) (12102203 * a + 1064866805);
+  return u.f;
+}
+
+// 1065353216 - 722019
+float expf_fast_lb(float a) {
+  union { float f; int x; } u;
+  u.x = (int) (12102203 * a + 1064631197);
+  return u.f;
+}
 
 /* Ankerl's inversion of Schraudolph's published algorithm, converted to explicit multiplication */
-double log_fast(double a) {
+double log_fast_ankerl(double a) {
   union { double d; int x[2]; } u = { a };
   return (u.x[1] - 1072632447) * 6.610368362777016e-7; // 1 / 1512775.0;
 }
 
-
-double log_fast_smooth_upper_bound(double a) {
+double log_fast_ub(double a) {
   union { double d; long long x; } u = { a };
   return (u.x - 4606794787981043020) * 1.539095918623324e-16; // 1 / 6497320848556798.0;
 }
+
 /* Ankerl's inversion of Schraudolph's published algorithm with my constants */
-double log_fast_smooth(double a) {
+double log_fast(double a) {
   union { double d; long long x; } u = { a };
   return (u.x - 4606921278410026770) * 1.539095918623324e-16; // 1 / 6497320848556798.0;
 }
-double log_fast_smooth_lower_bound(double a) {
+
+double log_fast_lb(double a) {
   union { double d; long long x; } u = { a };
   return (u.x - 4607182418800017409) * 1.539095918623324e-16; // 1 / 6497320848556798.0;
 }
 
 /* Ankerl's adaptation of Schraudolph's published algorithm with John's constants */
+
+
+// 1065353216 - 722019
+float logf_fast_ub(float a) {
+  union { float f; int x; } u = { a };
+  return (u.x - 1064631197) * 8.262958405176314e-8f; // 1 / 12102203.0;
+}
+
+// 1065353216 - 486411 = 1064866805
 float logf_fast(float a) {
-  union {
-    float f;
-    int x;
-  } u = { a };
-  return (u.x - 1065353216) * 8.262958405176314e-8f; // / 12102203.0;
+  union { float f; int x; } u = { a };
+  return (u.x - 1064866805) * 8.262958405176314e-8f; // 1 / 12102203.0;
+}
+
+// 1065353216 + 1
+float logf_fast_lb(float a) {
+  union { float f; int x; } u = { a };
+  return (u.x - 1065353217) * 8.262958405176314e-8f; // 1 / 12102203.0;
 }
 
 /*  722019 */

@@ -18,9 +18,7 @@ module Data.Analytics.Numeric.Fast
   ( Fast(..)
   , blog
   , pow_fast
-  , pow_fast_smooth
   , pow_fast_precise
-  , exp_fast
   , log_fast
   ) where
 
@@ -39,20 +37,24 @@ class Floating a => Fast a where
   fpow_ub :: a -> a -> a
 
 instance Fast Float where
-  flog = logf_fast
-  fexp = expf_fast
-  fpow = powf_fast_precise
+  flog     = logf_fast
+  flog_lb  = logf_fast_lb
+  flog_ub  = logf_fast_ub
+  fexp     = expf_fast
+  fexp_lb  = expf_fast_lb
+  fexp_ub  = expf_fast_ub
+  fpow     = powf_fast_precise
 
 instance Fast Double where
-  flog     = log_fast_smooth
-  flog_lb  = log_fast_smooth_lower_bound
-  flog_ub  = log_fast_smooth_upper_bound
-  fexp     = exp_fast_smooth
-  fexp_lb  = exp_fast_smooth_lower_bound
-  fexp_ub  = exp_fast_smooth_upper_bound
-  fpow     = pow_fast_precise_smooth
-  fpow_lb  = pow_fast_smooth_lower_bound
-  fpow_ub  = pow_fast_smooth_upper_bound
+  flog     = log_fast
+  flog_lb  = log_fast_lb
+  flog_ub  = log_fast_ub
+  fexp     = exp_fast
+  fexp_lb  = exp_fast_lb
+  fexp_ub  = exp_fast_ub
+  fpow     = pow_fast_precise
+  fpow_lb  = pow_fast_lb
+  fpow_ub  = pow_fast_ub
 
 -- | Borchardt’s Algorithm from “Dead Reckoning: Calculating without instruments”.
 --
@@ -63,20 +65,24 @@ blog :: Floating a => a -> a
 blog x = 6 * (x - 1) / (x + 1 + 4 * sqrt(x));
 
 foreign import ccall unsafe pow_fast  :: Double -> Double -> Double
-foreign import ccall unsafe pow_fast_smooth  :: Double -> Double -> Double
-foreign import ccall unsafe pow_fast_smooth_lower_bound  :: Double -> Double -> Double
-foreign import ccall unsafe pow_fast_smooth_upper_bound  :: Double -> Double -> Double
+foreign import ccall unsafe pow_fast_ankerl  :: Double -> Double -> Double
+foreign import ccall unsafe pow_fast_lb  :: Double -> Double -> Double
+foreign import ccall unsafe pow_fast_ub  :: Double -> Double -> Double
 foreign import ccall unsafe powf_fast :: Float -> Float -> Float
+foreign import ccall unsafe pow_fast_precise_ankerl  :: Double -> Double -> Double
 foreign import ccall unsafe pow_fast_precise  :: Double -> Double -> Double
-foreign import ccall unsafe pow_fast_precise_smooth  :: Double -> Double -> Double
 foreign import ccall unsafe powf_fast_precise :: Float -> Float -> Float
 foreign import ccall unsafe exp_fast  :: Double -> Double
-foreign import ccall unsafe exp_fast_smooth :: Double -> Double
-foreign import ccall unsafe exp_fast_smooth_lower_bound :: Double -> Double
-foreign import ccall unsafe exp_fast_smooth_upper_bound :: Double -> Double
+foreign import ccall unsafe exp_fast_schraudolph :: Double -> Double
+foreign import ccall unsafe exp_fast_lb :: Double -> Double
+foreign import ccall unsafe exp_fast_ub :: Double -> Double
 foreign import ccall unsafe expf_fast :: Float -> Float
+foreign import ccall unsafe expf_fast_lb :: Float -> Float
+foreign import ccall unsafe expf_fast_ub :: Float -> Float
 foreign import ccall unsafe log_fast  :: Double -> Double
-foreign import ccall unsafe log_fast_smooth :: Double -> Double
-foreign import ccall unsafe log_fast_smooth_lower_bound :: Double -> Double
-foreign import ccall unsafe log_fast_smooth_upper_bound :: Double -> Double
+foreign import ccall unsafe log_fast_ankerl :: Double -> Double
+foreign import ccall unsafe log_fast_lb :: Double -> Double
+foreign import ccall unsafe log_fast_ub :: Double -> Double
 foreign import ccall unsafe logf_fast :: Float -> Float
+foreign import ccall unsafe logf_fast_lb :: Float -> Float
+foreign import ccall unsafe logf_fast_ub :: Float -> Float
