@@ -21,6 +21,7 @@ module Data.Analytics.Numeric.Fast
   , pow_fast_smooth
   , pow_fast_precise
   , exp_fast
+  , log_fast
   ) where
 
 class Floating a => Fast a where
@@ -37,7 +38,7 @@ instance Fast Float where
   fpow = powf_fast_precise
 
 instance Fast Double where
-  flog  = log_fast
+  flog  = log_fast_smooth
   fexp  = exp_fast_smooth
   fpow = pow_fast_precise_smooth
 
@@ -59,4 +60,5 @@ foreign import ccall unsafe exp_fast  :: Double -> Double
 foreign import ccall unsafe exp_fast_smooth :: Double -> Double
 foreign import ccall unsafe expf_fast :: Float -> Float
 foreign import ccall unsafe log_fast  :: Double -> Double
+foreign import ccall unsafe log_fast_smooth :: Double -> Double
 foreign import ccall unsafe logf_fast :: Float -> Float

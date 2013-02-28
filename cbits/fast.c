@@ -198,7 +198,16 @@ double log_fast(double a) {
     double d;
     int x[2];
   } u = { a };
-  return (u.x[1] - 1072632447) / 1512775;
+  return (u.x[1] - 1072632447) / 1512775.0;
+}
+
+/* Ankerl's inversion of Schraudolph's published algorithm with my constants */
+double log_fast_smooth(double a) {
+  union {
+    double d;
+    long long x;
+  } u = { a };
+  return (u.x - 0x3fef127e83d16f12LL) / 6497320848556798.0;
 }
 
 /* Ankerl's adaptation of Schraudolph's published algorithm with John's constants */
@@ -207,5 +216,5 @@ float logf_fast(float a) {
     float f;
     int x;
   } u = { a };
-  return (u.x - 1065353216) / 12102203;
+  return (u.x - 1065353216) / 12102203.0;
 }
