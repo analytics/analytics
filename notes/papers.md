@@ -36,8 +36,11 @@
 [21:28] nwf:	 http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.56.704 I have just skimmed and has some nice examples
 [21:30] nwf:	 http://dl.acm.org/citation.cfm?doid=322261.322272 has some more graph-based examples
 ```
-* [Provenance Semirings](http://db.cis.upenn.edu/DL/07/pods07.pdf)
 * [Weighted Datalog and Levels of Trust](http://dl.acm.org/citation.cfm?id=1371966)
+
+# Provenance semirings and x-fast trees
+* [Provenance Semirings](http://db.cis.upenn.edu/DL/07/pods07.pdf)
+* [Provenance query evaluation: what's so special about it?](http://dl.acm.org/citation.cfm?id=1646040)
 
 # Consistency and distribution
 
