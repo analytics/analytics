@@ -53,6 +53,7 @@
 # Persistence and Versioning
 
 * [Fully Persistent B-Trees](http://cs.au.dk/~gerth/pub/soda12.html)
+* [Confluently Persistent Tries for Efficient Version Control](http://erikdemaine.org/papers/ConfluentTries_Algorithmica/paper.pdf) by Demaine, Langerman and Price is particularly interesting to me, because they provide O(log log n) movement time fully persistent hash table.
 
 # Cache-Obliviousness
 
