@@ -46,3 +46,21 @@
 # Latch-free architecture
 
 * [High-Performance Concurrency Control Mechanisms for Main-Memory Databases](http://vldb.org/pvldb/vol5/p298_per-akelarson_vldb2012.pdf)
+
+# Persistence and Versioning
+
+* [Fully Persistent B-Trees](http://cs.au.dk/~gerth/pub/soda12.html)
+
+# Cache-Obliviousness
+
+* [Cache Oblivious Sorting](http://cs.au.dk/~gerth/pub/encyclopedia08.html)
+* [Cache Oblivious Streaming B-Trees](http://supertech.csail.mit.edu/papers/sbtree.pdf)
+* [Streaming B-Trees for Filesystem Grand Challenges](http://institutes.lanl.gov/hec-fsio/workshops/2007/presentations/day1/Farach-Colton_sbtree-nsf07.pdf)
+* [Orded Files and Cache-Oblivious Priority Queues (video)](http://www.youtube.com/watch?v=jAh_bC4hYlc)
+
+# Logging and Metrics
+
+* [The log-structured merge tree](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.44.2782&rep=rep1&type=pdf) provides
+ great throughput for inserts in exchange for high read latency for write-mostly workloads.
+
+
