@@ -2,6 +2,7 @@
 module Examples.RBAC where
 
 import Control.Applicative
+import Control.Monad.Logic
 import Data.Analytics.Datalog
 import Data.Text
 import Data.Typeable
@@ -18,7 +19,7 @@ roleRole        = t2 (Table 1 const) (\x y () -> (x :: String,y :: String))
 rolePermissions = t2 (Table 2 const) (\x y () -> (x :: String,y :: String))
 userPermissions = t2 (Table 3 const) (\x y () -> (x :: String,y :: String))
 
-test :: Monad m => DatalogT m [(String,String)]
+test :: Monad m => DatalogT m (Logic (String,String))
 test = do
   userRole "Oz"    "Admin"
   userRole "Doug"  "Lackey"

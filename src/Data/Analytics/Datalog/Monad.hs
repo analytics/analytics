@@ -28,7 +28,7 @@ module Data.Analytics.Datalog.Monad
 
 import Control.Applicative
 import Control.Monad.IO.Class
-import Control.Monad.Trans.Class
+import Control.Monad.Logic
 import Control.Monad.State.Class
 import Control.Monad.Reader.Class
 import Data.Analytics.Datalog.Term
@@ -51,7 +51,7 @@ type Datalog = DatalogT Identity
 data DatalogT :: (* -> *) -> * -> * where
   (:-)   :: Atom a b -> Query a -> DatalogT m ()
   Fresh  :: (a -> a -> a) -> DatalogT m (Table a)
-  Query  :: Query a -> DatalogT m [a]
+  Query  :: Query a -> DatalogT m (Logic a)
   Bind   :: DatalogT m a -> (a -> DatalogT m b) -> DatalogT m b
   Return :: a -> DatalogT m a
   Lift   :: m a -> DatalogT m a
@@ -132,7 +132,7 @@ instance MonadTrans DatalogT where
 instance (Term a, Entity a ~ a, u ~ ()) => TermOf (DatalogT m u) a
 
 -- | Perform a 'Query'.
-query :: Query a -> DatalogT m [a]
+query :: Query a -> DatalogT m (Logic a)
 query = Query
 {-# INLINE query #-}
 

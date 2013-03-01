@@ -19,6 +19,7 @@ module Data.Analytics.Datalog.Evaluation.Naive
 import Control.Applicative as Ap
 import Control.Lens
 import Control.Monad
+import Control.Monad.Logic
 import Control.Monad.State
 import Control.Monad.Writer
 import Data.Analytics.Datalog.Atom
@@ -28,13 +29,13 @@ import Data.Analytics.Datalog.Query
 import Data.Analytics.Datalog.Row
 import Data.Analytics.Datalog.Subst
 import Data.Analytics.Datalog.Term
+import Data.Analytics.Instances ()
 import Data.Array
 import Data.Foldable as Foldable
 import Data.Graph
 import Data.IntMap as IntMap hiding (insert)
 import qualified Data.IntSet as IntSet
 import Data.Map as Map hiding (insert)
-import Data.Maybe
 import Data.Sequence as Seq
 import Data.Typeable
 
@@ -48,14 +49,17 @@ instance Show Relation where
   showsPrec d (Relation m) = showParen (d > 10) $
     showString "Relation " . showsPrec 11 m
 
-rows :: HasSubst s => Atom a b -> IntMap Relation -> StateT s [] (a, b)
+logical :: (Monad m, Foldable f) => f a -> LogicT m a
+logical = Foldable.foldr cons mzero
+
+rows :: HasSubst s => Atom a b -> IntMap Relation -> StateT s Logic (a, b)
 rows (Atom i r) m = case m^.at (i^.tableId) of
   Nothing -> mzero
   Just (Relation rl) -> do
-     (r', a) <- lift $ Map.toList rl
+     (r', a) <- lift $ logical $ Map.toList rl
      r'' <- match r' r
-     f <- lift $ maybeToList $ runRow r'' >>= cast
-     a' <- lift $ maybeToList $ cast a
+     f   <- lift $ logical $ runRow r'' >>= cast
+     a'  <- lift $ logical $ cast a
      return (a', f a)
 
 insert' :: Atom a b -> a -> IntMap Relation -> Maybe (IntMap Relation)
@@ -151,17 +155,17 @@ stratifying rules = Prelude.filter (not . Prelude.null) $ do
       (r, Rule (Atom i _) b) <- Prelude.zip [nts..] rules
       (tm IntMap.! (i^.tableId), r) : [ (r, tm IntMap.! j) | j <- IntSet.toList (tables b)]
 
-bodyRows :: IntMap Relation -> Query a -> StateT Subst [] a
+bodyRows :: IntMap Relation -> Query a -> StateT Subst Logic a
 bodyRows db q = do
   q' <- prepare db q
   u <- use subst
   finish db u q'
 
-prepare :: IntMap Relation -> Query a -> StateT Subst [] (Query a)
-prepare db (Ap l r)        = Ap <$> prepare db l <*> prepare db r
+prepare :: IntMap Relation -> Query a -> StateT Subst Logic (Query a)
+prepare db (Ap l r)        = prepare db l >>- \f -> Ap f <$> prepare db r
 prepare db (Map f x)       = Map f <$> prepare db x
 prepare _  (Pure a)        = pure (Pure a)
-prepare db (Alt l r)       = prepare db l <|> prepare db r
+prepare db (Alt l r)       = prepare db l `interleave` prepare db r
 prepare _  Empty           = Ap.empty
 prepare db (Row x)         = pure . snd <$> rows x db
 prepare db (Value x)       = pure . fst <$> rows x db
@@ -172,7 +176,7 @@ finish db u (Ap l r)  = finish db u l <*> finish db u r
 finish db u (Map f x) = f <$> finish db u x
 finish _  _ (Pure a)  = pure a
 finish db u (No x)
-  | Prelude.null $ runStateT (bodyRows db x) u = pure ()
+  | Prelude.null $ observeMany 1 $ runStateT (bodyRows db x) u = pure ()
   | otherwise = Ap.empty
 finish _  u (Key t) = case term `withArgType` t of
   IsEntity -> pure t
@@ -200,7 +204,7 @@ saturate :: (MonadState s m, HasEnv s) => m ()
 saturate = do
   rules <- use idb
   let go :: Rule -> (Any, IntMap Relation) -> (Any, IntMap Relation)
-      go (Rule h b) (n,db) = case Prelude.foldr (goto h) (n,db) $ runStateT ?? mempty $ bodyRows db b of
+      go (Rule h b) (n,db) = case Foldable.foldr (goto h) (n,db) $ runStateT ?? mempty $ bodyRows db b of
         (m, db') -> (n <> m, db')
       goto :: Atom a b -> (a, Subst) -> (Any, IntMap Relation) -> (Any, IntMap Relation)
       goto h@Atom{} (a, e) (n, db) = case insert (apply e h) a db of

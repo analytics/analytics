@@ -31,6 +31,7 @@ module Data.Analytics.Datalog.Prompt
 
 import Control.Lens
 import Control.Monad
+import Control.Monad.Logic
 import qualified Data.Analytics.Datalog.Monad as Datalog
 import Data.Analytics.Datalog.Monad hiding (Query, (:-), Fresh)
 import Data.Analytics.Datalog.Query
@@ -46,7 +47,7 @@ type Step = StepT Identity
 data StepT :: (* -> *) -> * -> * where
   Fresh :: (a -> a -> a) -> StepT m (Table a)
   (:-)  :: Atom a b -> Query a -> StepT m ()
-  Query :: Query a -> StepT m [a]
+  Query :: Query a -> StepT m (Logic a)
 
 type Prompt = PromptT Identity
 

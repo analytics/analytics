@@ -80,6 +80,7 @@ library
     Data.Analytics.Datalog.Term
     Data.Analytics.Hash.Double
     Data.Analytics.Hash.Rolling
+    Data.Analytics.Instances
     Data.Analytics.Morton
     Data.Analytics.Morton.Node
     Data.Analytics.Morton.Heap
@@ -122,6 +123,7 @@ library
     hashable                  >= 1.2     && < 1.3,
     haskeline                 >= 0.7     && < 0.8,
     lens                      >= 3.9     && < 4,
+    logict                    >= 0.6     && < 0.7,
     MonadCatchIO-transformers >= 0.3     && < 0.4,
     mtl                       >= 2.1.1   && < 2.2,
     pointed                   >= 3       && < 4,
