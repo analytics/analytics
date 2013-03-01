@@ -67,3 +67,6 @@
 * [The log-structured merge tree](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.44.2782&rep=rep1&type=pdf) provides
  great throughput for inserts in exchange for high read latency for write-mostly workloads.
 
+# Compressed Search
+
+* [Searching BWT compressed text with the Boyer-Moore algorithm and binary search](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.106.9296)
