@@ -57,10 +57,10 @@
 * [Cache Oblivious Streaming B-Trees](http://supertech.csail.mit.edu/papers/sbtree.pdf)
 * [Streaming B-Trees for Filesystem Grand Challenges](http://institutes.lanl.gov/hec-fsio/workshops/2007/presentations/day1/Farach-Colton_sbtree-nsf07.pdf)
 * [Orded Files and Cache-Oblivious Priority Queues (video)](http://www.youtube.com/watch?v=jAh_bC4hYlc)
+* [A density control algorithm for doing insertions and deletions in a sequentially ordered file in a good worst-case time](http://www.sciencedirect.com/science/article/pii/089054019290034D). This provides the O((log^2 N)/B) _worst case_ bound for ordered file maintanence. Note that to do so it uses a "calibrator tree" which corresponds directly with the total number of children under a given branch. This could be-expressed like (or as part of) a Haar sketch.
 
 # Logging and Metrics
 
 * [The log-structured merge tree](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.44.2782&rep=rep1&type=pdf) provides
  great throughput for inserts in exchange for high read latency for write-mostly workloads.
-
 
