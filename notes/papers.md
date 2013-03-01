@@ -64,9 +64,18 @@
 
 # Logging and Metrics
 
-* [The log-structured merge tree](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.44.2782&rep=rep1&type=pdf) provides
+* [The log-structured merge tree](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.44.2782&rep=rep1&type=pdf) by O'Neil, Cheng, Gawlick and O'Neil provides
  great throughput for inserts in exchange for high read latency for write-mostly workloads.
 
 # Compressed Search
 
+We could store full-text-indices on some columns as a BWT transformed version of the leave chunk, then perform compressed-search techniques on top to permit efficient operations on them without paying for full decompression.
+
+At ~4 meg leaves this actually fits pretty well with bzip2 window sizes.
+
 * [Searching BWT compressed text with the Boyer-Moore algorithm and binary search](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.106.9296)
+* [A Comparison of BWT Approaches to String Pattern Matching](http://vlsi.cs.ucf.edu/nsf/files/reportVer05driver.pdf) by Firth, Bell, Mukherjee and Adjeroh
+
+# Batched buffer management
+
+* [The Buffer Tree: A Technique for Designing Batched External Data Structures](http://www.cs.cmu.edu/~guyb/realworld/slidesF10/buffertree.pdf)
