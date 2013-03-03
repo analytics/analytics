@@ -9,6 +9,9 @@
 # Morton Ordering
 * [Skjellum provides a nice way to make a Morton order that works even for non-integral numbers of bits](http://people.cs.vt.edu/~asandu/Public/Qual2005/Q2005_skjellum.pdf)
 
+# Hilbert Ordering
+* [Efficient Range Query Using Multiple Hilbert Curves](http://cdn.intechopen.com/pdfs/16532/InTech-Efficient_range_query_using_multiple_hilbert_curves.pdf) shows that we can answer queries in fewer ranges if we store multiple copies of the data using different space filling curves or with rotations and shifts. This may point to a replication strategy. As with storing multiple copies for a column store using different orderings to get both fault tolerance, the same thing apply to space filling storage of the data.
+
 # Incremental Computation
 * [Differential Dataflow](http://www.cidrdb.org/cidr2013/Papers/CIDR13_Paper111.pdf)
 * [Project Naiad](http://research.microsoft.com/en-us/projects/naiad/)
