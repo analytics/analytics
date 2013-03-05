@@ -3,6 +3,8 @@
 {-# OPTIONS_GHC -Wall #-}
 module Main (main) where
 
+import Control.Monad
+import Data.Functor
 import Data.List ( nub )
 import Data.Version ( showVersion )
 import Distribution.Package ( PackageName(PackageName), PackageId, InstalledPackageId, packageVersion, packageName )
@@ -13,12 +15,20 @@ import Distribution.Simple.BuildPaths ( autogenModulesDir )
 import Distribution.Simple.Setup ( BuildFlags(buildVerbosity), fromFlag )
 import Distribution.Simple.LocalBuildInfo ( withLibLBI, withTestLBI, LocalBuildInfo(), ComponentLocalBuildInfo(componentPackageDeps) )
 import Distribution.Verbosity ( Verbosity )
+import System.Directory
 import System.FilePath ( (</>) )
 import System.Process
 
+unlessFileExists :: FilePath -> IO a -> IO ()
+unlessFileExists fp act = doesFileExist fp >>= \b -> unless b $ () <$ act
+
 main :: IO ()
 main = defaultMainWithHooks autoconfUserHooks
-  { buildHook = \pkg lbi hooks flags -> do
+  { preConf = \args flags -> do
+     unlessFileExists "aclocal.m4" $ readProcessWithExitCode "aclocal" [] ""
+     unlessFileExists "config.h.in" $ readProcessWithExitCode "autoreconf" ["-i"] ""
+     preConf autoconfUserHooks args flags
+  , buildHook = \pkg lbi hooks flags -> do
      generateBuildModule (fromFlag (buildVerbosity flags)) pkg lbi
      buildHook autoconfUserHooks pkg lbi hooks flags
   , postClean = \args flags pkg lbi -> do
