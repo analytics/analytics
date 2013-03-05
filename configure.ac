@@ -3,9 +3,6 @@ AC_INIT([analytics], [0.1], [ekmett@gmail.com])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_SRCDIR([cbits/fast.c])
 AM_INIT_AUTOMAKE([foreign])
-ANALYTICS_VERSION=0.1
-AC_MSG_NOTICE([Configuring analytics $ANALYTICS_VERSION])
-AC_DEFINE_UNQUOTED(ANALYTICS_VERSION,["$ANALYTICS_VERSION"],[analytics release version])
 
 # Checks for programs.
 AC_PROG_CC
