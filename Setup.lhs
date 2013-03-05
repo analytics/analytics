@@ -21,9 +21,14 @@ main = defaultMainWithHooks autoconfUserHooks
   { buildHook = \pkg lbi hooks flags -> do
      generateBuildModule (fromFlag (buildVerbosity flags)) pkg lbi
      buildHook autoconfUserHooks pkg lbi hooks flags
-  , postClean = \_args _flags _pkg_descr _ -> do
+  , postClean = \args flags pkg lbi -> do
+     putStrLn "Cleaning up"
      _ <- readProcessWithExitCode "make" ["distclean"] ""
-     return ()
+     postClean autoconfUserHooks args flags pkg lbi
+  , instHook = \pkg lbi hooks flags -> do
+     putStrLn "Registering man page analytics.1"
+     _ <- readProcessWithExitCode "make" ["install"] ""
+     instHook autoconfUserHooks pkg lbi hooks flags
   }
 
 generateBuildModule :: Verbosity -> PackageDescription -> LocalBuildInfo -> IO ()

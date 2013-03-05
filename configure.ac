@@ -90,6 +90,6 @@ if test x"$analytics_cv_HAVE_BROKEN_LARGEFILE" != x"yes"; then
    AC_SYS_LARGEFILE
 fi
 
-AC_CONFIG_FILES([Makefile analytics.buildinfo])
-# AC_CONFIG_SUBDIRS([cbits])
+AC_CONFIG_FILES([Makefile analytics.buildinfo man/Makefile])
+AC_CONFIG_SUBDIRS([man])
 AC_OUTPUT
