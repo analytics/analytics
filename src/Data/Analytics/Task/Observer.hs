@@ -37,7 +37,7 @@ instance Monoid (Observer a) where
   {-# INLINE mappend #-}
 
 -- | Perform an action for each
---
+
 -- >>> run $  subscribe (observe [1..10]) $ foreach (liftIO . print)
 -- 1
 -- 2
