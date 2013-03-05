@@ -21,6 +21,7 @@ AC_PROG_INSTALL
 
 # Checks for header files.
 
+AC_CHECK_HEADERS([fcntl.h])
 AC_CHECK_HEADERS_ONCE([fcntl.h sys/fcntl.h sys/syscall.h sys/types.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
@@ -30,6 +31,7 @@ AX_C_HAVE_ATTRIBUTE_COLD
 AC_C_BIGENDIAN(AC_SUBST([ENDIAN],[big]),AC_SUBST([ENDIAN],[little]))
 
 AC_TYPE_OFF_T
+AC_TYPE_SIZE_T
 
 AC_TRY_COMPILE([#include <fcntl.h>],[fstore_t store = { F_ALLOCATECONTIG, F_PEOFPOSMODE, 0, 4096 };],[analytics_cv_have_fstore=yes],[analytics_cv_have_fstore=no])
 if test x"$analytics_cv_have_fstore" = x"yes"; then
