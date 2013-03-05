@@ -8,7 +8,7 @@ import Data.Functor
 import Data.List ( nub )
 import Data.Version ( showVersion )
 import Distribution.Package ( PackageName(PackageName), PackageId, InstalledPackageId, packageVersion, packageName )
-import Distribution.PackageDescription ( PackageDescription(extraSrcFiles), TestSuite(..) )
+import Distribution.PackageDescription ( PackageDescription(), TestSuite(..) )
 import Distribution.Simple ( defaultMainWithHooks, UserHooks(..), autoconfUserHooks )
 import Distribution.Simple.Utils ( rewriteFile, createDirectoryIfMissingVerbose )
 import Distribution.Simple.BuildPaths ( autogenModulesDir )
