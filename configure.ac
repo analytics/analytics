@@ -1,8 +1,9 @@
 AC_PREREQ([2.68])
 AC_INIT([analytics], [0.1], [ekmett@gmail.com])
-AC_CONFIG_HEADER([includes/config.h])
-AC_CONFIG_SRCDIR([cbits/fast.c])
+AC_CONFIG_SRCDIR([config.h.in])
+AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([foreign])
+
 
 # Checks for programs.
 AC_CANONICAL_BUILD
@@ -18,11 +19,17 @@ AC_PROG_INSTALL
 
 # Checks for header files.
 
-AC_CHECK_HEADERS([fcntl.h],[sys/syscall.h],[sys/types.h], [unistd.h])
+AC_CHECK_HEADERS([fcntl.h sys/fcntl.h sys/syscall.h sys/types.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 
 AC_TYPE_OFF_T
+
+AC_TRY_COMPILE([#include <fcntl.h>],[fstore_t store = { F_ALLOCATECONTIG, F_PEOFPOSMODE, 0, 4096 };],[analytics_cv_have_fstore=yes],[analytics_cv_have_fstore=no])
+if test x"$analytics_cv_have_fstore" = x"yes"; then
+  AC_DEFINE(HAVE_FSTORE_T, 1, [Define to 1 if you can ask fstore_t for continuous storage with F_ALLOCATECONTIG])
+fi
+
 
 # Checks for library functions.
 

@@ -6,6 +6,10 @@
 #include <fcntl.h>
 #endif
 
+#ifdef HAVE_SYS_FCNTL_H
+#include <sys/fcntl.h>
+#endif
+
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -15,7 +19,7 @@ int c_fallocate(int fd, off_t len) {
   return fallocate(fd, 0, 0, len);
 #elif HAVE_POSIX_FALLOCATE
   return posix_fallocate(fd, 0, len);
-#elif HAVE_FTRUNCATE
+#elif HAVE_FSTORE_T && HAVE_FTRUNCATE /* Mac OS X */
   fstore_t store = { F_ALLOCATECONTIG, F_PEOFPOSMODE, 0, len };
   int result = fcntl(fd, F_PREALLOCATE, &store);
   if (result == -1) {
@@ -25,6 +29,6 @@ int c_fallocate(int fd, off_t len) {
   }
   return ftruncate(fd,len) == 0;
 #else
-#error "fallocate: Build issue"
+#error Unable to fallocate on this platform
 #endif
 }

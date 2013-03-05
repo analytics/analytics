@@ -62,7 +62,7 @@ library
   ghc-options:      -Wall -threaded
   if flag(ast)
     ghc-options: -O2 -DSPECIALIZE_INSTANCES=1 -fmax-simplifier-iterations=10 -fdicts-cheap
-  include-dirs:     includes
+  include-dirs:     . includes
   c-sources:        cbits/rolling.c cbits/debruijn.c cbits/fast.c cbits/fallocate.c
   cc-options:       -std=c99
   if os(windows)
@@ -90,6 +90,7 @@ library
     Data.Analytics.Datalog.Subst
     Data.Analytics.Datalog.Table
     Data.Analytics.Datalog.Term
+    Data.Analytics.File
     Data.Analytics.Hash.Double
     Data.Analytics.Hash.Rolling
     Data.Analytics.Instances
@@ -150,6 +151,7 @@ library
     template-haskell,
     transformers              >= 0.2     && < 0.4,
     transformers-compat       >= 0.1     && < 1,
+    unix                      >= 2.5     && < 2.6,
     unordered-containers      >= 0.2.1   && < 0.3,
     vector                    >= 0.10    && < 0.11,
     void                      >= 0.5.10  && < 1

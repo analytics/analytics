@@ -1,4 +1,4 @@
-/* includes/config.h.in.  Generated from configure.ac by autoheader.  */
+/* config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* Define if posix_fallocate is efficient (Cygwin) */
 #undef HAVE_EFFICIENT_POSIX_FALLOCATE
@@ -12,6 +12,10 @@
 
 /* Define to 1 if fseeko (and presumably ftello) exists and is declared. */
 #undef HAVE_FSEEKO
+
+/* Define to 1 if you can ask fstore_t for continuous storage with
+   F_ALLOCATECONTIG */
+#undef HAVE_FSTORE_T
 
 /* Define to 1 if you have the `ftruncate' function. */
 #undef HAVE_FTRUNCATE
@@ -40,8 +44,14 @@
 /* Define to 1 if you have the SYS_fallocate syscall number */
 #undef HAVE_SYS_FALLOCATE
 
+/* Define to 1 if you have the <sys/fcntl.h> header file. */
+#undef HAVE_SYS_FCNTL_H
+
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #undef HAVE_SYS_STAT_H
+
+/* Define to 1 if you have the <sys/syscall.h> header file. */
+#undef HAVE_SYS_SYSCALL_H
 
 /* Define to 1 if you have the <sys/types.h> header file. */
 #undef HAVE_SYS_TYPES_H
