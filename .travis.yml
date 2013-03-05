@@ -9,7 +9,6 @@ before_install:
   - travis/cabal-apt-install --constraint='hashable >= 1.2' --constraint='vector >= 0.10.0.1'
   - cabal install
   - cd ..
-  - autoreconf -i
   - travis/cabal-apt-install --enable-tests
 
 install:
