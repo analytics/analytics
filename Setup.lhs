@@ -7,19 +7,23 @@ import Data.List ( nub )
 import Data.Version ( showVersion )
 import Distribution.Package ( PackageName(PackageName), PackageId, InstalledPackageId, packageVersion, packageName )
 import Distribution.PackageDescription ( PackageDescription(), TestSuite(..) )
-import Distribution.Simple ( defaultMainWithHooks, UserHooks(..), simpleUserHooks )
+import Distribution.Simple ( defaultMainWithHooks, UserHooks(..), autoconfUserHooks )
 import Distribution.Simple.Utils ( rewriteFile, createDirectoryIfMissingVerbose )
 import Distribution.Simple.BuildPaths ( autogenModulesDir )
 import Distribution.Simple.Setup ( BuildFlags(buildVerbosity), fromFlag )
 import Distribution.Simple.LocalBuildInfo ( withLibLBI, withTestLBI, LocalBuildInfo(), ComponentLocalBuildInfo(componentPackageDeps) )
 import Distribution.Verbosity ( Verbosity )
 import System.FilePath ( (</>) )
+import System.Process
 
 main :: IO ()
-main = defaultMainWithHooks simpleUserHooks
+main = defaultMainWithHooks autoconfUserHooks
   { buildHook = \pkg lbi hooks flags -> do
      generateBuildModule (fromFlag (buildVerbosity flags)) pkg lbi
-     buildHook simpleUserHooks pkg lbi hooks flags
+     buildHook autoconfUserHooks pkg lbi hooks flags
+  , postClean = \_args _flags _pkg_descr _ -> do
+     _ <- readProcessWithExitCode "make" ["distclean"] ""
+     return ()
   }
 
 generateBuildModule :: Verbosity -> PackageDescription -> LocalBuildInfo -> IO ()

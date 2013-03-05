@@ -17,8 +17,8 @@
 module Data.Analytics.Numeric.Fast
   ( Fast(..)
   , blog
-  , expf_fast
-  , powf_fast_precise
+--  , expf_fast
+--  , powf_fast_precise
   ) where
 
 class Floating a => Fast a where
@@ -67,19 +67,19 @@ blog x = 6 * (x - 1) / (x + 1 + 4 * sqrt x);
 
 foreign import ccall unsafe pow_fast_lb       :: Double -> Double -> Double
 foreign import ccall unsafe pow_fast_ub       :: Double -> Double -> Double
-foreign import ccall unsafe pow_fast_precise  :: Double -> Double -> Double
+-- foreign import ccall unsafe pow_fast_precise  :: Double -> Double -> Double
 foreign import ccall unsafe better_pow_fast_precise  :: Double -> Double -> Double
 foreign import ccall unsafe powf_fast_lb      :: Float -> Float -> Float
 foreign import ccall unsafe powf_fast_ub      :: Float -> Float -> Float
-foreign import ccall unsafe powf_fast_precise :: Float -> Float -> Float
+-- foreign import ccall unsafe powf_fast_precise :: Float -> Float -> Float
 foreign import ccall unsafe better_powf_fast_precise :: Float -> Float -> Float
 
 foreign import ccall unsafe better_exp_fast   :: Double -> Double
-foreign import ccall unsafe exp_fast          :: Double -> Double
+-- foreign import ccall unsafe exp_fast          :: Double -> Double
 foreign import ccall unsafe exp_fast_lb       :: Double -> Double
 foreign import ccall unsafe exp_fast_ub       :: Double -> Double
 foreign import ccall unsafe better_expf_fast  :: Float -> Float
-foreign import ccall unsafe expf_fast         :: Float -> Float
+-- foreign import ccall unsafe expf_fast         :: Float -> Float
 foreign import ccall unsafe expf_fast_lb      :: Float -> Float
 foreign import ccall unsafe expf_fast_ub      :: Float -> Float
 
