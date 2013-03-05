@@ -1,12 +1,10 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE MagicHash #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
--- {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE TypeFamilies #-}
--- {-# LANGUAGE FlexibleInstances #-}
--- {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -fno-warn-deprecations #-}
 module Data.Analytics.Task.Monad
   ( Task(..), (|>>)
@@ -172,11 +170,13 @@ mask f = liftIO getMaskingState >>= \b -> case b of
   _        -> f id
 {-# INLINE mask #-}
 
+#ifndef HLINT
 class Monad m => MonadTask m where
   spawn :: Task () -> m ()
   default spawn :: (MonadTrans t, MonadTask n, m ~ t n) => Task () -> m ()
   spawn = lift . spawn
   {-# INLINE spawn #-}
+#endif
 
 instance MonadTask Task where
   spawn t = Task $ \kp e -> do
