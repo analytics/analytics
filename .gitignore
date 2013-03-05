@@ -15,12 +15,17 @@ contrib
 Makefile
 Makefile.in
 aclocal.m4
+analytics.buildinfo
 autom4te.cache
 autoscan.log
 config.log
+config.guess
 config.status
+config.sub
+config.h
 configure
 configure.scan
 install-sh
 missing
 www
+stamp-h1
