@@ -1,6 +1,8 @@
 {-# LANGUAGE ForeignFunctionInterface, DeriveDataTypeable #-}
 module Data.Analytics.File
   ( InsufficientDiskSpace
+  , AsInsufficientDiskSpace(..)
+  , fallocate
   ) where
 
 import Control.Exception
