@@ -30,3 +30,4 @@ install-sh
 missing
 www
 stamp-h1
+config.h.in
