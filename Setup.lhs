@@ -8,7 +8,7 @@ import Data.Functor
 import Data.List ( nub )
 import Data.Version ( showVersion )
 import Distribution.Package ( PackageName(PackageName), PackageId, InstalledPackageId, packageVersion, packageName )
-import Distribution.PackageDescription ( PackageDescription(), TestSuite(..) )
+import Distribution.PackageDescription ( PackageDescription(extraSrcFiles), TestSuite(..) )
 import Distribution.Simple ( defaultMainWithHooks, UserHooks(..), autoconfUserHooks )
 import Distribution.Simple.Utils ( rewriteFile, createDirectoryIfMissingVerbose )
 import Distribution.Simple.BuildPaths ( autogenModulesDir )
@@ -22,12 +22,19 @@ import System.Process
 unlessFileExists :: FilePath -> IO a -> IO ()
 unlessFileExists fp act = doesFileExist fp >>= \b -> unless b $ () <$ act
 
+setupAutoTools :: IO ()
+setupAutoTools = do
+  unlessFileExists "aclocal.m4" $ readProcessWithExitCode "aclocal" [] ""
+  unlessFileExists "config.h.in" $ readProcessWithExitCode "autoreconf" ["-i"] ""
+
 main :: IO ()
 main = defaultMainWithHooks autoconfUserHooks
   { preConf = \args flags -> do
-     unlessFileExists "aclocal.m4" $ readProcessWithExitCode "aclocal" [] ""
-     unlessFileExists "config.h.in" $ readProcessWithExitCode "autoreconf" ["-i"] ""
+     setupAutoTools
      preConf autoconfUserHooks args flags
+  , sDistHook = \pkg mlbi hooks flags -> do
+     setupAutoTools
+     sDistHook autoconfUserHooks pkg mlbi hooks flags
   , buildHook = \pkg lbi hooks flags -> do
      generateBuildModule (fromFlag (buildVerbosity flags)) pkg lbi
      buildHook autoconfUserHooks pkg lbi hooks flags
