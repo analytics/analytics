@@ -1,8 +1,5 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
-/* analytics release version */
-#undef ANALYTICS_VERSION
-
 /* Define if posix_fallocate is efficient (Cygwin) */
 #undef HAVE_EFFICIENT_POSIX_FALLOCATE
 
