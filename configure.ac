@@ -1,21 +1,32 @@
 AC_PREREQ([2.68])
 AC_INIT([analytics], [0.1], [ekmett@gmail.com])
-AC_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADER([includes/config.h])
 AC_CONFIG_SRCDIR([cbits/fast.c])
 AM_INIT_AUTOMAKE([foreign])
 
 # Checks for programs.
+AC_CANONICAL_BUILD
+AC_CANONICAL_HOST
+case "${host_os}" in
+  darwin*) AC_DEFINE(HOST_OS_DARWIN, 1, [Define if you are running on Darwin/Mac OS X.])
+  ;;
+esac
 AC_PROG_CC
 AC_PROG_INSTALL
-AC_CANONICAL_HOST
 
 # Checks for libraries.
 
 # Checks for header files.
 
+AC_CHECK_HEADERS([fcntl.h],[sys/syscall.h],[sys/types.h], [unistd.h])
+
 # Checks for typedefs, structures, and compiler characteristics.
 
+AC_TYPE_OFF_T
+
 # Checks for library functions.
+
+AC_FUNC_FSEEKO
 
 AC_CHECK_FUNCS(ftruncate posix_fallocate)
 
@@ -52,7 +63,7 @@ if test x"$ac_cv_func_posix_fallocate" = x"yes"; then
   esac
 fi
 
-AC_CACHE_CHECK([for broken largefile support],analytics_cv_HAVE_BROKEN_LARGEFILE,[
+AC_CACHE_CHECK([for broken largefile support],analytics_cv_have_broken_largefile,[
 AC_TRY_RUN([
 #define _FILE_OFFSET_BITS 64
 #include <stdio.h>
@@ -85,8 +96,8 @@ int main(void) {
   exit(WEXITSTATUS(status));
 }
 ],
-analytics_cv_HAVE_BROKEN_LARGEFILE=yes,analytics_cv_HAVE_BROKEN_LARGEFILE=no,analytics_cv_HAVE_BROKEN_LARGEFILE=cross)])
-if test x"$analytics_cv_HAVE_BROKEN_LARGEFILE" != x"yes"; then
+analytics_cv_have_broken_largefile=yes,analytics_cv_have_broken_largefile=no,analytics_cv_have_broken_largefile=cross)])
+if test x"$analytics_cv_have_broken_largefile" != x"yes"; then
    AC_SYS_LARGEFILE
 fi
 

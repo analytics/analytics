@@ -40,7 +40,6 @@ extra-source-files:
   man/Makefile.in
   man/analytics.1
 
-
 source-repository head
   type: git
   location: git://github.com/analytics/analytics.git
@@ -64,7 +63,7 @@ library
   if flag(ast)
     ghc-options: -O2 -DSPECIALIZE_INSTANCES=1 -fmax-simplifier-iterations=10 -fdicts-cheap
   include-dirs:     includes
-  c-sources:        cbits/rolling.c cbits/debruijn.c cbits/fast.c
+  c-sources:        cbits/rolling.c cbits/debruijn.c cbits/fast.c cbits/fallocate.c
   cc-options:       -std=c99
   if os(windows)
     cpp-options: -DOS_WINDOWS=1
