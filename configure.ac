@@ -29,6 +29,7 @@ AC_CHECK_HEADERS_ONCE([fcntl.h sys/fcntl.h sys/syscall.h sys/types.h unistd.h])
 AX_C_HAVE_ATTRIBUTE
 AX_C_HAVE_ATTRIBUTE_COLD
 AC_C_BIGENDIAN(AC_SUBST([ENDIAN],[big]),AC_SUBST([ENDIAN],[little]))
+AC_C_INLINE
 
 AC_TYPE_OFF_T
 AC_TYPE_SIZE_T
@@ -42,7 +43,10 @@ fi
 
 AC_FUNC_FSEEKO
 
-AC_CHECK_FUNCS(ftruncate fallocate64 posix_fallocate)
+AC_CHECK_DECLS(posix_fadvise, [], [], [
+#define _XOPEN_SOURCE 600
+#include <fcntl.h>])
+AC_CHECK_FUNCS(ftruncate fallocate64 posix_fallocate posix_fadvise posix_memalign pread pwrite pread64 pwrite64 valloc lseek64)
 
 AC_CACHE_CHECK([for fallocate],analytics_cv_have_fallocate,[
 AC_TRY_LINK([#include <fcntl.h>
