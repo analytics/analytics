@@ -24,8 +24,8 @@ unlessFileExists fp act = doesFileExist fp >>= \b -> unless b $ () <$ act
 
 setupAutoTools :: IO ()
 setupAutoTools = do
-  unlessFileExists "aclocal.m4" $ readProcessWithExitCode "aclocal" [] ""
-  unlessFileExists "config.h.in" $ readProcessWithExitCode "autoreconf" ["-i"] ""
+  unlessFileExists "aclocal.m4" $ readProcessWithExitCode "aclocal" ["-Im4"] ""
+  unlessFileExists "config.h.in" $ readProcessWithExitCode "autoreconf" ["-Im4", "-i"] ""
 
 main :: IO ()
 main = defaultMainWithHooks autoconfUserHooks

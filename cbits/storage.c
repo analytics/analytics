@@ -15,7 +15,9 @@
 #endif
 
 int c_fallocate(int fd, off_t len) {
-#if HAVE_FALLOCATE
+#if HAVE_FALLOCATE64
+  return fallocate64(fd, 0, 0, len);
+#elif HAVE_FALLOCATE
   return fallocate(fd, 0, 0, len);
 #elif HAVE_POSIX_FALLOCATE
   return posix_fallocate(fd, 0, len);
@@ -23,12 +25,24 @@ int c_fallocate(int fd, off_t len) {
   fstore_t store = { F_ALLOCATECONTIG, F_PEOFPOSMODE, 0, len };
   int result = fcntl(fd, F_PREALLOCATE, &store);
   if (result == -1) {
-   store.fst_flags = F_ALLOCATEALL;
-   result = fcntl(fd, F_PREALLOCATE, &store);
-   if (result == -1) return 0;
+    store.fst_flags = F_ALLOCATEALL;
+    result = fcntl(fd, F_PREALLOCATE, &store);
+    if (result == -1) return 0;
   }
   return ftruncate(fd,len) == 0;
 #else
+  /* TODO: emulate fallocate */
 #error Unable to fallocate on this platform
+#endif
+}
+
+int c_prefetch (int fd UNUSED, off_t off UNUSED, size_t count UNUSED) {
+#ifdef HAVE_POSIX_FADVISE
+  return posix_fadvise(fd, off, count, POSIX_FADV_WILLNEED);
+#elif HAVE_RADVISORY
+  struct radvisory rad = { off, count };
+  return fcntl(fd, F_RDADVISE, &rad);
+#else
+  return 0;
 #endif
 }

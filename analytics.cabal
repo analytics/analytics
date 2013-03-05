@@ -35,6 +35,7 @@ extra-source-files:
   configure.ac
   config.h.in
   install-sh
+  m4/*.m4
   missing
   man/Makefile.am
   man/Makefile.in
@@ -64,7 +65,7 @@ library
     ghc-options: -O2 -fmax-simplifier-iterations=10 -fdicts-cheap
     cpp-options: -DSPECIALIZE_INSTANCES=1
   include-dirs:     . includes
-  c-sources:        cbits/rolling.c cbits/debruijn.c cbits/fast.c cbits/fallocate.c
+  c-sources:        cbits/rolling.c cbits/debruijn.c cbits/fast.c cbits/storage.c
   cc-options:       -std=c99
   if os(windows)
     cpp-options: -DOS_WINDOWS=1

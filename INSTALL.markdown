@@ -9,7 +9,7 @@ If your build fails, you can try On a Mac you can retrieve them with `brew`
 and manually run:
 
 * `aclocal -Im4`
-* `autoreconf -i`
+* `autoreconf -Im4 -i`
 
 Once that is done you can run `cabal`:
 
