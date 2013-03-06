@@ -28,9 +28,7 @@ setupAutoTools = do
   unlessFileExists "aclocal.m4" $ readProcessWithExitCode "aclocal" ["-Im4"] ""
   unlessFileExists "config.h.in" $ readProcessWithExitCode "autoreconf" ["-Im4", "-i"] ""
 
-
 haddockOutputDir :: Package pkg => HaddockFlags -> pkg -> FilePath
-
 haddockOutputDir flags pkg = destDir where
   baseDir = case haddockDistPref flags of
     NoFlag -> "."
