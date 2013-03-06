@@ -45,9 +45,11 @@ allocate h n = do
       throwIO (InsufficientDiskSpace h n desc)
     _ -> return ()
 
--- | Prefetch a range of a file from disk.
---  `prefetch h o c` signals the OS that the bytes(?) 
----  in the range o ... o+c will be accessed soon.
+-- | Prefetch a range from a file on disk.
+--
+--  @'prefetch' h o c@ signals to the operating system
+-- that we intend to access the bytes at positions @[o..o+c)@
+-- in the file with handle @h@ soon.
 prefetch :: Handle -> Int64 -> Int64 -> IO ()
 prefetch h o c = do
   fd <- handleToFd h
