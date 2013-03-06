@@ -10,7 +10,12 @@ AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
 
 case "${host_os}" in
-  darwin*) AC_DEFINE(HOST_OS_DARWIN, 1, [Define if you are running on Darwin/Mac OS X.])
+  *mingw32*)
+    AC_DEFINE(HOST_MINGW32, 1, [Define if you are running on Windows under 32-bit MinGW.])
+    AC_DEFINE(HOST_WIN32, 1, [Define if you are running on 32-bit Windows.])
+  ;;
+  darwin*)
+    AC_DEFINE(HOST_DARWIN, 1, [Define if you are running on Darwin/Mac OS X.])
   ;;
 esac
 
@@ -22,7 +27,7 @@ AC_PROG_INSTALL
 # Checks for header files.
 
 AC_CHECK_HEADERS([fcntl.h])
-AC_CHECK_HEADERS_ONCE([fcntl.h sys/fcntl.h sys/syscall.h sys/types.h unistd.h])
+AC_CHECK_HEADERS_ONCE([sys/fcntl.h sys/syscall.h sys/types.h unistd.h io.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 

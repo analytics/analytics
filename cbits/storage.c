@@ -2,6 +2,10 @@
 
 #include "config.h"
 
+#ifdef HAVE_IO_H
+#include <io.h>
+#endif
+
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
@@ -36,7 +40,7 @@ int c_fallocate(int fd, off_t len) {
 #endif
 }
 
-int c_prefetch (int fd UNUSED, off_t off UNUSED, size_t count UNUSED) {
+int c_prefetch(int fd UNUSED, off_t off UNUSED, size_t count UNUSED) {
 #ifdef HAVE_POSIX_FADVISE
   return posix_fadvise(fd, off, count, POSIX_FADV_WILLNEED);
 #elif HAVE_RADVISORY
@@ -44,5 +48,13 @@ int c_prefetch (int fd UNUSED, off_t off UNUSED, size_t count UNUSED) {
   return fcntl(fd, F_RDADVISE, &rad);
 #else
   return 0;
+#endif
+}
+
+int c_sync(int fd) {
+#ifdef HOST_WIN32
+  return _commit(fd);
+#else
+  return fsync(fd);
 #endif
 }
