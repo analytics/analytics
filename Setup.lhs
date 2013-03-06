@@ -7,14 +7,15 @@ import Control.Monad
 import Data.Functor
 import Data.List ( nub )
 import Data.Version ( showVersion )
-import Distribution.Package ( PackageName(PackageName), PackageId, InstalledPackageId, packageVersion, packageName )
+import Distribution.Package ( PackageName(PackageName), Package(..), PackageId, InstalledPackageId, packageVersion, packageName )
 import Distribution.PackageDescription ( PackageDescription(), TestSuite(..) )
 import Distribution.Simple ( defaultMainWithHooks, UserHooks(..), autoconfUserHooks )
-import Distribution.Simple.Utils ( rewriteFile, createDirectoryIfMissingVerbose )
+import Distribution.Simple.Utils ( rewriteFile, createDirectoryIfMissingVerbose, copyFiles )
 import Distribution.Simple.BuildPaths ( autogenModulesDir )
-import Distribution.Simple.Setup ( BuildFlags(buildVerbosity), fromFlag )
+import Distribution.Simple.Setup ( HaddockFlags(..), BuildFlags(buildVerbosity), fromFlag, haddockDistPref, Flag(..) )
 import Distribution.Simple.LocalBuildInfo ( withLibLBI, withTestLBI, LocalBuildInfo(), ComponentLocalBuildInfo(componentPackageDeps) )
-import Distribution.Verbosity ( Verbosity )
+import Distribution.Text ( display )
+import Distribution.Verbosity ( Verbosity, normal )
 import System.Directory
 import System.FilePath ( (</>) )
 import System.Process
@@ -27,6 +28,15 @@ setupAutoTools = do
   unlessFileExists "aclocal.m4" $ readProcessWithExitCode "aclocal" ["-Im4"] ""
   unlessFileExists "config.h.in" $ readProcessWithExitCode "autoreconf" ["-Im4", "-i"] ""
 
+
+haddockOutputDir :: Package pkg => HaddockFlags -> pkg -> FilePath
+
+haddockOutputDir flags pkg = destDir where
+  baseDir = case haddockDistPref flags of
+    NoFlag -> "."
+    Flag x -> x
+  destDir = baseDir </> "doc" </> "html" </> display (packageName pkg)
+
 main :: IO ()
 main = defaultMainWithHooks autoconfUserHooks
   { preConf = \args flags -> do
@@ -38,6 +48,9 @@ main = defaultMainWithHooks autoconfUserHooks
   , buildHook = \pkg lbi hooks flags -> do
      generateBuildModule (fromFlag (buildVerbosity flags)) pkg lbi
      buildHook autoconfUserHooks pkg lbi hooks flags
+  , postHaddock = \args flags pkg lbi -> do
+     copyFiles normal (haddockOutputDir flags pkg) [] -- [("doc","analytics.png")]
+     postHaddock autoconfUserHooks args flags pkg lbi
   , postClean = \args flags pkg lbi -> do
      putStrLn "Cleaning up"
      _ <- readProcessWithExitCode "make" ["distclean"] ""
