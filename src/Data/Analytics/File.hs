@@ -46,6 +46,8 @@ allocate h n = do
     _ -> return ()
 
 -- | Prefetch a range of a file from disk.
+--  `prefetch h o c` signals the OS that the bytes(?) 
+---  in the range o ... o+c will be accessed soon.
 prefetch :: Handle -> Int64 -> Int64 -> IO ()
 prefetch h o c = do
   fd <- handleToFd h
