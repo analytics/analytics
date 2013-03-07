@@ -84,6 +84,7 @@ At ~4 meg leaves this actually fits pretty well with bzip2 window sizes.
 * [A Comparison of BWT Approaches to String Pattern Matching](http://vlsi.cs.ucf.edu/nsf/files/reportVer05driver.pdf) by Firth, Bell, Mukherjee and Adjeroh
 * [The SBC-Tree: An Index for Run-Length Compressed Sequences](http://www.ittc.ku.edu/~jsv/Papers/EHS08.SBCtree.pdf)
 * [Geometric Burrows-Wheeler Transform: Linking Range Searching and Text Indexing](http://www.ittc.ku.edu/~jsv/Papers/CHS08.geometricbw.pdf)
+* [Compressed Text Indexing and Range Searching](http://www.cs.purdue.edu/research/technical_reports/2006/TR%2006-021.pdf)
 
 # Batched buffer management
 
