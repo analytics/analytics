@@ -181,7 +181,7 @@ instance Buildable BitBuilder where
              !b' = shiftL b 1 & bitAt 0 .~ v
          in (# i', b', mempty #)
   {-# INLINE putBit #-}
-#endif HLINT
+#endif
 
   bitBuilder = id
   {-# INLINE bitBuilder #-}
