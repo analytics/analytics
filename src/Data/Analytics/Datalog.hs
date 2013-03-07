@@ -19,4 +19,4 @@ import Data.Analytics.Datalog.Query
 import Data.Analytics.Datalog.Table
 import Data.Analytics.Datalog.Term
 
-{-# ANN module "HLint: ignore Use import/export shortcut" #-}
+{-# ANN module "hlint: ignore Use import/export shortcut" #-}

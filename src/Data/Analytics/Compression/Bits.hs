@@ -26,6 +26,8 @@ import Data.Semigroup
 import Data.Typeable
 import Data.Word
 
+{-# ANN module "hlint: ignore Redundant $!" #-}
+
 ------------------------------------------------------------------------------
 -- GetBits
 ------------------------------------------------------------------------------
