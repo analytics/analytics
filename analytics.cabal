@@ -65,7 +65,7 @@ library
     ghc-options: -O2 -fmax-simplifier-iterations=10 -fdicts-cheap
     cpp-options: -DSPECIALIZE_INSTANCES=1
   include-dirs:     . includes
-  c-sources:        cbits/rolling.c cbits/debruijn.c cbits/fast.c cbits/storage.c
+  c-sources:        cbits/rolling.c cbits/debruijn.c cbits/fast.c cbits/storage.c cbits/crc32.c
   cc-options:       -std=c99
   if os(windows)
     cpp-options: -DOS_WINDOWS=1
@@ -95,6 +95,7 @@ library
     Data.Analytics.Datalog.Table
     Data.Analytics.Datalog.Term
     Data.Analytics.File
+    Data.Analytics.Hash.CRC32
     Data.Analytics.Hash.Double
     Data.Analytics.Hash.Rolling
     Data.Analytics.Instances
