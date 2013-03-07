@@ -79,6 +79,7 @@ library
     Data.Analytics.Approximate.Type
     Data.Analytics.Bits
     Data.Analytics.Combinators
+    Data.Analytics.Compression.Arithmetic
     Data.Analytics.Compression.Bits
     Data.Analytics.Console
     Data.Analytics.Console.Options
