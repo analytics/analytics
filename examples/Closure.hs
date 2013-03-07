@@ -2,6 +2,7 @@
 module Examples.Closure where
 
 import Control.Applicative
+import Control.Monad.Logic
 import Data.Analytics.Datalog
 import Data.Typeable
 
@@ -20,7 +21,7 @@ tc   = t2 (Table 1 const) Edge
 endpoint :: T1 Node Node ()
 endpoint = t1 (Table 3 const) (\x () -> x)
 
-test :: Monad m => DatalogT m [Edge]
+test :: Monad m => DatalogT m (Logic Edge)
 test = do
   T1 cyclic <- table (\x () -> x :: Node) const
   T1 acyclic <- table (\x () -> x :: Node) const
@@ -34,5 +35,5 @@ test = do
   endpoint X :- acyclic X
   query $ row (tc A X) <* no (edge X C)
 
-test' :: Datalog [Edge]
+test' :: Datalog (Logic Edge)
 test' = test
