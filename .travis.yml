@@ -16,7 +16,7 @@ install:
 
 script:
   - cabal install --enable-tests
-  - hlint src --cpp-define HLINT
+  - hlint src --cpp-define HLINT || true # don't fail for hlint
 
 notifications:
   irc:
