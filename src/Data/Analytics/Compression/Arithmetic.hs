@@ -1,9 +1,17 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE Rank2Types #-}
-
-
+--------------------------------------------------------------------
+-- |
+-- Copyright :  (c) Edward Kmett 2013
+-- License   :  BSD3
+-- Maintainer:  Edward Kmett <ekmett@gmail.com>
+-- Stability :  experimental
+-- Portability: non-portable
+--
 -- <http://www.stanford.edu/class/ee398a/handouts/papers/WittenACM87ArithmCoding.pdf>
+-- <http://www.sable.mcgill.ca/publications/techreports/2007-5/bodden-07-arithmetic-TR.pdf>
+--------------------------------------------------------------------
 module Data.Analytics.Compression.Arithmetic
   (
   -- * Encoding
@@ -74,12 +82,13 @@ instance Monad Decoding where
   Decoding m >>= f = Decoding $ \ k -> m $ \a -> runDecoding (f a) k
   {-# INLINE (>>=) #-}
 
-{-
+-- | For now fill all but the most significant bit directly.
+--
+-- This means we cannot arithmetic encode a sequence of bits shorter than 63 bits.
 decoding :: Decoding a -> GetBits a
 decoding m = do
   startBits <- replicateM 63 getBit
   runDecoding m (\a _ _ -> return a) 63 $ ifoldrOf (backwards traversed) (set . bitAt) 0 startBits
--}
 
 ------------------------------------------------------------------------------
 -- Utilities
