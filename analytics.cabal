@@ -79,6 +79,7 @@ library
     Data.Analytics.Approximate.Type
     Data.Analytics.Bits
     Data.Analytics.Combinators
+    Data.Analytics.Compression.Bits
     Data.Analytics.Console
     Data.Analytics.Console.Options
     Data.Analytics.Console.Unicode
@@ -122,6 +123,7 @@ library
   build-depends:
     array                     >= 0.4     && < 0.5,
     base                      >= 4.4     && < 5,
+    binary                    >= 0.5     && < 0.6,
     bytestring                >= 0.9.2   && < 0.11,
     cereal                    >= 0.3.5   && < 0.4,
     cereal-vector             >= 0.2     && < 0.3,
