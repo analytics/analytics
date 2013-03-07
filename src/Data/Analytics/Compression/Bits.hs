@@ -65,20 +65,24 @@ getBit = GetBits $ \ k i b ->
 -- BitBuilder
 ------------------------------------------------------------------------------
 
+#ifndef HLINT
 newtype BitBuilder = BitBuilder { runBitBuilder :: Int -> Word8 -> (# Int, Word8, Builder #) }
   deriving Typeable
+#endif
 
 instance Semigroup BitBuilder where
   (<>) = mappend
   {-# INLINE (<>) #-}
 
 instance Monoid BitBuilder where
+#ifndef HLINT
   mempty = BitBuilder $ \i b -> (# i, b, mempty #)
   {-# INLINE mempty #-}
   BitBuilder x `mappend` BitBuilder y = BitBuilder $ \i b -> case x i b of
     (# j, c, m  #) -> case y j c of
       (# k, d, n #) -> (# k, d, mappend m n #)
   {-# INLINE mappend #-}
+#endif
 
 ------------------------------------------------------------------------------
 -- PutBits
@@ -155,6 +159,7 @@ class Buildable t where
   bitBuilder :: BitBuilder -> t
 
 instance Buildable BitBuilder where
+#ifndef HLINT
   flushBits = BitBuilder $ \i b ->
     if i == 0
     then (# 0, 0, mempty #)
@@ -175,6 +180,7 @@ instance Buildable BitBuilder where
              !b' = shiftL b 1 & bitAt 0 .~ v
          in (# i', b', mempty #)
   {-# INLINE putBit #-}
+#endif HLINT
 
   bitBuilder = id
   {-# INLINE bitBuilder #-}
