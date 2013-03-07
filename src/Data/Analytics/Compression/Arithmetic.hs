@@ -1,6 +1,9 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE Rank2Types #-}
+
+
+-- <http://www.stanford.edu/class/ee398a/handouts/papers/WittenACM87ArithmCoding.pdf>
 module Data.Analytics.Compression.Arithmetic
   (
   -- * Encoding
