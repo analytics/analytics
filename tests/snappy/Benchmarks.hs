@@ -6,8 +6,8 @@ import Criterion.Main
 import Functions (rechunk)
 import System.Directory (getTemporaryDirectory, removeFile)
 import System.IO (hClose, openBinaryTempFile)
-import qualified Codec.Compression.Snappy as S
-import qualified Codec.Compression.Snappy.Lazy as L
+import qualified Data.Analytics.Compression.Snappy as S
+import qualified Data.Analytics.Compression.Snappy.Lazy as L
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString.Lazy.Internal as L

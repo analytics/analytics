@@ -87,7 +87,7 @@ library
     cbits/crc32.c
 
     cbits/hs_snappy.cpp
-    
+
     cbits/snappy/snappy.cc
     cbits/snappy/snappy-sinksource.cc
     cbits/snappy/snappy-stubs-internal.cc
@@ -216,11 +216,11 @@ test-suite doctests
   hs-source-dirs: tests
 
 
-{-
-test-suite tests
+-- currently this doesn't build right 
+test-suite snappy-tests
   type:           exitcode-stdio-1.0
-  hs-source-dirs: tests/snappy
-  main-is:        Properties.hs
+  hs-source-dirs: tests/snappy, src 
+  main-is:        Snappy-Properties.hs
 
   ghc-options:
     -Wall -threaded -O0 -rtsopts
@@ -232,7 +232,8 @@ test-suite tests
     base < 5,
     bytestring,
     QuickCheck >= 2.4,
-    snappy,
+    analytics >= 0.1,
+    --snappy,
     test-framework,
     test-framework-quickcheck2
-  -}
+  

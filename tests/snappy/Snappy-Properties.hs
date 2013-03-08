@@ -6,8 +6,8 @@ import Functions (rechunk)
 import Test.Framework (defaultMain)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.QuickCheck (Arbitrary(..))
-import qualified Codec.Compression.Snappy as B
-import qualified Codec.Compression.Snappy.Lazy as L
+import qualified Data.Analytics.Compression.Snappy as B
+import qualified Data.Analytics.Compression.Snappy.Lazy as L
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as L
 
