@@ -5,7 +5,7 @@ module Main (main) where
 
 import Control.Monad
 import Data.Functor
-import Data.List ( nub )
+import Data.List ( nub, foldl1' )
 import Data.Version ( showVersion )
 import Distribution.Package ( PackageName(PackageName), Package(..), PackageId, InstalledPackageId, packageVersion, packageName )
 import Distribution.PackageDescription ( PackageDescription(), TestSuite(..) )
@@ -20,13 +20,19 @@ import System.Directory
 import System.FilePath ( (</>) )
 import System.Process
 
-unlessFileExists :: FilePath -> IO a -> IO ()
-unlessFileExists fp act = doesFileExist fp >>= \b -> unless b $ () <$ act
+--unlessFileExists :: FilePath -> IO a -> IO ()
+--unlessFileExists fp act = doesFileExist fp >>= \b -> unless b $ () <$ act
+
+unlessResultNewer :: FilePath -> [FilePath] -> IO a -> IO ()
+unlessResultNewer resFP sourceFPs act  = do
+        resTime <- getModificationTime resFP
+        sourceTimes <- mapM getModificationTime sourceFPs
+        unless (resTime > foldl1' max sourceTimes ) $   () <$ act 
 
 setupAutoTools :: IO ()
 setupAutoTools = do
-  unlessFileExists "aclocal.m4" $ readProcessWithExitCode "aclocal" ["-Im4"] ""
-  unlessFileExists "config.h.in" $ readProcessWithExitCode "autoreconf" ["-Im4", "-i"] ""
+  unlessResultNewer "aclocal.m4"  ["m4/ax_c_have_attribute.m4","m4/ax_c_have_attribute_cold.m4", "m4/ax_check_defined.m4","m4/ax_gcc_x86_cpuid.m4"]$ readProcessWithExitCode "aclocal" ["-Im4"] ""
+  unlessResultNewer "config.h.in" ["Makefile.in", "analytics.buildinfo.in", "configure.ac"] $ readProcessWithExitCode "autoreconf" ["-Im4", "-i"] ""
 
 haddockOutputDir :: Package pkg => HaddockFlags -> pkg -> FilePath
 haddockOutputDir flags pkg = destDir where
