@@ -1,3 +1,8 @@
+m4_define([snappy_major], [1])
+m4_define([snappy_minor], [1])
+m4_define([snappy_patchlevel], [0])
+m4_define([snappy_ltversion], [2:4:1])
+
 AC_PREREQ([2.68])
 AC_INIT([analytics], [0.1], [ekmett@gmail.com])
 AC_CONFIG_SRCDIR([config.h.in])
@@ -20,6 +25,8 @@ case "${host_os}" in
 esac
 
 AC_PROG_CC
+AC_PROG_CXX
+AC_LANG([C++])
 AC_PROG_INSTALL
 
 # Checks for libraries.
@@ -27,7 +34,9 @@ AC_PROG_INSTALL
 # Checks for header files.
 
 AC_CHECK_HEADERS([fcntl.h])
+AC_CHECK_HEADERS([stdint.h stddef.h sys/mman.h sys/resource.h windows.h byteswap.h sys/byteswap.h sys/endian.h sys/time.h])
 AC_CHECK_HEADERS_ONCE([sys/fcntl.h sys/syscall.h sys/types.h unistd.h io.h])
+
 
 # Checks for typedefs, structures, and compiler characteristics.
 
@@ -45,6 +54,7 @@ if test x"$analytics_cv_have_fstore" = x"yes"; then
 fi
 
 # Checks for library functions.
+
 
 AC_FUNC_FSEEKO
 
@@ -152,6 +162,90 @@ AH_BOTTOM(
 # endif
 ])
 
-AC_CONFIG_FILES([Makefile analytics.buildinfo man/Makefile])
+# begin snappy compatibility
+
+# Don't use AC_FUNC_MMAP, as it checks for mappings of already-mapped memory,
+# which we don't need (and does not exist on Windows).
+AC_CHECK_FUNC([mmap])
+
+# See if we have __builtin_expect.
+# TODO: Use AC_CACHE.
+AC_MSG_CHECKING([if the compiler supports __builtin_expect])
+
+AC_TRY_COMPILE(, [
+    return __builtin_expect(1, 1) ? 1 : 0
+], [
+    snappy_have_builtin_expect=yes
+    AC_MSG_RESULT([yes])
+], [
+    snappy_have_builtin_expect=no
+    AC_MSG_RESULT([no])
+])
+if test x$snappy_have_builtin_expect = xyes ; then
+    AC_DEFINE([HAVE_BUILTIN_EXPECT], [1], [Define to 1 if the compiler supports __builtin_expect.])
+fi
+
+# See if we have working count-trailing-zeros intrinsics.
+# TODO: Use AC_CACHE.
+AC_MSG_CHECKING([if the compiler supports __builtin_ctzll])
+
+AC_TRY_COMPILE(, [
+    return (__builtin_ctzll(0x100000000LL) == 32) ? 1 : 0
+], [
+    snappy_have_builtin_ctz=yes
+    AC_MSG_RESULT([yes])
+], [
+    snappy_have_builtin_ctz=no
+    AC_MSG_RESULT([no])
+])
+if test x$snappy_have_builtin_ctz = xyes ; then
+    AC_DEFINE([HAVE_BUILTIN_CTZ], [1], [Define to 1 if the compiler supports __builtin_ctz and friends.])
+fi
+
+
+UNITTEST_LIBS=""
+AC_DEFUN([CHECK_EXT_COMPRESSION_LIB], [
+  AH_CHECK_LIB([$1])
+  AC_CHECK_LIB(
+    [$1],
+    [$2],
+    [
+      AC_DEFINE_UNQUOTED(AS_TR_CPP(HAVE_LIB$1))
+      UNITTEST_LIBS="-l$1 $UNITTEST_LIBS"
+    ],
+    [true]
+  )
+])
+
+CHECK_EXT_COMPRESSION_LIB([z], [zlibVersion])
+CHECK_EXT_COMPRESSION_LIB([lzo2], [lzo1x_1_15_compress])
+CHECK_EXT_COMPRESSION_LIB([lzf], [lzf_compress])
+CHECK_EXT_COMPRESSION_LIB([fastlz], [fastlz_compress])
+CHECK_EXT_COMPRESSION_LIB([quicklz], [qlz_compress])
+AC_SUBST([UNITTEST_LIBS])
+
+# These are used by snappy-stubs-public.h.in.
+if test "$ac_cv_header_stdint_h" = "yes"; then
+    AC_SUBST([ac_cv_have_stdint_h], [1])
+else
+    AC_SUBST([ac_cv_have_stdint_h], [0])
+fi
+if test "$ac_cv_header_stddef_h" = "yes"; then
+    AC_SUBST([ac_cv_have_stddef_h], [1])
+else
+    AC_SUBST([ac_cv_have_stddef_h], [0])
+fi
+
+SNAPPY_MAJOR="snappy_major"
+SNAPPY_MINOR="snappy_minor"
+SNAPPY_PATCHLEVEL="snappy_patchlevel"
+AC_SUBST([SNAPPY_MAJOR])
+AC_SUBST([SNAPPY_MINOR])
+AC_SUBST([SNAPPY_PATCHLEVEL])
+AC_SUBST([SNAPPY_LTVERSION], snappy_ltversion)
+
+#end snappy configuration
+
+AC_CONFIG_FILES([Makefile analytics.buildinfo man/Makefile snappy/snappy-stubs-public.h])
 AC_CONFIG_SUBDIRS([man])
 AC_OUTPUT

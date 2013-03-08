@@ -10,6 +10,7 @@ contrib
 .*.swo
 *.o
 *.hi
+.svn
 *~
 *#
 Makefile
@@ -26,6 +27,7 @@ config.h
 config.h.in
 configure
 configure.scan
+depcomp
 install-sh
 missing
 www

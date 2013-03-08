@@ -34,12 +34,24 @@ extra-source-files:
   configure
   configure.ac
   config.h.in
+  depcomp
   install-sh
   m4/*.m4
   missing
   man/Makefile.am
   man/Makefile.in
   man/analytics.1
+  snappy/AUTHORS
+  snappy/COPYING
+  snappy/Makefile.am
+  snappy/NEWS
+  snappy/README
+  snappy/configure.ac
+  snappy/*.cc
+  snappy/*.h
+  snappy/*.h.in
+  snappy/*.txt
+  snappy/m4/*.m4
 
 source-repository head
   type: git
@@ -57,6 +69,7 @@ flag ast
   default: False
   manual: True
 
+
 library
   hs-source-dirs:   src
   default-language: Haskell2010
@@ -64,9 +77,19 @@ library
   if flag(ast)
     ghc-options: -O2 -fmax-simplifier-iterations=10 -fdicts-cheap
     cpp-options: -DSPECIALIZE_INSTANCES=1
-  include-dirs:     . includes
-  c-sources:        cbits/rolling.c cbits/debruijn.c cbits/fast.c cbits/storage.c cbits/crc32.c
-  cc-options:       -std=c99
+  include-dirs: . includes snappy
+  -- cc-options: -std=c99
+  c-sources:
+    cbits/rolling.c
+    cbits/debruijn.c
+    cbits/fast.c
+    cbits/storage.c
+    cbits/crc32.c
+    snappy/snappy.cc
+    snappy/snappy-sinksource.cc
+    snappy/snappy-stubs-internal.cc
+    snappy/snappy-c.cc
+
   if os(windows)
     cpp-options: -DOS_WINDOWS=1
 
