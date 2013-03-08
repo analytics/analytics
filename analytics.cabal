@@ -41,17 +41,17 @@ extra-source-files:
   man/Makefile.am
   man/Makefile.in
   man/analytics.1
-  snappy/AUTHORS
-  snappy/COPYING
-  snappy/Makefile.am
-  snappy/NEWS
-  snappy/README
-  snappy/configure.ac
-  snappy/*.cc
-  snappy/*.h
-  snappy/*.h.in
-  snappy/*.txt
-  snappy/m4/*.m4
+  cbits/snappy/AUTHORS
+  cbits/snappy/COPYING
+  cbits/snappy/Makefile.am
+  cbits/snappy/NEWS
+  cbits/snappy/README
+  cbits/snappy/configure.ac
+  cbits/snappy/*.cc
+  cbits/snappy/*.h
+  cbits/snappy/*.h.in
+  cbits/snappy/*.txt
+  cbits/snappy/m4/*.m4
 
 source-repository head
   type: git
@@ -77,7 +77,7 @@ library
   if flag(ast)
     ghc-options: -O2 -fmax-simplifier-iterations=10 -fdicts-cheap
     cpp-options: -DSPECIALIZE_INSTANCES=1
-  include-dirs: . includes snappy
+  include-dirs: . includes cbits/snappy
   -- cc-options: -std=c99
   c-sources:
     cbits/rolling.c
@@ -85,11 +85,13 @@ library
     cbits/fast.c
     cbits/storage.c
     cbits/crc32.c
+
     cbits/hs_snappy.cpp
-    snappy/snappy.cc
-    snappy/snappy-sinksource.cc
-    snappy/snappy-stubs-internal.cc
-    snappy/snappy-c.cc
+    
+    cbits/snappy/snappy.cc
+    cbits/snappy/snappy-sinksource.cc
+    cbits/snappy/snappy-stubs-internal.cc
+    cbits/snappy/snappy-c.cc
 
   if os(windows)
     cpp-options: -DOS_WINDOWS=1

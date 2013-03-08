@@ -246,6 +246,6 @@ AC_SUBST([SNAPPY_LTVERSION], snappy_ltversion)
 
 #end snappy configuration
 
-AC_CONFIG_FILES([Makefile analytics.buildinfo man/Makefile snappy/snappy-stubs-public.h])
+AC_CONFIG_FILES([Makefile analytics.buildinfo man/Makefile cbits/snappy/snappy-stubs-public.h])
 AC_CONFIG_SUBDIRS([man])
 AC_OUTPUT
