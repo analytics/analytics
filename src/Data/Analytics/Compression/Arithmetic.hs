@@ -21,9 +21,11 @@ module Data.Analytics.Compression.Arithmetic
   ) where
 
 import Control.Applicative
+import Control.Lens
 import Control.Monad
 import Data.Analytics.Compression.Bits
 import Data.Bits
+import Data.Bits.Lens
 import Data.Int
 import Data.Monoid
 import Data.Typeable
