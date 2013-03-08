@@ -25,6 +25,10 @@
 -- Stability :  experimental
 -- Portability: non-portable
 --
+-- An approximate streaming (constant space) unique object counter.
+--
+-- See the original paper for details:
+-- <http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf>
 --------------------------------------------------------------------
 module Data.Analytics.Approximate.HyperLogLog.Type
   (
@@ -52,23 +56,18 @@ import qualified Data.Vector.Unboxed.Mutable                   as MV
 import           Generics.Deriving                             hiding (D, to)
 import           GHC.Int
 
-------------------------------------------------------------------------------
--- HyperLogLog
-------------------------------------------------------------------------------
-
-
--- | An approximate streaming (constant space) unique object counter.
---
--- See paper for details:
--- @http:\/\/algo.inria.fr\/flajolet\/Publications\/FlFuGaMe07.pdf@
---
--- Usage:
---
+-- $setup
 -- >>> :set -XTemplateHaskell
 -- >>> import Control.Lens
 -- >>> import Data.Analytics.Approximate.HyperLogLog
 -- >>> import Data.Analytics.Reflection
 -- >>> import Data.Monoid
+
+------------------------------------------------------------------------------
+-- HyperLogLog
+------------------------------------------------------------------------------
+
+-- |
 --
 -- Initialize a new counter:
 --
@@ -81,7 +80,7 @@ import           GHC.Int
 --
 -- Let's count a list of unique items and get the latest estimate:
 --
--- >>> size $ foldr cons (mempty :: HyperLogLog $(nat 4)) [1..10]
+-- >>> size (foldr cons mempty [1..10] :: HyperLogLog $(nat 4))
 -- Approximate {_confidence = 0.9972, _lo = 2, _estimate = 11, _hi = 20}
 --
 -- Note how 'cons' can be used to add new observations to the
