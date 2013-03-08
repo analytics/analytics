@@ -216,12 +216,11 @@ test-suite doctests
     ghc-options: -Werror
   hs-source-dirs: tests
 
-
--- currently this doesn't build right 
 test-suite snappy-tests
   type:           exitcode-stdio-1.0
-  hs-source-dirs: tests/snappy, src 
+  hs-source-dirs: tests/snappy, src
   main-is:        Snappy-Properties.hs
+  other-modules:  Benchmarks Functions Speedy
 
   ghc-options:
     -Wall -threaded -O0 -rtsopts
@@ -237,4 +236,3 @@ test-suite snappy-tests
     --snappy,
     test-framework,
     test-framework-quickcheck2
-  
