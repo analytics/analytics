@@ -210,7 +210,8 @@ test-suite doctests
     base < 5,
     directory >= 1.0,
     doctest >= 0.9.1,
-    filepath
+    filepath,
+    cereal-vector >= 0.2.0.0
   ghc-options: -Wall -threaded
   if impl(ghc<7.6.1)
     ghc-options: -Werror
@@ -218,7 +219,7 @@ test-suite doctests
 
 test-suite snappy-tests
   type:           exitcode-stdio-1.0
-  hs-source-dirs: tests/snappy, src
+  hs-source-dirs: tests/snappy 
   main-is:        Snappy-Properties.hs
   other-modules:  Benchmarks Functions Speedy
 
