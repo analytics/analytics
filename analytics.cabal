@@ -212,3 +212,25 @@ test-suite doctests
   if impl(ghc<7.6.1)
     ghc-options: -Werror
   hs-source-dirs: tests
+
+
+{-
+test-suite tests
+  type:           exitcode-stdio-1.0
+  hs-source-dirs: tests/snappy
+  main-is:        Properties.hs
+
+  ghc-options:
+    -Wall -threaded -O0 -rtsopts
+
+  cpp-options:
+    -DASSERTS -DHAVE_DEEPSEQ
+
+  build-depends:
+    base < 5,
+    bytestring,
+    QuickCheck >= 2.4,
+    snappy,
+    test-framework,
+    test-framework-quickcheck2
+  -}
