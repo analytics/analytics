@@ -9,21 +9,24 @@ import Control.Monad
 import Data.Functor
 import Data.List ( nub, foldl1' )
 import Data.Version ( showVersion )
-import Distribution.Package ( PackageName(PackageName), Package(..), PackageId, InstalledPackageId, packageVersion, packageName )
-import Distribution.PackageDescription ( PackageDescription(), TestSuite(..) )
-import Distribution.Simple ( defaultMainWithHooks, UserHooks(..), autoconfUserHooks )
-import Distribution.Simple.Utils ( rewriteFile, createDirectoryIfMissingVerbose, copyFiles )
-import Distribution.Simple.BuildPaths ( autogenModulesDir )
-import Distribution.Simple.Setup ( HaddockFlags(..), BuildFlags(buildVerbosity), fromFlag, haddockDistPref, Flag(..) )
-import Distribution.Simple.LocalBuildInfo ( withLibLBI, withTestLBI, LocalBuildInfo(buildDir), ComponentLocalBuildInfo(componentPackageDeps) )
-import Distribution.Text ( display )
-import Distribution.Verbosity ( Verbosity, normal )
+import Distribution.Package
+import Distribution.PackageDescription as PackageDescription
+import Distribution.PackageDescription.Parse
+import Distribution.Simple
+import Distribution.Simple.Command
+import Distribution.Simple.Utils
+import Distribution.Simple.BuildPaths
+import Distribution.Simple.Setup as Setup
+import Distribution.Simple.LocalBuildInfo
+import Distribution.System
+import Distribution.Text
+import Distribution.Verbosity
 import System.Directory
+import System.Environment
 import System.FilePath ( (</>) )
+import System.IO.Error
+import System.Posix.Directory
 import System.Process
-
---unlessFileExists :: FilePath -> IO a -> IO ()
---unlessFileExists fp act = doesFileExist fp >>= \b -> unless b $ () <$ act
 
 unlessResultNewer :: FilePath -> [FilePath] -> IO a -> IO ()
 unlessResultNewer resFP sourceFPs act  = do
@@ -41,15 +44,13 @@ haddockOutputDir :: Package pkg => HaddockFlags -> pkg -> FilePath
 haddockOutputDir flags pkg = destDir where
   baseDir = case haddockDistPref flags of
     NoFlag -> "."
-    Flag x -> x
+    Setup.Flag x -> x
   destDir = baseDir </> "doc" </> "html" </> display (packageName pkg)
 
 main :: IO ()
 main = defaultMainWithHooks autoconfUserHooks
-  { preConf = \args flags -> do
-     setupAutoTools
-     preConf autoconfUserHooks args flags
-  , sDistHook = \pkg mlbi hooks flags -> do
+  {
+    sDistHook = \pkg mlbi hooks flags -> do
      setupAutoTools
      sDistHook autoconfUserHooks pkg mlbi hooks flags
   , buildHook = \pkg lbi hooks flags -> do
@@ -66,7 +67,67 @@ main = defaultMainWithHooks autoconfUserHooks
      putStrLn "Registering man page analytics.1"
      _ <- readProcessWithExitCode "make" ["install"] ""
      instHook autoconfUserHooks pkg lbi hooks flags
+--  , preConf = \args flags -> do
+--     setupAutoTools
+--     preConf autoconfUserHooks args flags
+  , postConf = \args flags pkg lbi -> do
+      let verbosity = fromFlag (configVerbosity flags)
+      noExtraFlags args
+      setupAutoTools
+      unlessResultNewer (buildDir lbi </> "config.h") ["configure"] $ runMyConfigureScript verbosity False flags lbi
+      pbi <- getHookedBuildInfo verbosity
+      let pkg' = updatePackageDescription pbi pkg
+      postConf simpleUserHooks args flags pkg' lbi
   }
+
+
+getHookedBuildInfo :: Verbosity -> IO HookedBuildInfo
+getHookedBuildInfo verbosity = do
+  maybe_infoFile <- defaultHookedPackageDesc
+  case maybe_infoFile of
+    Nothing       -> return emptyHookedBuildInfo
+    Just infoFile -> do
+      info verbosity $ "Reading parameters from " ++ infoFile
+      readHookedBuildInfo verbosity infoFile
+
+runMyConfigureScript :: Verbosity -> Bool -> ConfigFlags -> LocalBuildInfo -> IO ()
+runMyConfigureScript verbosity backwardsCompatHack flags lbi = do
+  env <- getEnvironment
+  let programConfig = withPrograms lbi
+  (ccProg, ccFlags) <- configureCCompiler verbosity programConfig
+  -- The C compiler's compilation and linker flags (e.g.
+  -- "C compiler flags" and "Gcc Linker flags" from GHC) have already
+  -- been merged into ccFlags, so we set both CFLAGS and LDFLAGS
+  -- to ccFlags
+  -- We don't try and tell configure which ld to use, as we don't have
+  -- a way to pass its flags too
+  here <- getWorkingDirectory
+  let env' = appendToEnvironment ("CFLAGS",  unwords ccFlags)
+             env
+      args' = args here ++ ["--with-gcc=" ++ ccProg]
+  -- Run the configure script from the autogen folder
+  changeWorkingDirectory (buildDir lbi </> "autogen")
+  handleNoWindowsSH $
+    rawSystemExitWithEnv verbosity "sh" args' env'
+  changeWorkingDirectory here
+  where
+    args there = (there </> "configure") : configureArgs backwardsCompatHack flags
+
+    appendToEnvironment (key, val) [] = [(key, val)]
+    appendToEnvironment (key, val) (kv@(k, v) : rest)
+     | key == k  = (key, v ++ " " ++ val) : rest
+     | otherwise = kv : appendToEnvironment (key, val) rest
+
+    handleNoWindowsSH action
+      | buildOS /= Windows = action
+      | otherwise = action
+          `E.catch` \ioe -> if isDoesNotExistError ioe
+                              then die notFoundMsg
+                              else throwIO ioe
+
+    notFoundMsg = "The package has a './configure' script. This requires a "
+               ++ "Unix compatibility toolchain such as MinGW+MSYS or Cygwin."
+
 
 generateBuildModule :: Verbosity -> PackageDescription -> LocalBuildInfo -> IO ()
 generateBuildModule verbosity pkg lbi = do
