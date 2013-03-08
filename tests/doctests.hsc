@@ -52,6 +52,7 @@ withUnicode m = m
 main :: IO ()
 main = withUnicode $ getSources >>= \sources -> doctest $
     "-isrc"
+  : "-fobject-code"
   : "-idist/build/autogen"
   : "-optP-include"
   : "-optPdist/build/autogen/cabal_macros.h"

@@ -1,2 +1,3 @@
-:set -isrc -idist/build/autogen -optP-include -optPdist/build/autogen/cabal_macros.h -optP-Iincludes
+-- :set -isrc -idist/build/autogen -optP-include -optPdist/build/autogen/cabal_macros.h -optP-Iincludes
+:set -fobject-code
 :set -v0
