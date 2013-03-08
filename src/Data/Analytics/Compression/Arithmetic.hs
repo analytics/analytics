@@ -17,7 +17,7 @@ module Data.Analytics.Compression.Arithmetic
   -- * Encoding
     Encoding, encoding, encode
   -- * Decoding
-  , Decoding(..)
+  , Decoding(..), decoding
   ) where
 
 import Control.Applicative
