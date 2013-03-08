@@ -85,6 +85,7 @@ library
     cbits/fast.c
     cbits/storage.c
     cbits/crc32.c
+    cbits/hs_snappy.cpp
     snappy/snappy.cc
     snappy/snappy-sinksource.cc
     snappy/snappy-stubs-internal.cc
@@ -104,6 +105,8 @@ library
     Data.Analytics.Combinators
     Data.Analytics.Compression.Arithmetic
     Data.Analytics.Compression.Bits
+    Data.Analytics.Compression.Snappy 
+    Data.Analytics.Compression.Snappy.Lazy
     Data.Analytics.Console
     Data.Analytics.Console.Options
     Data.Analytics.Console.Unicode
@@ -144,6 +147,7 @@ library
     Data.Analytics.Task.Subscription
 
   other-modules: Paths_analytics
+        Data.Analytics.Compression.Snappy.Internal
 
   build-depends:
     array                     >= 0.4     && < 0.5,
