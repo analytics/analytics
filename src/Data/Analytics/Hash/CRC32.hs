@@ -1,6 +1,15 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE MagicHash #-}
 {-# LANGUAGE UnboxedTuples #-}
+--------------------------------------------------------------------
+-- |
+-- Copyright :  (c) Edward Kmett 2013
+-- License   :  BSD3
+-- Maintainer:  Edward Kmett <ekmett@gmail.com>
+-- Stability :  experimental
+-- Portability: non-portable
+--
+--------------------------------------------------------------------
 module Data.Analytics.Hash.CRC32
   ( CRC32
   , initial

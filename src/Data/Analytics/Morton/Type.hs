@@ -9,6 +9,15 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
+--------------------------------------------------------------------
+-- |
+-- Copyright :  (c) Edward Kmett 2013
+-- License   :  BSD3
+-- Maintainer:  Edward Kmett <ekmett@gmail.com>
+-- Stability :  experimental
+-- Portability: non-portable
+--
+--------------------------------------------------------------------
 module Data.Analytics.Morton.Type
   ( Morton(..)
   , morton
