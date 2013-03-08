@@ -5,7 +5,7 @@ This project has been greatly enriched by opening it up to community development
 Many people have contributed patches, documentation, wiki pages, bug reports, test cases and code to `analytics` including (among others):
 
 * [Edward Kmett](mailto:ekmett@gmail.com) [@ekmett](https://github.com/ekmett)
-* [Alec Heller](mailto:alec@deviant-logic.net) [@deviant-logic](https://github.com/deviant-logic)]
+* [Alec Heller](mailto:alec@deviant-logic.net) [@deviant-logic](https://github.com/deviant-logic)
 * [Dan Doel](mailto:dan.doel@gmail.com) [@dolio](https://github.com/dolio)
 * [Aristid Breitkreuz](mailto:aristidb+lens@gmail.com) [@aristidb](https://github.com/aristidb)
 * [Matvey B. Aksenov](mailto:matvey.aksenov@gmail.com) [@supki](https://github.com/supki)
