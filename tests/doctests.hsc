@@ -15,7 +15,7 @@
 -----------------------------------------------------------------------------
 module Main where
 
-import Build_doctests (deps)
+import Build_doctests (deps, buildDir)
 import Control.Applicative
 import Control.Monad
 import Data.List
@@ -55,8 +55,8 @@ main = withUnicode $ getSources >>= \sources -> doctest $
   : "-fobject-code"
   : "-idist/build/autogen"
   : "-optP-include"
-  : "-odir=dist/build/doctests"
-  : "-hidir=dist/build/doctests"
+  : ("-odir=" ++ buildDir)
+  : ("-hidir=" ++ buildDir)
   : "-optPdist/build/autogen/cabal_macros.h"
   : "-hide-all-packages"
   : map ("-package="++) deps ++ sources
