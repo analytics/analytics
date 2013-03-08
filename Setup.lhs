@@ -1,8 +1,10 @@
 #!/usr/bin/runhaskell
 \begin{code}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wall #-}
 module Main (main) where
 
+import Control.Exception as E
 import Control.Monad
 import Data.Functor
 import Data.List ( nub, foldl1' )
@@ -27,7 +29,8 @@ unlessResultNewer :: FilePath -> [FilePath] -> IO a -> IO ()
 unlessResultNewer resFP sourceFPs act  = do
         resTime <- getModificationTime resFP
         sourceTimes <- mapM getModificationTime sourceFPs
-        unless (resTime > foldl1' max sourceTimes ) $   () <$ act 
+        unless (resTime > foldl1' max sourceTimes ) $ () <$ act
+  `E.catch` \ (_ :: SomeException) -> () <$ act
 
 setupAutoTools :: IO ()
 setupAutoTools = do
