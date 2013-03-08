@@ -78,6 +78,7 @@ library
     ghc-options: -O2 -fmax-simplifier-iterations=10 -fdicts-cheap
     cpp-options: -DSPECIALIZE_INSTANCES=1
   include-dirs: . includes cbits/snappy
+  extra-libraries: stdc++
   -- cc-options: -std=c99
   c-sources:
     cbits/rolling.c
