@@ -17,7 +17,7 @@
 -- floating point arithmetic based on Knuth's error free
 -- transformation, various algorithms by Ogita, Rump and Oishi,
 -- Hida, Li and Bailey, Kahan summation, etc. with custom compensated
--- arithetic circuits to do multiplication, division, etc. of compensated
+-- arithmetic circuits to do multiplication, division, etc. of compensated
 -- numbers.
 --
 -- In general if @a@ has x bits of significand, @Compensated a@ gives
