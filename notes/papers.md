@@ -26,6 +26,7 @@
 
 # Stable Models
 * [Extending and Implementing the Stable Model Semantics](http://arxiv.org/pdf/cs/0005010.pdf)
+* [Safe Database Queries with Arithmetic Operations](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.48.4845&rep=rep1&type=pdf)
 
 # Top-Down Evaluation
 * [Efficient Top-Down Computation of Queries Under the Well-Founded Semantics](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.38.6142&rep=rep1&type=pdf)
