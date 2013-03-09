@@ -26,7 +26,7 @@ import System.Environment
 import System.FilePath ( (</>) )
 import System.IO.Error
 import System.Posix.Directory
-import System.Process
+import System.Process hiding (env)
 
 unlessResultNewer :: FilePath -> [FilePath] -> IO a -> IO ()
 unlessResultNewer resFP sourceFPs act  = do
@@ -62,19 +62,18 @@ main = defaultMainWithHooks autoconfUserHooks
   , postClean = \args flags pkg lbi -> do
      putStrLn "Cleaning up"
      _ <- readProcessWithExitCode "make" ["distclean"] ""
+     _ <- removeFile "analytics.buildinfo"
      postClean autoconfUserHooks args flags pkg lbi
   , instHook = \pkg lbi hooks flags -> do
      putStrLn "Registering man page analytics.1"
      _ <- readProcessWithExitCode "make" ["install"] ""
      instHook autoconfUserHooks pkg lbi hooks flags
---  , preConf = \args flags -> do
---     setupAutoTools
---     preConf autoconfUserHooks args flags
   , postConf = \args flags pkg lbi -> do
       let verbosity = fromFlag (configVerbosity flags)
       noExtraFlags args
       setupAutoTools
-      unlessResultNewer (buildDir lbi </> "config.h") ["configure"] $ runMyConfigureScript verbosity False flags lbi
+      unlessResultNewer (buildDir lbi </> "config.h") ["configure"] $ do
+        runMyConfigureScript verbosity False flags lbi
       pbi <- getHookedBuildInfo verbosity
       let pkg' = updatePackageDescription pbi pkg
       postConf simpleUserHooks args flags pkg' lbi
@@ -106,10 +105,13 @@ runMyConfigureScript verbosity backwardsCompatHack flags lbi = do
              env
       args' = args here ++ ["--with-gcc=" ++ ccProg]
   -- Run the configure script from the autogen folder
-  changeWorkingDirectory (buildDir lbi </> "autogen")
+  let autoDir = buildDir lbi </> "autogen"
+  createDirectoryIfMissing True autoDir
+  changeWorkingDirectory autoDir
   handleNoWindowsSH $
     rawSystemExitWithEnv verbosity "sh" args' env'
   changeWorkingDirectory here
+  copyFile (autoDir </> "analytics.buildinfo") (here </> "analytics.buildinfo")
   where
     args there = (there </> "configure") : configureArgs backwardsCompatHack flags
 

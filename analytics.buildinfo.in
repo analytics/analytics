@@ -1,1 +1,2 @@
 cc-options: @CPPFLAGS@ @DEFS@
+include-dirs: dist/build/autogen
