@@ -1,2 +1,2 @@
-cc-options: @CPPFLAGS@ @DEFS@
+cc-options: @CPPFLAGS@ @DEFS@ -Wno-implicit
 include-dirs: dist/build/autogen dist/build/include dist/build/autogen/cbits/snappy
