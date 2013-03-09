@@ -1,6 +1,8 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE MagicHash #-}
 {-# LANGUAGE UnboxedTuples #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) Edward Kmett 2013
@@ -13,7 +15,7 @@
 module Data.Analytics.Hash.CRC32
   ( CRC32
   , initial
-  , update, updated
+  , updated
   , final
   ) where
 
@@ -36,12 +38,12 @@ initial :: CRC32
 initial = CRC32 0xffffffff;
 {-# INLINE initial #-}
 
-update :: Word8 -> CRC32 -> CRC32
-update w (CRC32 h) = CRC32 (shiftL h 8 `xor` lut w)
-{-# INLINE update #-}
+instance (Bifunctor p, Profunctor p, Functor f) => Cons p f CRC32 CRC32 Word8 Word8 where
+  _Cons = unto $ \(w, CRC32 h) -> CRC32 (shiftL h 8 `xor` lut w)
+  {-# INLINE _Cons #-}
 
 updated :: Getting (Endo CRC32) t Word8 -> t -> CRC32 -> CRC32
-updated l t z = foldrOf l update z t
+updated l t z = foldrOf l cons z t
 {-# INLINE updated #-}
 
 final :: CRC32 -> Word32
