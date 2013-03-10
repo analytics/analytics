@@ -171,7 +171,6 @@ AC_CHECK_FUNC([mmap])
 # See if we have __builtin_expect.
 # TODO: Use AC_CACHE.
 AC_MSG_CHECKING([if the compiler supports __builtin_expect])
-
 AC_TRY_COMPILE(, [
     return __builtin_expect(1, 1) ? 1 : 0
 ], [
@@ -188,7 +187,6 @@ fi
 # See if we have working count-trailing-zeros intrinsics.
 # TODO: Use AC_CACHE.
 AC_MSG_CHECKING([if the compiler supports __builtin_ctzll])
-
 AC_TRY_COMPILE(, [
     return (__builtin_ctzll(0x100000000LL) == 32) ? 1 : 0
 ], [
@@ -202,26 +200,7 @@ if test x$snappy_have_builtin_ctz = xyes ; then
     AC_DEFINE([HAVE_BUILTIN_CTZ], [1], [Define to 1 if the compiler supports __builtin_ctz and friends.])
 fi
 
-
 UNITTEST_LIBS=""
-AC_DEFUN([CHECK_EXT_COMPRESSION_LIB], [
-  AH_CHECK_LIB([$1])
-  AC_CHECK_LIB(
-    [$1],
-    [$2],
-    [
-      AC_DEFINE_UNQUOTED(AS_TR_CPP(HAVE_LIB$1))
-      UNITTEST_LIBS="-l$1 $UNITTEST_LIBS"
-    ],
-    [true]
-  )
-])
-
-CHECK_EXT_COMPRESSION_LIB([z], [zlibVersion])
-CHECK_EXT_COMPRESSION_LIB([lzo2], [lzo1x_1_15_compress])
-CHECK_EXT_COMPRESSION_LIB([lzf], [lzf_compress])
-CHECK_EXT_COMPRESSION_LIB([fastlz], [fastlz_compress])
-CHECK_EXT_COMPRESSION_LIB([quicklz], [qlz_compress])
 AC_SUBST([UNITTEST_LIBS])
 
 # These are used by snappy-stubs-public.h.in.
