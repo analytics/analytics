@@ -10,20 +10,20 @@ size_t _hsnappy_MaxCompressedLength(size_t n)
 }
 
 void _hsnappy_RawCompress(const char *input, size_t input_length,
-			  char *compressed, size_t *compressed_length)
+                          char *compressed, size_t *compressed_length)
 {
   RawCompress(input, input_length, compressed, compressed_length);
 }
 
 int _hsnappy_GetUncompressedLength(const char *compressed,
-				   size_t compressed_length,
-				   size_t *result)
+                                   size_t compressed_length,
+                                   size_t *result)
 {
   return GetUncompressedLength(compressed, compressed_length, result);
 }
 
 int _hsnappy_RawUncompress(const char *compressed, size_t compressed_length,
-			   char *uncompressed)
+                           char *uncompressed)
 {
   return RawUncompress(compressed, compressed_length, uncompressed);
 }
@@ -52,7 +52,7 @@ public:
       left_ -= n;
       cur_->off += n;
       if (cur_->off == cur_->len)
-	cur_++;
+        cur_++;
     }
   }
 
@@ -72,7 +72,7 @@ private:
 };
 
 void _hsnappy_CompressChunks(BS *chunks, size_t nchunks, size_t length,
-			     char *compressed, size_t *compressed_length)
+                             char *compressed, size_t *compressed_length)
 {
   BSSource reader(chunks, nchunks, length);
   UncheckedByteArraySink writer(compressed);
