@@ -7,28 +7,37 @@
 <link type='text/css' rel='stylesheet' href='hscolour.css' />
 </head>
 <body>
-<pre><a name="line-1"></a><span class='hs-keyword'>module</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Analytics</span><span class='hs-varop'>.</span><span class='hs-conid'>Task</span>
-<a name="line-2"></a>  <span class='hs-layout'>(</span>
-<a name="line-3"></a>  <span class='hs-comment'>-- * Task</span>
-<a name="line-4"></a>    <span class='hs-conid'>Task</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
-<a name="line-5"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>MonadTask</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
-<a name="line-6"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>MonadSTM</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
-<a name="line-7"></a>  <span class='hs-comment'>-- , run</span>
-<a name="line-8"></a>  <span class='hs-layout'>,</span> <span class='hs-layout'>(</span><span class='hs-varop'>|&gt;&gt;</span><span class='hs-layout'>)</span>
-<a name="line-9"></a>  <span class='hs-comment'>-- * Observer</span>
-<a name="line-10"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>Observer</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
-<a name="line-11"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>foreach</span>
-<a name="line-12"></a>  <span class='hs-comment'>-- * Observable</span>
-<a name="line-13"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>Observable</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
-<a name="line-14"></a>  <span class='hs-layout'>,</span> <span class='hs-keyword'>safe</span><span class='hs-layout'>,</span> <span class='hs-varid'>fby</span><span class='hs-layout'>,</span> <span class='hs-varid'>never</span><span class='hs-layout'>,</span> <span class='hs-varid'>observe</span>
-<a name="line-15"></a>  <span class='hs-comment'>-- * Subscription</span>
-<a name="line-16"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>Subscription</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
-<a name="line-17"></a>  <span class='hs-layout'>)</span> <span class='hs-keyword'>where</span>
-<a name="line-18"></a>
-<a name="line-19"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Analytics</span><span class='hs-varop'>.</span><span class='hs-conid'>Task</span><span class='hs-varop'>.</span><span class='hs-conid'>Monad</span>
-<a name="line-20"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Analytics</span><span class='hs-varop'>.</span><span class='hs-conid'>Task</span><span class='hs-varop'>.</span><span class='hs-conid'>STM</span>
-<a name="line-21"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Analytics</span><span class='hs-varop'>.</span><span class='hs-conid'>Task</span><span class='hs-varop'>.</span><span class='hs-conid'>Observer</span>
-<a name="line-22"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Analytics</span><span class='hs-varop'>.</span><span class='hs-conid'>Task</span><span class='hs-varop'>.</span><span class='hs-conid'>Observable</span>
-<a name="line-23"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Analytics</span><span class='hs-varop'>.</span><span class='hs-conid'>Task</span><span class='hs-varop'>.</span><span class='hs-conid'>Subscription</span>
+<pre><a name="line-1"></a><span class='hs-comment'>--------------------------------------------------------------------</span>
+<a name="line-2"></a><span class='hs-comment'>-- |</span>
+<a name="line-3"></a><span class='hs-comment'>-- Copyright :  (c) Edward Kmett 2013</span>
+<a name="line-4"></a><span class='hs-comment'>-- License   :  BSD3</span>
+<a name="line-5"></a><span class='hs-comment'>-- Maintainer:  Edward Kmett &lt;ekmett@gmail.com&gt;</span>
+<a name="line-6"></a><span class='hs-comment'>-- Stability :  experimental</span>
+<a name="line-7"></a><span class='hs-comment'>-- Portability: non-portable</span>
+<a name="line-8"></a><span class='hs-comment'>--</span>
+<a name="line-9"></a><span class='hs-comment'>--------------------------------------------------------------------</span>
+<a name="line-10"></a><span class='hs-keyword'>module</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Analytics</span><span class='hs-varop'>.</span><span class='hs-conid'>Task</span>
+<a name="line-11"></a>  <span class='hs-layout'>(</span>
+<a name="line-12"></a>  <span class='hs-comment'>-- * Task</span>
+<a name="line-13"></a>    <span class='hs-conid'>Task</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
+<a name="line-14"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>MonadTask</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
+<a name="line-15"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>MonadSTM</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
+<a name="line-16"></a>  <span class='hs-comment'>-- , run</span>
+<a name="line-17"></a>  <span class='hs-layout'>,</span> <span class='hs-layout'>(</span><span class='hs-varop'>|&gt;&gt;</span><span class='hs-layout'>)</span>
+<a name="line-18"></a>  <span class='hs-comment'>-- * Observer</span>
+<a name="line-19"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>Observer</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
+<a name="line-20"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>foreach</span>
+<a name="line-21"></a>  <span class='hs-comment'>-- * Observable</span>
+<a name="line-22"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>Observable</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
+<a name="line-23"></a>  <span class='hs-layout'>,</span> <span class='hs-keyword'>safe</span><span class='hs-layout'>,</span> <span class='hs-varid'>fby</span><span class='hs-layout'>,</span> <span class='hs-varid'>never</span><span class='hs-layout'>,</span> <span class='hs-varid'>observe</span>
+<a name="line-24"></a>  <span class='hs-comment'>-- * Subscription</span>
+<a name="line-25"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>Subscription</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
+<a name="line-26"></a>  <span class='hs-layout'>)</span> <span class='hs-keyword'>where</span>
+<a name="line-27"></a>
+<a name="line-28"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Analytics</span><span class='hs-varop'>.</span><span class='hs-conid'>Task</span><span class='hs-varop'>.</span><span class='hs-conid'>Monad</span>
+<a name="line-29"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Analytics</span><span class='hs-varop'>.</span><span class='hs-conid'>Task</span><span class='hs-varop'>.</span><span class='hs-conid'>STM</span>
+<a name="line-30"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Analytics</span><span class='hs-varop'>.</span><span class='hs-conid'>Task</span><span class='hs-varop'>.</span><span class='hs-conid'>Observer</span>
+<a name="line-31"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Analytics</span><span class='hs-varop'>.</span><span class='hs-conid'>Task</span><span class='hs-varop'>.</span><span class='hs-conid'>Observable</span>
+<a name="line-32"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Analytics</span><span class='hs-varop'>.</span><span class='hs-conid'>Task</span><span class='hs-varop'>.</span><span class='hs-conid'>Subscription</span>
 </pre></body>
 </html>
