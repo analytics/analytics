@@ -62,7 +62,8 @@ main = defaultMainWithHooks autoconfUserHooks
   , postClean = \args flags pkg lbi -> do
      putStrLn "Cleaning up"
      _ <- readProcessWithExitCode "make" ["distclean"] ""
-     _ <- removeFile "analytics.buildinfo"
+     doesFileExist "analytics.buildinfo" >>= \b -> when b $ removeFile "analytics.buildinfo"
+     doesFileExist "config.h.in~" >>= \b -> when b $ removeFile "config.h.in~"
      postClean autoconfUserHooks args flags pkg lbi
   , instHook = \pkg lbi hooks flags -> do
      putStrLn "Registering man page analytics.1"
