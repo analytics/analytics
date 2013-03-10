@@ -14,7 +14,6 @@
 --------------------------------------------------------------------
 module Data.Analytics.Hash.CRC32
   ( CRC32
-  , initial
   , updated
   , final
   ) where
@@ -22,6 +21,7 @@ module Data.Analytics.Hash.CRC32
 
 import Control.Lens
 import Data.Bits
+import Data.Default
 import Data.Monoid
 import Data.Word
 import Foreign.Storable
@@ -34,9 +34,9 @@ import GHC.Base
 
 newtype CRC32 = CRC32 { getCRC32 :: Word32 }
 
-initial :: CRC32
-initial = CRC32 0xffffffff;
-{-# INLINE initial #-}
+instance Default CRC32 where
+  def = CRC32 0xffffffff;
+  {-# INLINE def #-}
 
 instance (Bifunctor p, Profunctor p, Functor f) => Cons p f CRC32 CRC32 Word8 Word8 where
   _Cons = unto $ \(w, CRC32 h) -> CRC32 (shiftL h 8 `xor` lut w)
