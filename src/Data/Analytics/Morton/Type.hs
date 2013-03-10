@@ -43,8 +43,7 @@ data Morton f
   | Morton
     {-# UNPACK #-} !Int -- bits remaining
     {-# UNPACK #-} !Int -- index count
-    !(MinHeap (f (Int -> Bool))) -- top down
-    !(MaxHeap (f (Int -> Bool))) -- bottom up
+    !(Heap (f (Int -> Bool))) -- top down
 
 instance Semigroup (Morton f) where
   (<>) = mappend
@@ -55,16 +54,15 @@ instance Monoid (Morton f) where
   {-# INLINE mempty #-}
   mappend Z m = m
   mappend m Z = m
-  mappend (Morton n i t b) (Morton m j t' b')
+  mappend (Morton n i t) (Morton m j t')
     = Morton (n + m) (i + j) (t <> (t' & nodes.nodeSequence +~ i))
-                             (b <> (b' & nodes.nodeSequence +~ i))
   {-# INLINE mappend #-}
 
 instance (p ~ (->), Applicative f, Gettable f, Functor g, Functor h) => Cons p f (Morton g) (Morton h) (g Bool) (h Bool) where
   _Cons _ Z = pure Z
-  _Cons f (Morton k i (MinHeap (Node np ns nw nh nl nd) ts0) b) = coerce $ f
+  _Cons f (Morton k i (Heap (Node np ns nw nh nl nd) ts0)) = coerce $ f
      ( fmap ($ nhm1) nd
-     , if k == 1 then Z else Morton (k - 1) i t' b
+     , if k == 1 then Z else Morton (k - 1) i t'
      ) where
        !nhm1 = nh - 1
        t' | nhm1 == nl = case ts0 of
@@ -72,37 +70,18 @@ instance (p ~ (->), Applicative f, Gettable f, Functor g, Functor h) => Cons p f
             (t:ts) -> meldWithHeap t ts
           | otherwise = meldWithNode ts0
        meldWithNode (t2:ts) = insertMin (Node (np + nw) ns nw nhm1 nl nd) (meldWithHeap t2 ts)
-       meldWithNode []      = MinHeap (Node (np + nw) ns nw nhm1 nl nd) []
+       meldWithNode []      = Heap (Node (np + nw) ns nw nhm1 nl nd) []
        meldWithHeap t (t2:ts) = t <> meldWithHeap t2 ts
        meldWithHeap t []      = t
   {-# INLINE _Cons #-}
 
-instance (p ~ (->), Applicative f, Gettable f, Functor g, Functor h) => Snoc p f (Morton g) (Morton h) (g Bool) (h Bool) where
-  _Snoc _ Z = pure Z
-  _Snoc f (Morton k i b (MaxHeap (Node np ns nw nh nl nd) ts0)) = coerce $ f
-     ( if k == 1 then Z else Morton (k - 1) i b t'
-     , fmap ($ nl) nd
-     ) where
-       !nlp1 = nl + 1
-       t' | nlp1 == nh = case ts0 of
-            []     -> error "_Snoc: the impossible happened"
-            (t:ts) -> meldWithHeap t ts
-          | otherwise = meldWithNode ts0
-       meldWithNode (t2:ts) = insertMax (Node (np - nw) ns nw nh nlp1 nd) (meldWithHeap t2 ts)
-       meldWithNode []      = MaxHeap (Node (np - nw) ns nw nh nlp1 nd) []
-       meldWithHeap t (t2:ts) = t <> meldWithHeap t2 ts
-       meldWithHeap t []      = t
-  {-# INLINE _Snoc #-}
-
 morton64 :: Functor f => Schedule a -> f (Int -> Bool) -> Morton f
 morton64 (Schedule p w c _ _ _) fi
-  = Morton c 1 (MinHeap (Node p             0 w c 0 fi) [])
-               (MaxHeap (Node (p + w*(c-1)) 0 w c 0 fi) [])
+  = Morton c 1 (Heap (Node p             0 w c 0 fi) [])
 {-# INLINE morton64 #-}
 
 morton :: Functor f => Schedule a -> f a -> Morton f
 morton (Schedule p w c _ _ f) fa
-  = Morton c 1 (MinHeap (Node p             0 w c 0 fi) [])
-               (MaxHeap (Node (p + w*(c-1)) 0 w c 0 fi) [])
+  = Morton c 1 (Heap (Node p             0 w c 0 fi) [])
   where fi = fmap f fa
 {-# INLINE morton #-}
