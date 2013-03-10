@@ -24,6 +24,9 @@ import Data.Data
 import Data.Hashable
 import Generics.Deriving
 
+-- $setup
+-- >>> :load Data.Analytics.Hash.Double
+
 -- | \"Less Hashing, Same Performance: Building a Better Bloom Filter\" by
 -- Kirsch and Mitzenmacher demonstrated that for many use-cases, especially
 -- involving Bloom filters, we can use pairwise independent hashes to

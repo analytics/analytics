@@ -63,6 +63,9 @@ import Foreign.Storable
 import Text.Read as T
 import Text.Show as T
 
+-- $setup
+-- >>> :load Data.Analytics.Numeric.Compensated
+
 {-# ANN module "hlint: ignore Use -" #-}
 {-# ANN module "hlint: ignore Use curry" #-}
 

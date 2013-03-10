@@ -58,8 +58,8 @@ import           GHC.Int
 
 -- $setup
 -- >>> :set -XTemplateHaskell
+-- >>> :load Data.Analytics.Approximate.HyperLogLog
 -- >>> import Control.Lens
--- >>> import Data.Analytics.Approximate.HyperLogLog
 -- >>> import Data.Analytics.Reflection
 -- >>> import Data.Monoid
 

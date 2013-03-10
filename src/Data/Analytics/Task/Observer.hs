@@ -22,7 +22,7 @@ import Data.Monoid
 import Data.Typeable
 
 -- $setup
--- >>> import Data.Analytics.Task
+-- >>> :load Data.Analytics.Task
 
 infixl 1 !
 

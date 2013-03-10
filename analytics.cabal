@@ -41,17 +41,6 @@ extra-source-files:
   man/Makefile.am
   man/Makefile.in
   man/analytics.1
-  cbits/snappy/AUTHORS
-  cbits/snappy/COPYING
-  cbits/snappy/Makefile.am
-  cbits/snappy/NEWS
-  cbits/snappy/README
-  cbits/snappy/configure.ac
-  cbits/snappy/*.cc
-  cbits/snappy/*.h
-  cbits/snappy/*.h.in
-  cbits/snappy/*.txt
-  cbits/snappy/m4/*.m4
 
 source-repository head
   type: git
@@ -89,22 +78,13 @@ library
     ghc-options: -O2 -fmax-simplifier-iterations=10 -fdicts-cheap
     cpp-options: -DSPECIALIZE_INSTANCES=1
 
-  -- this doesn't make it through to linking time =(
-
-  include-dirs: . includes cbits/snappy
-  extra-libraries: stdc++
-  -- cc-options: -std=c99
+  include-dirs: . includes
   c-sources:
     cbits/rolling.c
     cbits/debruijn.c
     cbits/fast.c
     cbits/storage.c
     cbits/crc32.c
-    cbits/hs_snappy.cpp
-    cbits/snappy/snappy.cc
-    cbits/snappy/snappy-sinksource.cc
-    cbits/snappy/snappy-stubs-internal.cc
-    cbits/snappy/snappy-c.cc
 
   exposed-modules:
     Data.Analytics.Approximate
@@ -117,8 +97,6 @@ library
     Data.Analytics.Combinators
     Data.Analytics.Compression.Arithmetic
     Data.Analytics.Compression.Bits
-    Data.Analytics.Compression.Snappy
-    Data.Analytics.Compression.Snappy.Lazy
     Data.Analytics.Console
     Data.Analytics.Console.Options
     Data.Analytics.Console.Unicode
@@ -160,7 +138,6 @@ library
 
   other-modules:
     Paths_analytics
-    Data.Analytics.Compression.Snappy.Internal
 
   build-depends:
     array                     >= 0.4     && < 0.5,
@@ -183,6 +160,7 @@ library
     haskeline                 >= 0.7     && < 0.8,
     lens                      >= 3.9     && < 4,
     logict                    >= 0.6     && < 0.7,
+    lz4                       >= 0.2.2   && < 0.3,
     MonadCatchIO-transformers >= 0.3     && < 0.4,
     mtl                       >= 2.1.1   && < 2.2,
     pointed                   >= 3       && < 4,
@@ -215,7 +193,6 @@ test-suite doctests
   type:    exitcode-stdio-1.0
   main-is: doctests.hs
   default-language: Haskell2010
-  -- analytics >= 0.1,
   build-depends:
     base < 5,
     directory >= 1.0,
@@ -226,24 +203,3 @@ test-suite doctests
   if impl(ghc<7.6.1)
     ghc-options: -Werror
   hs-source-dirs: tests
-  extra-libraries: stdc++
-  ghc-options: -pgmlg++
-  ghc-options: -optl-lstdc++
-
-test-suite snappy-tests
-  type:           exitcode-stdio-1.0
-  hs-source-dirs: tests/snappy
-  main-is:        Snappy-Properties.hs
-  other-modules:  Benchmarks Functions Speedy
-  ghc-options:    -threaded -O0 -rtsopts
-  cpp-options:    -DASSERTS -DHAVE_DEEPSEQ
-  default-language: Haskell2010
-  extra-libraries: stdc++
-
-  build-depends:
-    base < 5,
-    bytestring,
-    QuickCheck >= 2.4,
-    analytics >= 0.1,
-    test-framework,
-    test-framework-quickcheck2

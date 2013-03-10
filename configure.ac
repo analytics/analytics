@@ -1,8 +1,3 @@
-m4_define([snappy_major], [1])
-m4_define([snappy_minor], [1])
-m4_define([snappy_patchlevel], [0])
-m4_define([snappy_ltversion], [2:4:1])
-
 AC_PREREQ([2.68])
 AC_INIT([analytics], [0.1], [ekmett@gmail.com])
 AC_CONFIG_SRCDIR([config.h.in])
@@ -54,7 +49,6 @@ if test x"$analytics_cv_have_fstore" = x"yes"; then
 fi
 
 # Checks for library functions.
-
 
 AC_FUNC_FSEEKO
 
@@ -162,8 +156,6 @@ AH_BOTTOM(
 # endif
 ])
 
-# begin snappy compatibility
-
 # Don't use AC_FUNC_MMAP, as it checks for mappings of already-mapped memory,
 # which we don't need (and does not exist on Windows).
 AC_CHECK_FUNC([mmap])
@@ -200,31 +192,6 @@ if test x$snappy_have_builtin_ctz = xyes ; then
     AC_DEFINE([HAVE_BUILTIN_CTZ], [1], [Define to 1 if the compiler supports __builtin_ctz and friends.])
 fi
 
-UNITTEST_LIBS=""
-AC_SUBST([UNITTEST_LIBS])
-
-# These are used by snappy-stubs-public.h.in.
-if test "$ac_cv_header_stdint_h" = "yes"; then
-    AC_SUBST([ac_cv_have_stdint_h], [1])
-else
-    AC_SUBST([ac_cv_have_stdint_h], [0])
-fi
-if test "$ac_cv_header_stddef_h" = "yes"; then
-    AC_SUBST([ac_cv_have_stddef_h], [1])
-else
-    AC_SUBST([ac_cv_have_stddef_h], [0])
-fi
-
-SNAPPY_MAJOR="snappy_major"
-SNAPPY_MINOR="snappy_minor"
-SNAPPY_PATCHLEVEL="snappy_patchlevel"
-AC_SUBST([SNAPPY_MAJOR])
-AC_SUBST([SNAPPY_MINOR])
-AC_SUBST([SNAPPY_PATCHLEVEL])
-AC_SUBST([SNAPPY_LTVERSION], snappy_ltversion)
-
-#end snappy configuration
-
-AC_CONFIG_FILES([Makefile analytics.buildinfo man/Makefile cbits/snappy/snappy-stubs-public.h])
+AC_CONFIG_FILES([Makefile analytics.buildinfo man/Makefile])
 AC_CONFIG_SUBDIRS([man])
 AC_OUTPUT
