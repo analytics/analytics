@@ -73,7 +73,7 @@ main = defaultMainWithHooks autoconfUserHooks
       let verbosity = fromFlag (configVerbosity flags)
       noExtraFlags args
       setupAutoTools
-      unlessResultNewer (buildDir lbi </> "config.h") ["configure"] $ do
+      unlessResultNewer (buildDir lbi </> "autogen" </> "config.h") ["configure", "Setup.lhs"] $ do
         runMyConfigureScript verbosity False flags lbi
       pbi <- getHookedBuildInfo verbosity
       let pkg' = updatePackageDescription pbi pkg
