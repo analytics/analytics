@@ -26,6 +26,7 @@ import Generics.Deriving
 
 -- $setup
 -- >>> :load Data.Analytics.Hash.Double
+-- >>> import Control.Lens
 
 -- | \"Less Hashing, Same Performance: Building a Better Bloom Filter\" by
 -- Kirsch and Mitzenmacher demonstrated that for many use-cases, especially

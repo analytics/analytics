@@ -59,6 +59,11 @@ main = withUnicode $ getSources >>= \sources -> doctest $
   : ("-odir=" ++ buildDir)
   : ("-hidir=" ++ buildDir)
   : "-optPdist/build/autogen/cabal_macros.h"
+  : "dist/build/cbits/crc32.o"
+  : "dist/build/cbits/debruijn.o"
+  : "dist/build/cbits/fast.o"
+  : "dist/build/cbits/rolling.o"
+  : "dist/build/cbits/storage.o"
   : "-hide-all-packages"
   : map ("-package="++) deps ++ sources
 
