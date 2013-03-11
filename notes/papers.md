@@ -26,7 +26,7 @@
 * Sometimes we don't care about ordering. If we have categorical information, we could use Huffman directly on that dimension.
 * [Dictionary-based Order-preserving String Compression
 for Main Memory Column Stores](http://www.cs.uni-paderborn.de/fileadmin/Informatik/AG-Boettcher/Lehre/WS_09_10/pro-sem-ws09/Dictionary-based_Order-preserving_String_Compression_for_Main_Memory_Column_Stores.pdf)
-
+* [Query Optimization In Compressed Database Systems](http://userpages.umbc.edu/~zhchen/papers/sigmod01-camera.pdf)
 
 # Incremental Computation
 * [Differential Dataflow](http://www.cidrdb.org/cidr2013/Papers/CIDR13_Paper111.pdf)
