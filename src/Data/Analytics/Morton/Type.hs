@@ -42,9 +42,9 @@ import Data.Semigroup
 data Morton
   = Z
   | Morton
-    {-# UNPACK #-} !(Approximate Int) -- ^ expected bits remaining
-    {-# UNPACK #-} !Int               -- ^ index count
-    !Heap                             -- ^ top down
+    {-# UNPACK #-} !(Approximate Int) -- expected bits remaining
+    {-# UNPACK #-} !Int               -- index count
+    !Heap                             -- top down
 
 instance Semigroup Morton where
   (<>) = mappend
