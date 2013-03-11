@@ -15,7 +15,7 @@
 -----------------------------------------------------------------------------
 module Main where
 
-import Build_doctests (deps, buildDir)
+import Build_doctests (deps)
 import Control.Applicative
 import Control.Monad
 import Data.List
@@ -54,10 +54,7 @@ main = withUnicode $ getSources >>= \sources -> doctest $
     "-isrc"
   : "-idist/build/autogen"
   : "-idist/build"
-  : "-fobject-code"
   : "-optP-include"
-  : ("-odir=" ++ buildDir)
-  : ("-hidir=" ++ buildDir)
   : "-optPdist/build/autogen/cabal_macros.h"
   : "dist/build/cbits/crc32.o"
   : "dist/build/cbits/debruijn.o"
