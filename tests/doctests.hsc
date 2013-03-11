@@ -53,12 +53,13 @@ main :: IO ()
 main = withUnicode $ getSources >>= \sources -> doctest $
     "-isrc"
   : "-idist/build/autogen"
+  : "-idist/build"
+  : "-fobject-code"
   : "-optP-include"
   : ("-odir=" ++ buildDir)
   : ("-hidir=" ++ buildDir)
   : "-optPdist/build/autogen/cabal_macros.h"
   : "-hide-all-packages"
-  : "-package=analytics-0.1"
   : map ("-package="++) deps ++ sources
 
 getSources :: IO [FilePath]
