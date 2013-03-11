@@ -18,7 +18,7 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Data.Analytics.Morton.Heap
+module Data.Analytics.Key.Heap
   ( Heap(..)
   , insertMin
   , extractMin
@@ -26,7 +26,7 @@ module Data.Analytics.Morton.Heap
 
 import Control.Applicative
 import Control.Lens
-import Data.Analytics.Morton.Node
+import Data.Analytics.Key.Node
 import Data.Data
 import Data.Foldable
 import Data.Semigroup

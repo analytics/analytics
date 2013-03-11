@@ -21,7 +21,7 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Data.Analytics.Morton.Node
+module Data.Analytics.Key.Node
   ( Node(Node)
   , HasNode(..)
   , HasNodes(..)

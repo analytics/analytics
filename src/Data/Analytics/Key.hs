@@ -7,10 +7,10 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Data.Analytics.Morton
-  ( Morton(..)
-  , morton
-  , morton64
+module Data.Analytics.Key
+  ( Interleaving(..)
+  , interleaving
+  , interleaving64
   -- * Schedules
   , Schedule
   , HasSchedule(..)
@@ -23,5 +23,5 @@ module Data.Analytics.Morton
   , iso8859_1
   ) where
 
-import Data.Analytics.Morton.Schedule
-import Data.Analytics.Morton.Type
+import Data.Analytics.Key.Interleaving
+import Data.Analytics.Key.Schedule

@@ -16,7 +16,7 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Data.Analytics.Morton.Schedule
+module Data.Analytics.Key.Schedule
   ( Schedule(Schedule)
   , HasSchedule(..)
   , Scheduled(..)

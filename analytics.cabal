@@ -114,11 +114,11 @@ library
     Data.Analytics.Hash.Double
     Data.Analytics.Hash.Rolling
     Data.Analytics.Instances
-    Data.Analytics.Morton
-    Data.Analytics.Morton.Node
-    Data.Analytics.Morton.Heap
-    Data.Analytics.Morton.Schedule
-    Data.Analytics.Morton.Type
+    Data.Analytics.Key
+    Data.Analytics.Key.Node
+    Data.Analytics.Key.Heap
+    Data.Analytics.Key.Schedule
+    Data.Analytics.Key.Interleaving
     Data.Analytics.Numeric.Compensated
     Data.Analytics.Numeric.Fast
     Data.Analytics.Numeric.Log
