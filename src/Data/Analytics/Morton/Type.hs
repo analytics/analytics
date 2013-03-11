@@ -26,6 +26,7 @@ module Data.Analytics.Morton.Type
 
 import Control.Applicative
 import Control.Lens
+import Data.Analytics.Approximate.Type
 import Data.Analytics.Morton.Heap
 import Data.Analytics.Morton.Node
 import Data.Analytics.Morton.Schedule
@@ -38,18 +39,18 @@ import Data.Semigroup
 -- | This provides a double-ended priority queue with a fixed schedule that
 -- can be used to obtain a generalized morton sequence of bits from multiple
 -- sources. Use the monoid to fairly interleave breaking ties to the left.
-data Morton f
+data Morton
   = Z
   | Morton
-    {-# UNPACK #-} !Int -- bits remaining
-    {-# UNPACK #-} !Int -- index count
-    !(Heap (f (Int -> Bool))) -- top down
+    {-# UNPACK #-} !(Approximate Int) -- ^ expected bits remaining
+    {-# UNPACK #-} !Int               -- ^ index count
+    !Heap                             -- ^ top down
 
-instance Semigroup (Morton f) where
+instance Semigroup Morton where
   (<>) = mappend
   {-# INLINE (<>) #-}
 
-instance Monoid (Morton f) where
+instance Monoid Morton where
   mempty = Z
   {-# INLINE mempty #-}
   mappend Z m = m
@@ -58,30 +59,26 @@ instance Monoid (Morton f) where
     = Morton (n + m) (i + j) (t <> (t' & nodes.nodeSequence +~ i))
   {-# INLINE mappend #-}
 
-instance (p ~ (->), Applicative f, Gettable f, Functor g, Functor h) => Cons p f (Morton g) (Morton h) (g Bool) (h Bool) where
+instance (p ~ (->), Applicative f, Gettable f) => Cons p f Morton Morton Bool Bool where
   _Cons _ Z = pure Z
-  _Cons f (Morton k i (Heap (Node np ns nw nh nl nd) ts0)) = coerce $ f
-     ( fmap ($ nhm1) nd
-     , if k == 1 then Z else Morton (k - 1) i t'
-     ) where
-       !nhm1 = nh - 1
-       t' | nhm1 == nl = case ts0 of
-            []     -> error "_Cons: the impossible happened"
-            (t:ts) -> meldWithHeap t ts
-          | otherwise = meldWithNode ts0
-       meldWithNode (t2:ts) = insertMin (Node (np + nw) ns nw nhm1 nl nd) (meldWithHeap t2 ts)
-       meldWithNode []      = Heap (Node (np + nw) ns nw nhm1 nl nd) []
+  _Cons f (Morton k i (Heap (Node np ns nw nb nbs) ts0)) = coerce $ f $ (,) nb $
+    case nbs of
+      [] -> case ts0 of
+        [] -> Z
+        (t:ts) -> Morton (k - 1) i $ meldWithHeap t ts
+      (b:bs) -> Morton (k - 1) i $ meldWithNode (Node (np + nw) ns nw b bs) ts0
+    where
+       meldWithNode n (t2:ts) = insertMin n (meldWithHeap t2 ts)
+       meldWithNode n []      = Heap n []
        meldWithHeap t (t2:ts) = t <> meldWithHeap t2 ts
        meldWithHeap t []      = t
   {-# INLINE _Cons #-}
 
-morton64 :: Functor f => Schedule a -> f (Int -> Bool) -> Morton f
-morton64 (Schedule p w c _ _ _) fi
-  = Morton c 1 (Heap (Node p             0 w c 0 fi) [])
+morton64 :: Schedule a -> [Bool] -> Morton
+morton64 _ [] = mempty
+morton64 (Schedule p w c _ _ _) (b:bs) = Morton c 1 (Heap (Node p 0 w b bs) [])
 {-# INLINE morton64 #-}
 
-morton :: Functor f => Schedule a -> f a -> Morton f
-morton (Schedule p w c _ _ f) fa
-  = Morton c 1 (Heap (Node p             0 w c 0 fi) [])
-  where fi = fmap f fa
+morton :: Schedule a -> a -> Morton
+morton s a = morton64 s (view scheduleEncoder s a)
 {-# INLINE morton #-}

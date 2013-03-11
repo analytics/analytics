@@ -29,7 +29,9 @@ module Data.Analytics.Morton.Schedule
   , iso8859_1
   ) where
 
+import Control.Applicative
 import Control.Lens
+import Data.Analytics.Approximate.Type
 import Data.Bits
 import Data.Hashable
 import Data.Int
@@ -40,10 +42,10 @@ import Foreign.Storable
 data Schedule a = Schedule
   { _schedulePriority    :: {-# UNPACK #-} !Int
   , _scheduleStride      :: {-# UNPACK #-} !Int
-  , _scheduleBits        :: {-# UNPACK #-} !Int
+  , _scheduleBits        :: {-# UNPACK #-} !(Approximate Int)
   , _scheduleOrdered     :: !Bool
   , _scheduleApproximate :: !Bool
-  , _scheduleEncoder     :: a -> Int -> Bool
+  , _scheduleEncoder     :: a -> [Bool]
   }
 
 makeClassy ''Schedule
@@ -60,11 +62,11 @@ magic = 256936680
 {-# INLINE magic #-}
 
 integral :: forall a. (Storable a, Bits a) => Schedule a
-integral = bits (sizeOf (undefined :: a) * 8)
+integral = bits (fromIntegral (sizeOf (undefined :: a)) * 8)
 {-# INLINE integral #-}
 
 bits :: Bits a => Int -> Schedule a
-bits n = Schedule 0 (if n <= 1 then 0 else div magic (n - 1)) n True False testBit
+bits n = Schedule 0 (if n <= 1 then 0 else div magic (n - 1)) (fromIntegral n) True False $ \a -> testBit a <$> [n-1,n-2..0]
 {-# INLINE bits #-}
 
 -- We conservatively approximate characters above of this range by the upper bound to preserve ordering.
