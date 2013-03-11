@@ -16,6 +16,14 @@
 # Peano Ordering
 * [Cache Oblivious Dense and Sparse Matrix Multiplication Based on Peano Curves](https://para08.idi.ntnu.no/docs/submission_155.pdf)
 
+# Order Preserving Codes
+* The identity transformation
+* [Shor's explanation of the Hu-Tucker algorithm](http://www-math.mit.edu/~shor/PAM/hu-tucker_algorithm.html)
+* [Golomb coding](http://en.wikipedia.org/wiki/Golomb_coding)
+* [Arithmetic coding](http://en.wikipedia.org/wiki/Arithmetic_coding)
+* [Range coding](http://en.wikipedia.org/wiki/Range_encoding)
+* Sometimes we don't care about ordering. If we have categorical information, we could use Huffman directly on that dimension.
+
 # Incremental Computation
 * [Differential Dataflow](http://www.cidrdb.org/cidr2013/Papers/CIDR13_Paper111.pdf)
 * [Project Naiad](http://research.microsoft.com/en-us/projects/naiad/)
