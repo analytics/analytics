@@ -2,6 +2,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) Edward Kmett 2013
@@ -24,6 +25,7 @@ import Control.Applicative
 import Control.Lens
 import Data.Analytics.Numeric.Log
 import Data.Copointed
+import Data.Data
 import Data.Foldable
 import Data.Functor.Apply
 import Data.Monoid
@@ -35,7 +37,7 @@ import Data.Pointed
 data Approximate a = Approximate
   { _confidence :: {-# UNPACK #-} !(Log Double)
   , _lo, _estimate, _hi :: a
-  } deriving (Eq,Show,Read)
+  } deriving (Eq,Show,Read,Typeable,Data)
 
 makeClassy ''Approximate
 

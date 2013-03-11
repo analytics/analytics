@@ -9,6 +9,10 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveFoldable #-}
+{-# LANGUAGE DeriveTraversable #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) Edward Kmett 2013
@@ -30,6 +34,8 @@ import Data.Analytics.Approximate.Type
 import Data.Analytics.Morton.Heap
 import Data.Analytics.Morton.Node
 import Data.Analytics.Morton.Schedule
+import Data.Data
+import Data.Foldable
 import Data.Semigroup
 
 ------------------------------------------------------------------------------
@@ -39,18 +45,19 @@ import Data.Semigroup
 -- | This provides a double-ended priority queue with a fixed schedule that
 -- can be used to obtain a generalized morton sequence of bits from multiple
 -- sources. Use the monoid to fairly interleave breaking ties to the left.
-data Morton
+data Morton a
   = Z
   | Morton
     {-# UNPACK #-} !(Approximate Int) -- expected bits remaining
     {-# UNPACK #-} !Int               -- index count
-    !Heap                             -- top down
+    !(Heap a)                         -- top down
+  deriving (Typeable, Data, Functor, Foldable, Traversable)
 
-instance Semigroup Morton where
+instance Semigroup (Morton a) where
   (<>) = mappend
   {-# INLINE (<>) #-}
 
-instance Monoid Morton where
+instance Monoid (Morton a) where
   mempty = Z
   {-# INLINE mempty #-}
   mappend Z m = m
@@ -59,7 +66,7 @@ instance Monoid Morton where
     = Morton (n + m) (i + j) (t <> (t' & nodes.nodeSequence +~ i))
   {-# INLINE mappend #-}
 
-instance (p ~ (->), Applicative f, Gettable f) => Cons p f Morton Morton Bool Bool where
+instance (p ~ (->), Applicative f, Gettable f) => Cons p f (Morton a) (Morton b) a b where
   _Cons _ Z = pure Z
   _Cons f (Morton k i (Heap (Node np ns nw nb nbs) ts0)) = coerce $ f $ (,) nb $
     case nbs of
@@ -74,11 +81,11 @@ instance (p ~ (->), Applicative f, Gettable f) => Cons p f Morton Morton Bool Bo
        meldWithHeap t []      = t
   {-# INLINE _Cons #-}
 
-morton64 :: Schedule a -> [Bool] -> Morton
+morton64 :: Schedule a -> [b] -> Morton b
 morton64 _ [] = mempty
 morton64 (Schedule p w c _ _ _) (b:bs) = Morton c 1 (Heap (Node p 0 w b bs) [])
 {-# INLINE morton64 #-}
 
-morton :: Schedule a -> a -> Morton
+morton :: Schedule a -> a -> Morton Bool
 morton s a = morton64 s (view scheduleEncoder s a)
 {-# INLINE morton #-}
