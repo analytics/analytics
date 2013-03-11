@@ -80,7 +80,7 @@ for Main Memory Column Stores](http://www.cs.uni-paderborn.de/fileadmin/Informat
 * [Cache Oblivious Sorting](http://cs.au.dk/~gerth/pub/encyclopedia08.html)
 * [Cache Oblivious Streaming B-Trees](http://supertech.csail.mit.edu/papers/sbtree.pdf)
 * [Streaming B-Trees for Filesystem Grand Challenges](http://institutes.lanl.gov/hec-fsio/workshops/2007/presentations/day1/Farach-Colton_sbtree-nsf07.pdf)
-* [Orded Files and Cache-Oblivious Priority Queues (video)](http://www.youtube.com/watch?v=jAh_bC4hYlc)
+* [Ordered Files and Cache-Oblivious Priority Queues *video*](http://www.youtube.com/watch?v=jAh_bC4hYlc)
 * [A density control algorithm for doing insertions and deletions in a sequentially ordered file in a good worst-case time](http://www.sciencedirect.com/science/article/pii/089054019290034D). This provides the O((log^2 N)/B) _worst case_ bound for ordered file maintanence. Note that to do so it uses a "calibrator tree" which corresponds directly with the total number of children under a given branch. This could be-expressed like (or as part of) a Haar sketch.
 
 # Logging and Metrics
