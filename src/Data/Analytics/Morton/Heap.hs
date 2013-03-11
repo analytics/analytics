@@ -29,7 +29,6 @@ module Data.Analytics.Morton.Heap
 import Control.Applicative
 import Control.Lens
 import Data.Analytics.Morton.Node
-import Data.Foldable
 import Data.Semigroup
 
 ------------------------------------------------------------------------------
