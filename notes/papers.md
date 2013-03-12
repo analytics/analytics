@@ -22,11 +22,16 @@
 * [Golomb coding](http://en.wikipedia.org/wiki/Golomb_coding)
 * [Arithmetic coding](http://en.wikipedia.org/wiki/Arithmetic_coding)
 * [Range coding](http://en.wikipedia.org/wiki/Range_encoding)
-* [Order Preserving Key Compression](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.86.3306&rep=rep1&type=pdf) describes ALM coding and references the ZIL coding
-* Sometimes we don't care about ordering. If we have categorical information, we could use Huffman directly on that dimension.
+* [Order Preserving Key Compression](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.86.3306&rep=rep1&type=pdf) describes ALM coding and references the ZIL coding. ALM coding violates the prefix property of Huffman and Hu-Tucker locally, but only needs the next symbol worth of lookahead to resolve the ambiguity.
 * [Dictionary-based Order-preserving String Compression
 for Main Memory Column Stores](http://www.cs.uni-paderborn.de/fileadmin/Informatik/AG-Boettcher/Lehre/WS_09_10/pro-sem-ws09/Dictionary-based_Order-preserving_String_Compression_for_Main_Memory_Column_Stores.pdf)
 * [Query Optimization In Compressed Database Systems](http://userpages.umbc.edu/~zhchen/papers/sigmod01-camera.pdf)
+* Sometimes we don't care about ordering. If we have categorical information, we could use Huffman directly on that dimension.
+* [Order Preserving Minimal Perfect Hash Functions and Information Retrieval](http://eprints.cs.vt.edu/archive/00000248/01/TR-91-01.pdf) by Fox, Chen, Daoud, and Heath max present a way to create still-order preserving hashing functions for categorical data with known categories.
+
+# Other Order-Preserving Structures:
+* [Order Preserving Encryption for Numeric Data](http://rsrikant.com/papers/sigmod04.pdf) by Agrawal, Kiernan Srikant, and Xu covers how to make an order-preserving encryption scheme that permits standard database indexing, robust against inspection, but not against prior domain information about ranges of values or the ability to encrypt or decrypt known data.
+* [An Ideal-Security Protocol for Order-Preserving Encoding](http://eprint.iacr.org/2013/129.pdf) by Popa, Li, and Zeldovich covers a way to improve on the previous paper to leak nothing other than order by using "mutable cipher-text". This is currently realized in their [cryptdb](http://css.csail.mit.edu/cryptdb/) project.
 
 # Incremental Computation
 * [Differential Dataflow](http://www.cidrdb.org/cidr2013/Papers/CIDR13_Paper111.pdf)
