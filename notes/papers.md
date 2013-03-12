@@ -100,6 +100,10 @@ At ~4 meg leaves this actually fits pretty well with bzip2 window sizes.
 * [Geometric Burrows-Wheeler Transform: Linking Range Searching and Text Indexing](http://www.ittc.ku.edu/~jsv/Papers/CHS08.geometricbw.pdf)
 * [Compressed Text Indexing and Range Searching](http://www.cs.purdue.edu/research/technical_reports/2006/TR%2006-021.pdf)
 
+# Compressed Computation
+
+* [Computable Compressed Matrices](http://arxiv.org/pdf/1303.0270v1.pdf)
+
 # Batched buffer management
 
 * [The Buffer Tree: A Technique for Designing Batched External Data Structures](http://www.cs.cmu.edu/~guyb/realworld/slidesF10/buffertree.pdf)
