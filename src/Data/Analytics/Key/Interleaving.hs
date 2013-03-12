@@ -31,7 +31,7 @@
 module Data.Analytics.Key.Interleaving
   ( Interleaving(..)
   , interleaving
-  , interleaving64
+  , interleavingBy
   ) where
 
 import Control.Applicative
@@ -87,11 +87,11 @@ instance (p ~ (->), Applicative f, Gettable f) => Cons p f (Interleaving a) (Int
        meldWithHeap t []      = t
   {-# INLINE _Cons #-}
 
-interleaving64 :: Schedule a -> [b] -> Interleaving b
-interleaving64 _ [] = mempty
-interleaving64 (Schedule p w c _ _ _) (b:bs) = Interleaving c 1 (Heap (Node p 0 w b bs) [])
-{-# INLINE interleaving64 #-}
+interleavingBy :: Schedule a -> [b] -> Interleaving b
+interleavingBy _ [] = mempty
+interleavingBy (Schedule p w c _ _ _) (b:bs) = Interleaving c 1 (Heap (Node p 0 w b bs) [])
+{-# INLINE interleavingBy #-}
 
 interleaving :: Schedule a -> a -> Interleaving Bool
-interleaving s a = interleaving64 s (view scheduleEncoder s a)
+interleaving s a = interleavingBy s (view scheduleEncoder s a)
 {-# INLINE interleaving #-}

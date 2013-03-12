@@ -10,7 +10,7 @@
 module Data.Analytics.Key
   ( Interleaving(..)
   , interleaving
-  , interleaving64
+  , interleavingBy
   -- * Schedules
   , Schedule
   , HasSchedule(..)
