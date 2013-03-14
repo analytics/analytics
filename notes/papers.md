@@ -33,6 +33,7 @@ for Main Memory Column Stores](http://www.cs.uni-paderborn.de/fileadmin/Informat
 # Other Order-Preserving Structures:
 * [Order Preserving Encryption for Numeric Data](http://rsrikant.com/papers/sigmod04.pdf) by Agrawal, Kiernan Srikant, and Xu covers how to make an order-preserving encryption scheme that permits standard database indexing, robust against inspection, but not against prior domain information about ranges of values or the ability to encrypt or decrypt known data.
 * [An Ideal-Security Protocol for Order-Preserving Encoding](http://eprint.iacr.org/2013/129.pdf) by Popa, Li, and Zeldovich covers a way to improve on the previous paper to leak nothing other than order by using "mutable cipher-text". This is currently realized in their [cryptdb](http://css.csail.mit.edu/cryptdb/) project.
+* [Fast string sorting using order-preserving compression](http://dl.acm.org/citation.cfm?id=1180611)
 
 # Incremental Computation
 * [Differential Dataflow](http://www.cidrdb.org/cidr2013/Papers/CIDR13_Paper111.pdf)
