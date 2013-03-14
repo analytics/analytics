@@ -28,10 +28,9 @@ AC_PROG_INSTALL
 
 # Checks for header files.
 
-AC_CHECK_HEADERS([fcntl.h])
-AC_CHECK_HEADERS([stdint.h stddef.h sys/mman.h sys/resource.h windows.h byteswap.h sys/byteswap.h sys/endian.h sys/time.h])
-AC_CHECK_HEADERS_ONCE([sys/fcntl.h sys/syscall.h sys/types.h unistd.h io.h])
-
+AC_CHECK_HEADERS_ONCE([windows.h])
+AC_CHECK_HEADERS_ONCE([unistd.h io.h stdint.h stddef.h fcntl.h byteswap.h])
+AC_CHECK_HEADERS_ONCE([sys/mman.h sys/resource.h sys/byteswap.h sys/endian.h sys/time.h sys/fcntl.h sys/syscall.h sys/types.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 
@@ -166,13 +165,13 @@ AC_MSG_CHECKING([if the compiler supports __builtin_expect])
 AC_TRY_COMPILE(, [
     return __builtin_expect(1, 1) ? 1 : 0
 ], [
-    snappy_have_builtin_expect=yes
+    analytics_have_builtin_expect=yes
     AC_MSG_RESULT([yes])
 ], [
-    snappy_have_builtin_expect=no
+    analytics_have_builtin_expect=no
     AC_MSG_RESULT([no])
 ])
-if test x$snappy_have_builtin_expect = xyes ; then
+if test x$analytics_have_builtin_expect = xyes ; then
     AC_DEFINE([HAVE_BUILTIN_EXPECT], [1], [Define to 1 if the compiler supports __builtin_expect.])
 fi
 
@@ -182,13 +181,13 @@ AC_MSG_CHECKING([if the compiler supports __builtin_ctzll])
 AC_TRY_COMPILE(, [
     return (__builtin_ctzll(0x100000000LL) == 32) ? 1 : 0
 ], [
-    snappy_have_builtin_ctz=yes
+    analytics_have_builtin_ctz=yes
     AC_MSG_RESULT([yes])
 ], [
-    snappy_have_builtin_ctz=no
+    analytics_have_builtin_ctz=no
     AC_MSG_RESULT([no])
 ])
-if test x$snappy_have_builtin_ctz = xyes ; then
+if test x$analytics_have_builtin_ctz = xyes ; then
     AC_DEFINE([HAVE_BUILTIN_CTZ], [1], [Define to 1 if the compiler supports __builtin_ctz and friends.])
 fi
 
