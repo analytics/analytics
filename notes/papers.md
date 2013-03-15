@@ -90,6 +90,7 @@ for Main Memory Column Stores](http://www.cs.uni-paderborn.de/fileadmin/Informat
 * [Streaming B-Trees for Filesystem Grand Challenges](http://institutes.lanl.gov/hec-fsio/workshops/2007/presentations/day1/Farach-Colton_sbtree-nsf07.pdf)
 * [Ordered Files and Cache-Oblivious Priority Queues *video*](http://www.youtube.com/watch?v=jAh_bC4hYlc)
 * [A density control algorithm for doing insertions and deletions in a sequentially ordered file in a good worst-case time](http://www.sciencedirect.com/science/article/pii/089054019290034D). This provides the O((log^2 N)/B) _worst case_ bound for ordered file maintanence. Note that to do so it uses a "calibrator tree" which corresponds directly with the total number of children under a given branch. This could be-expressed like (or as part of) a Haar sketch.
+* [Cache-Oblivious Parallel Algorithms](http://multicoretheory.wordpress.com/2011/05/11/cache-oblivious-parallel-algorithms/) gives a decent overview of cache-oblivious parallel architecture and Blelloch et al.'s parallel cache complexity bounds.
 
 # Logging and Metrics
 
