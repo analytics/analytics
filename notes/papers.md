@@ -107,6 +107,7 @@ At ~4 meg leaves this actually fits pretty well with bzip2 window sizes.
 * [The SBC-Tree: An Index for Run-Length Compressed Sequences](http://www.ittc.ku.edu/~jsv/Papers/EHS08.SBCtree.pdf)
 * [Geometric Burrows-Wheeler Transform: Linking Range Searching and Text Indexing](http://www.ittc.ku.edu/~jsv/Papers/CHS08.geometricbw.pdf)
 * [Compressed Text Indexing and Range Searching](http://www.cs.purdue.edu/research/technical_reports/2006/TR%2006-021.pdf)
+* [Opportunistic Data Structures with Applications](http://people.unipmn.it/manzini/papers/focs00draft.pdf) by Ferragina and Manzini describes how to work with 'compressed suffix arrays' for sublinear space overhead on compressible texts.
 
 # Compressed Computation
 
