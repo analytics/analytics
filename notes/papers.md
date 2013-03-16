@@ -10,7 +10,7 @@
 * [Skjellum provides a nice way to make a Morton order that works even for non-integral numbers of bits](http://people.cs.vt.edu/~asandu/Public/Qual2005/Q2005_skjellum.pdf)
 * [Adaptive query processing in point-transformation schemes](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.59.6190&rep=rep1&type=pdf) by B. Yu covers a way we can incrementally refine compution of overlapping ranges in Morton order.
 * [Efficient Range Query Using Multiple Hilbert Curves](http://cdn.intechopen.com/pdfs/16532/InTech-Efficient_range_query_using_multiple_hilbert_curves.pdf) shows that we can answer queries in fewer ranges if we store multiple copies of the data using different space filling curves or with rotations and shifts. This may point to a replication strategy. As with storing multiple copies for a column store using different orderings to get both fault tolerance, the same thing apply to space filling storage of the data.
-* [Cache Oblivious Dense and Sparse Matrix Multiplication Based on Peano Curves](https://para08.idi.ntnu.no/docs/submission_155.pdf)
+* [Cache-Oblivious Dense and Sparse Matrix Multiplication Based on Peano Curves](https://para08.idi.ntnu.no/docs/submission_155.pdf)
 * [Performance of Multi-Dimensional Space-Filling Curves](http://docs.lib.purdue.edu/cgi/viewcontent.cgi?article=2545&context=cstech) by Mokbel, Aref and Kamel gives a number of general invariants over all space filling curves.
 
 # Order Preserving Codes
@@ -81,9 +81,9 @@ for Main Memory Column Stores](http://www.cs.uni-paderborn.de/fileadmin/Informat
 * [Confluently Persistent Tries for Efficient Version Control](http://erikdemaine.org/papers/ConfluentTries_Algorithmica/paper.pdf) by Demaine, Langerman and Price is particularly interesting to me, because they provide O(log log n) movement time fully persistent hash table.
 
 # Cache-Obliviousness
-
-* [Cache Oblivious Sorting](http://cs.au.dk/~gerth/pub/encyclopedia08.html)
-* [Cache Oblivious Streaming B-Trees](http://supertech.csail.mit.edu/papers/sbtree.pdf)
+* [Cache-Oblivious Algorithms](http://supertech.csail.mit.edu/papers/Prokop99.pdf) was Prokop's M.S. thesis and more or less started this whole field.
+* [Cache-Oblivious Sorting](http://cs.au.dk/~gerth/pub/encyclopedia08.html)
+* [Cache-Oblivious Streaming B-Trees](http://supertech.csail.mit.edu/papers/sbtree.pdf)
 * [Streaming B-Trees for Filesystem Grand Challenges](http://institutes.lanl.gov/hec-fsio/workshops/2007/presentations/day1/Farach-Colton_sbtree-nsf07.pdf)
 * [Ordered Files and Cache-Oblivious Priority Queues *video*](http://www.youtube.com/watch?v=jAh_bC4hYlc)
 * [A density control algorithm for doing insertions and deletions in a sequentially ordered file in a good worst-case time](http://www.sciencedirect.com/science/article/pii/089054019290034D). This provides the O((log^2 N)/B) _worst case_ bound for ordered file maintanence. Note that to do so it uses a "calibrator tree" which corresponds directly with the total number of children under a given branch. This could be-expressed like (or as part of) a Haar sketch.
@@ -92,9 +92,9 @@ for Main Memory Column Stores](http://www.cs.uni-paderborn.de/fileadmin/Informat
 
 # String Dictionaries
 
-* Cache Oblivious String Dictionaries ([slides](http://www.cs.au.dk/~gerth/slides/bertinoro06.pdf)) ([paper](http://www.cs.au.dk/~gerth/papers/soda06.pdf)) by Brodal and Fagerberg use giraffe trees for fixed dictionaries.
+* Cache-Oblivious String Dictionaries ([slides](http://www.cs.au.dk/~gerth/slides/bertinoro06.pdf)) ([paper](http://www.cs.au.dk/~gerth/papers/soda06.pdf)) by Brodal and Fagerberg use giraffe trees for fixed dictionaries.
 * [Fast Compressed Tries through Path Decompositions](http://siam.omnibooksonline.com/2012ALENEX/data/papers/018.pdf) by Grossi and Ottaviano talks about [centroid trees](http://mathworld.wolfram.com/CentroidPoint.html), which are used in many dictionary structures including
-* [Cache Oblivious String B-Trees](http://www.cs.stonybrook.edu/~bender/pub/PODS06-BFK.pdf) by Bender, Farach-Colton and Kuszmaul used centroid trees as part of their COSB-tree
+* [Cache-Oblivious String B-Trees](http://www.cs.stonybrook.edu/~bender/pub/PODS06-BFK.pdf) by Bender, Farach-Colton and Kuszmaul used centroid trees as part of their COSB-tree
 * [Compressed String Dictionaries](http://arxiv.org/pdf/1101.5506v1.pdf) by Brisaboa, Cánovas, Martínez-Prieto and Navarro uses a BWT-based transformation to get an efficient compressed string dictionary.
 * [Offline Dictionary-Based Compression](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.31.5097&rep=rep1&type=pdf) by Larsson and Moffat covers RE-PAIR, which has very slow encoding, but reasonable decoding performance.
 
