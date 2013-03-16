@@ -117,7 +117,8 @@ At ~4 meg leaves this actually fits pretty well with bzip2 window sizes.
 * [Searching BWT compressed text with the Boyer-Moore algorithm and binary search](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.106.9296) by Bell, Powell, Mukherjee and Adjeroh. Note: since our text fragments end with a given block, the concern about chunking BWT searches from the paper do not apply.
 * [A Comparison of BWT Approaches to String Pattern Matching](http://vlsi.cs.ucf.edu/nsf/files/reportVer05driver.pdf) by Firth, Bell, Mukherjee and Adjeroh
 * [The SBC-Tree: An Index for Run-Length Compressed Sequences](http://www.ittc.ku.edu/~jsv/Papers/EHS08.SBCtree.pdf)
-* [Geometric Burrows-Wheeler Transform: Linking Range Searching and Text Indexing](http://www.ittc.ku.edu/~jsv/Papers/CHS08.geometricbw.pdf)
+* [Geometric Burrows-Wheeler Transform: Linking Range Searching and Text Indexing](http://www.ittc.ku.edu/~jsv/Papers/CHS08.geometricbw.pdf) lets us use the algorithms from
+* Space-efficient suffix trees by Munro, Raman and Rao (2001).
 * [Compressed Text Indexing and Range Searching](http://www.cs.purdue.edu/research/technical_reports/2006/TR%2006-021.pdf)
 * [Opportunistic Data Structures with Applications](http://people.unipmn.it/manzini/papers/focs00draft.pdf) by Ferragina and Manzini describes how to work with 'compressed suffix arrays' for sublinear space overhead on compressible texts.
 
