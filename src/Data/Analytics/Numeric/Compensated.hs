@@ -49,7 +49,6 @@ module Data.Analytics.Numeric.Compensated
 import Control.Applicative
 import Control.Lens as L
 import Control.Monad
-import Data.Analytics.Numeric.Log
 import Data.Foldable as Foldable
 import Data.Function (on)
 import Data.Ratio
@@ -60,6 +59,7 @@ import Data.Vector.Generic.Mutable as M
 import Data.Data
 import Foreign.Ptr
 import Foreign.Storable
+import Numeric.Log
 import Text.Read as T
 import Text.Show as T
 

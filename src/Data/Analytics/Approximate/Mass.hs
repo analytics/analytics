@@ -18,12 +18,12 @@ import Control.Comonad
 import Data.Data
 import Data.Default
 import Data.Foldable
-import Data.Analytics.Numeric.Log
 import Data.Functor.Apply
 import Data.Pointed
 import Data.Traversable
 import Data.Semigroup
 import Generics.Deriving
+import Numeric.Log
 
 -- | A quantity with a lower-bound on its probability mass. This represents
 -- a 'probable value' as a 'Monad' that you can use to calculate progressively

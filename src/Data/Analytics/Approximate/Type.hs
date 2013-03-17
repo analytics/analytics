@@ -23,13 +23,13 @@ module Data.Analytics.Approximate.Type
 
 import Control.Applicative
 import Control.Lens
-import Data.Analytics.Numeric.Log
 import Data.Copointed
 import Data.Data
 import Data.Foldable
 import Data.Functor.Apply
 import Data.Monoid
 import Data.Pointed
+import Numeric.Log
 
 -- | An approximate number, with a likely interval, an expected value and a lower bound on the @log@ of probability that the answer falls in the interval.
 --
