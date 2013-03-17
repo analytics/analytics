@@ -1,4 +1,14 @@
-{-# LANGUAGE KindSignatures, TemplateHaskell, MultiParamTypeClasses, FlexibleContexts #-}
+{-# LANGUAGE CPP #-}
+{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+#if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 706
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE PolyKinds #-}
+#define USE_TYPE_LITS 1
+#endif
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) Edward Kmett 2013
@@ -13,6 +23,7 @@ module Data.Analytics.Reflection
   ) where
 
 import Control.Lens
+import Control.Monad
 import Data.Proxy
 import Data.Reflection
 import Language.Haskell.TH
@@ -69,3 +80,66 @@ nat :: Int -> TypeQ
 nat n
   | n >= 0 = int n
   | otherwise = error "nat: negative"
+
+instance Num a => Num (Q a) where
+  (+) = liftM2 (+)
+  (*) = liftM2 (*)
+  (-) = liftM2 (-)
+  negate = fmap negate
+  abs = fmap abs
+  signum = fmap signum
+  fromInteger = return . fromInteger
+
+instance Fractional a => Fractional (Q a) where
+  (/) = liftM2 (/)
+  recip = fmap recip
+  fromRational = return . fromRational
+
+#ifdef USE_TYPE_LITS
+type Plus a b = a + b
+type Times a b = a * b
+type Minus a b = a - b
+#endif
+
+-- | This permits the use of $(5) as a type splice.
+instance Num Type where
+#ifdef USE_TYPE_LITS
+  a + b = AppT (AppT (VarT 'Plus) a) b
+  a * b = AppT (AppT (VarT 'Times) a) b
+  a - b = AppT (AppT (VarT 'Minus) a) b
+  fromInteger = LitT . NumTyLit
+#else
+  (+) = error "Type.(+): undefined"
+  (*) = error "Type.(*): undefined"
+  (-) = error "Type.(-): undefined"
+  fromInteger n = case quotRem n 2 of
+      (0, 0) -> ConT ''Z
+      (q,-1) -> ConT ''PD `AppT` fromInteger q
+      (q, 0) -> ConT ''D  `AppT` fromInteger q
+      (q, 1) -> ConT ''SD `AppT` fromInteger q
+      _ -> error "ghc is bad at math"
+#endif
+  abs = error "Type.abs"
+  signum = error "Type.signum"
+
+plus, times, minus :: Num a => a -> a -> a
+plus = (+)
+times = (*)
+minus = (-)
+fract :: Fractional a => a -> a -> a
+fract = (/)
+
+-- | This permits the use of $(5) as an expression splice.
+instance Num Exp where
+  a + b = AppE (AppE (VarE 'plus) a) b
+  a * b = AppE (AppE (VarE 'times) a) b
+  a - b = AppE (AppE (VarE 'minus) a) b
+  negate = AppE (VarE 'negate)
+  signum = AppE (VarE 'signum)
+  abs = AppE (VarE 'abs)
+  fromInteger = LitE . IntegerL
+
+instance Fractional Exp where
+  a / b = AppE (AppE (VarE 'fract) a) b
+  recip = AppE (VarE 'recip)
+  fromRational = LitE . RationalL
