@@ -88,13 +88,19 @@ for Main Memory Column Stores](http://www.cs.uni-paderborn.de/fileadmin/Informat
 * [Cache-Oblivious Parallel Algorithms](http://multicoretheory.wordpress.com/2011/05/11/cache-oblivious-parallel-algorithms/) gives a decent overview of cache-oblivious parallel architecture and Blelloch et al.'s parallel cache complexity bounds.
 * [Exponential Structures for Efﬁcient Cache-Oblivious Algorithms](http://www.daimi.au.dk/~large/ioS05/BCR.pdf) by Bender, Cole and Raman
 
-# Cache-Oblivious Databases
+## Packed Memory Arrays
+* [An Adaptive Packed Memory Array](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.63.1533) by Bender and Hu provides a PMA that for many access patterns offers faster /O(log n)/ amortized inserts.
+
+## X-Fast, Y-Fast and Z-Fast Tries
+* [Predecessor search with distance-sensitive query time](http://arxiv.org/pdf/1209.5441.pdf) covers Z-Fast Trees, and unlike [the original](http://link.springer.com/chapter/10.1007%2F978-3-642-16321-0_15?LI=true#page-1) isn't behind a Springer pay-wall).
+
+## Cache-Oblivious Databases
 
 * [Cache-Oblivious Databases: Limitations and Opportunities](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.144.9113&rep=rep1&type=pdf) by He and Luo provides lots of hard numbers comparing COB+ trees with other structures, etc.
 * [Cache-Oblivious Streaming B-Trees](http://supertech.csail.mit.edu/papers/sbtree.pdf)
 * [Streaming B-Trees for Filesystem Grand Challenges](http://institutes.lanl.gov/hec-fsio/workshops/2007/presentations/day1/Farach-Colton_sbtree-nsf07.pdf)
 
-# String Dictionaries
+## String Dictionaries
 
 * Cache-Oblivious String Dictionaries ([slides](http://www.cs.au.dk/~gerth/slides/bertinoro06.pdf)) ([paper](http://www.cs.au.dk/~gerth/papers/soda06.pdf)) by Brodal and Fagerberg use giraffe trees for fixed dictionaries.
 * [Fast Compressed Tries through Path Decompositions](http://siam.omnibooksonline.com/2012ALENEX/data/papers/018.pdf) by Grossi and Ottaviano talks about [centroid trees](http://mathworld.wolfram.com/CentroidPoint.html), which are used in many dictionary structures including
