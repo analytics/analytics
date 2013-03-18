@@ -99,6 +99,7 @@ for Main Memory Column Stores](http://www.cs.uni-paderborn.de/fileadmin/Informat
 * [Cache-Oblivious Databases: Limitations and Opportunities](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.144.9113&rep=rep1&type=pdf) by He and Luo provides lots of hard numbers comparing COB+ trees with other structures, etc.
 * [Cache-Oblivious Streaming B-Trees](http://supertech.csail.mit.edu/papers/sbtree.pdf)
 * [Streaming B-Trees for Filesystem Grand Challenges](http://institutes.lanl.gov/hec-fsio/workshops/2007/presentations/day1/Farach-Colton_sbtree-nsf07.pdf)
+* [Cache-Oblivious Query Processing](http://www-db.cs.wisc.edu/cidr/cidr2007/papers/cidr07p05.pdf) by He and Luo
 
 ## String Dictionaries
 
