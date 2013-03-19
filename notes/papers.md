@@ -143,5 +143,5 @@ At ~4 meg leaves this actually fits pretty well with bzip2 window sizes.
 # Scheduling and Work-Stealing
 
 * [The data locality of work stealing](http://citeseer.ist.psu.edu/viewdoc/summary?doi=10.1.1.129.9162) by Acar and Blelloch introduced the affinity scheduler now used by Intel's TBB.
-* [Dynamic circular work-stealing deque](http://citeseerx.ist.psu.edu/showciting?cid=3884551) by Chase and Lev described a novel circular work-stealing deque. However my attempts to get it to work in Haskell have been fraught with difficulty.
+* [Dynamic circular work-stealing deque](http://citeseerx.ist.psu.edu/showciting?cid=3884551) by Chase and Lev described a novel circular work-stealing deque. However, my attempts to get it to work in Haskell have been fraught with difficulty.
 * [A Dynamic-Sized Nonblocking Work Stealing Deque](http://citeseerx.ist.psu.edu/showciting?cid=3884551) by Hendler et al.
