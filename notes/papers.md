@@ -140,6 +140,7 @@ At ~4 meg leaves this actually fits pretty well with bzip2 window sizes.
 * [The Buffer Tree: A Technique for Designing Batched External Data Structures](http://www.cs.cmu.edu/~guyb/realworld/slidesF10/buffertree.pdf)
 * [MemC3: Compact and Concurrent MemCache with Dumber Caching and Smarter Hashing](http://www.cs.cmu.edu/~binfan/papers/nsdi13_memc3.pdf) uses smarter hashing to get a nice write-focused memcached variant.
 * [High Performance Cache Replacement Using Re-Reference Interval Prediction (RRIP)](http://www.jaleels.org/ajaleel/publications/isca2010-rrip.pdf) by Jaleel, Theobald, Steely and Emer provides a nice replacement for LRU policies for an explicit buffer cache with low overhead.
+* [Decoupled Dynamic Cache Segmentation](http://faculty.cse.tamu.edu/djimenez/pdfs/hpca2012_dist.pdf) by Khan, Wang and Jiminéz is resistant to both scanning and thrashing, but is also "decoupled" from the choice of replacement policy.
 
 # Scheduling and Work-Stealing
 
