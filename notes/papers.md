@@ -139,3 +139,9 @@ At ~4 meg leaves this actually fits pretty well with bzip2 window sizes.
 
 * [The Buffer Tree: A Technique for Designing Batched External Data Structures](http://www.cs.cmu.edu/~guyb/realworld/slidesF10/buffertree.pdf)
 * [MemC3: Compact and Concurrent MemCache with Dumber Caching and Smarter Hashing](http://www.cs.cmu.edu/~binfan/papers/nsdi13_memc3.pdf) uses smarter hashing to get a nice write-focused memcached variant.
+
+# Scheduling and Work-Stealing
+
+* [The data locality of work stealing](http://citeseer.ist.psu.edu/viewdoc/summary?doi=10.1.1.129.9162) by Acar and Blelloch introduced the affinity scheduler now used by Intel's TBB.
+* [Dynamic circular work-stealing deque](http://citeseerx.ist.psu.edu/showciting?cid=3884551) by Chase and Lev described a novel circular work-stealing deque. However my attempts to get it to work in Haskell have been fraught with difficulty.
+* [A Dynamic-Sized Nonblocking Work Stealing Deque](http://citeseerx.ist.psu.edu/showciting?cid=3884551) by Hendler et al.
