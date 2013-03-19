@@ -138,3 +138,4 @@ At ~4 meg leaves this actually fits pretty well with bzip2 window sizes.
 # Batched buffer management
 
 * [The Buffer Tree: A Technique for Designing Batched External Data Structures](http://www.cs.cmu.edu/~guyb/realworld/slidesF10/buffertree.pdf)
+* [MemC3: Compact and Concurrent MemCache with Dumber Caching and Smarter Hashing](http://www.cs.cmu.edu/~binfan/papers/nsdi13_memc3.pdf) uses smarter hashing to get a nice write-focused memcached variant.
