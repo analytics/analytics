@@ -8,9 +8,7 @@
 --
 --------------------------------------------------------------------
 module Data.Analytics.Numeric
-  ( module Data.Analytics.Numeric.Compensated
-  , module Data.Analytics.Numeric.Tropical
+  ( module Data.Analytics.Numeric.Tropical
   ) where
 
-import Data.Analytics.Numeric.Compensated
 import Data.Analytics.Numeric.Tropical
