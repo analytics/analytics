@@ -110,9 +110,9 @@ runMyConfigureScript verbosity backwardsCompatHack flags lbi = do
   createDirectoryIfMissing True autoDir
   changeWorkingDirectory autoDir
   handleNoWindowsSH $
-    rawSystemExitWithEnv verbosity "sh" args' env'
+    rawSystemExitWithEnv verbosity "/bin/sh" args' env'
   changeWorkingDirectory here
-  copyFile (autoDir </> "analytics.buildinfo") (here </> "analytics.buildinfo")
+  copyFile (autoDir </> "analytics.buildinfo") "analytics.buildinfo"
   where
     args there = (there </> "configure") : configureArgs backwardsCompatHack flags
 
