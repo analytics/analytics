@@ -6,6 +6,7 @@
 #if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 706
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE TypeOperators #-}
 #define USE_TYPE_LITS 1
 #endif
 {-# OPTIONS_GHC -fno-warn-orphans #-}
@@ -27,6 +28,9 @@ import Control.Monad
 import Data.Proxy
 import Data.Reflection
 import Language.Haskell.TH
+#ifdef USE_TYPE_LITS
+import GHC.TypeLits
+#endif
 
 data Z -- 0
 data D  (n :: *) -- 2n
@@ -95,18 +99,12 @@ instance Fractional a => Fractional (Q a) where
   recip = fmap recip
   fromRational = return . fromRational
 
-#ifdef USE_TYPE_LITS
-type Plus a b = a + b
-type Times a b = a * b
-type Minus a b = a - b
-#endif
-
 -- | This permits the use of $(5) as a type splice.
 instance Num Type where
 #ifdef USE_TYPE_LITS
-  a + b = AppT (AppT (VarT 'Plus) a) b
-  a * b = AppT (AppT (VarT 'Times) a) b
-  a - b = AppT (AppT (VarT 'Minus) a) b
+  a + b = AppT (AppT (VarT '(+)) a) b
+  a * b = AppT (AppT (VarT '(*)) a) b
+  a - b = AppT (AppT (VarT '(-)) a) b
   fromInteger = LitT . NumTyLit
 #else
   (+) = error "Type.(+): undefined"
