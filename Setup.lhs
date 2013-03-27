@@ -57,7 +57,8 @@ main = defaultMainWithHooks autoconfUserHooks
      generateBuildModule (fromFlag (buildVerbosity flags)) pkg lbi
      buildHook autoconfUserHooks pkg lbi hooks flags
   , postHaddock = \args flags pkg lbi -> do
-     copyFiles normal (haddockOutputDir flags pkg) [] -- [("doc","analytics.png")]
+     _ <- readProcessWithExitCode "sh" ["scripts/overview.sh"] ""
+     copyFiles normal (haddockOutputDir flags pkg) [("images","overview.png")]
      postHaddock autoconfUserHooks args flags pkg lbi
   , postClean = \args flags pkg lbi -> do
      putStrLn "Cleaning up"
