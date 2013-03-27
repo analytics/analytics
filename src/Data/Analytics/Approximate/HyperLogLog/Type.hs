@@ -71,16 +71,16 @@ import           GHC.Int
 --
 -- Initialize a new counter:
 --
--- >>> mempty :: HyperLogLog $(nat 3)
+-- >>> mempty :: HyperLogLog $(3)
 -- HyperLogLog {runHyperLogLog = fromList [0,0,0,0,0,0,0,0]}
 --
--- Please note how you specify a counter size with the @$(nat n)@
+-- Please note how you specify a counter size with the @$(n)@
 -- invocation. Sizes of up to 16 are valid, with 7 being a
 -- likely good minimum for decent accuracy.
 --
 -- Let's count a list of unique items and get the latest estimate:
 --
--- >>> size (foldr cons mempty [1..10] :: HyperLogLog $(nat 4))
+-- >>> size (foldr cons mempty [1..10] :: HyperLogLog $(4))
 -- Approximate {_confidence = 0.9972, _lo = 2, _estimate = 11, _hi = 20}
 --
 -- Note how 'cons' can be used to add new observations to the
