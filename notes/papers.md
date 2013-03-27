@@ -33,6 +33,11 @@ for Main Memory Column Stores](http://www.cs.uni-paderborn.de/fileadmin/Informat
 * [An Ideal-Security Protocol for Order-Preserving Encoding](http://eprint.iacr.org/2013/129.pdf) by Popa, Li, and Zeldovich covers a way to improve on the previous paper to leak nothing other than order by using "mutable cipher-text". This is currently realized in their [cryptdb](http://css.csail.mit.edu/cryptdb/) project.
 * [Fast string sorting using order-preserving compression](http://dl.acm.org/citation.cfm?id=1180611)
 
+# Formal Concept Analysis
+
+* [The Wikipedia Article](http://en.wikipedia.org/wiki/Formal_concept_analysis) is okay, it includes a link to this
+* [FCA Homepage](http://www.fcahome.org.uk/fca.html)
+
 # Incremental Computation
 * [Differential Dataflow](http://www.cidrdb.org/cidr2013/Papers/CIDR13_Paper111.pdf)
 * [Project Naiad](http://research.microsoft.com/en-us/projects/naiad/)
