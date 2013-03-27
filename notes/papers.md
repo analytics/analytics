@@ -27,6 +27,7 @@ for Main Memory Column Stores](http://www.cs.uni-paderborn.de/fileadmin/Informat
 * [Order Preserving Minimal Perfect Hash Functions and Information Retrieval](http://eprints.cs.vt.edu/archive/00000248/01/TR-91-01.pdf) by Fox, Chen, Daoud, and Heath max present a way to create still-order preserving hashing functions for categorical data with known categories.
 * [How to Wring a Table Dry: Entropy Compression of Relations and Querying of Compressed Relations](http://tomx.inf.elte.hu/twiki/pub/Tudas_Labor/2012Summer/how_to_wring_a_table_dry_-_vldb2006-p858-raman.pdf)
 * [Binary Ordered Compression for Unicode](http://en.wikipedia.org/wiki/Binary_Ordered_Compression_for_Unicode) provides an lexicographically order preserving compression scheme for unicode text, so long as you do not use the reset code! BOCU-1 is covered by US Patent #6,737,994, but is royalty-free. It may serve as a default unicode text column format in the absence of more coding information.
+* [An Alternative to Arithmetic Coding with Local Decodability](http://people.csail.mit.edu/mip/papers/trits/paper.pdf)
 
 # Other Order-Preserving Structures:
 * [Order Preserving Encryption for Numeric Data](http://rsrikant.com/papers/sigmod04.pdf) by Agrawal, Kiernan Srikant, and Xu covers how to make an order-preserving encryption scheme that permits standard database indexing, robust against inspection, but not against prior domain information about ranges of values or the ability to encrypt or decrypt known data.
