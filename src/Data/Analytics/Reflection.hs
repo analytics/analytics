@@ -102,9 +102,13 @@ instance Fractional a => Fractional (Q a) where
 -- | This permits the use of $(5) as a type splice.
 instance Num Type where
 #ifdef USE_TYPE_LITS
-  a + b = AppT (AppT (VarT '(+)) a) b
-  a * b = AppT (AppT (VarT '(*)) a) b
-  a - b = AppT (AppT (VarT '(-)) a) b
+  a + b = AppT (AppT (VarT ''(+)) a) b
+  a * b = AppT (AppT (VarT ''(*)) a) b
+#if MIN_VERSION_base(4,8,0)
+  a - b = AppT (AppT (VarT ''(-)) a) b
+#else
+  (-) = error "Type.(-): undefined"
+#endif
   fromInteger = LitT . NumTyLit
 #else
   (+) = error "Type.(+): undefined"
