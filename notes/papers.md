@@ -157,7 +157,7 @@ At ~4 meg leaves this actually fits pretty well with bzip2 window sizes.
 * [Dynamic circular work-stealing deque](http://citeseerx.ist.psu.edu/showciting?cid=3884551) by Chase and Lev described a novel circular work-stealing deque. However, my attempts to get it to work in Haskell have been fraught with difficulty.
 * [A Dynamic-Sized Nonblocking Work Stealing Deque](http://citeseerx.ist.psu.edu/showciting?cid=3884551) by Hendler et al.
 
-# Data Sets (for future demo / benchmarksing)
+# Data Sets (for future demo / benchmarking)
 
 * [Flights Data Set](http://stat-computing.org/dataexpo/2009/the-data.html) might be a "good" benchmark
 
