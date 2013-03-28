@@ -47,9 +47,9 @@ module Data.Analytics.Approximate.HyperLogLog.Config
   ) where
 
 import Control.Lens
-import Data.Analytics.Bits
 import Data.Analytics.Reflection
 import Data.Bits
+import Data.Bits.Extras
 import Data.Proxy
 import Data.Reflection
 import Data.Serialize

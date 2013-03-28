@@ -45,8 +45,8 @@ import           Control.Lens
 import           Control.Monad
 import           Data.Analytics.Approximate.HyperLogLog.Config
 import           Data.Analytics.Approximate.Type
-import           Data.Analytics.Bits
 import           Data.Bits
+import           Data.Bits.Extras
 import           Data.Hashable
 import           Data.Proxy
 import           Data.Semigroup
