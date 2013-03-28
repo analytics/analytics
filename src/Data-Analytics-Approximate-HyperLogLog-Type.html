@@ -54,8 +54,8 @@
 <a name="line-45"></a><span class='hs-keyword'>import</span>           <span class='hs-conid'>Control</span><span class='hs-varop'>.</span><span class='hs-conid'>Monad</span>
 <a name="line-46"></a><span class='hs-keyword'>import</span>           <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Analytics</span><span class='hs-varop'>.</span><span class='hs-conid'>Approximate</span><span class='hs-varop'>.</span><span class='hs-conid'>HyperLogLog</span><span class='hs-varop'>.</span><span class='hs-conid'>Config</span>
 <a name="line-47"></a><span class='hs-keyword'>import</span>           <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Analytics</span><span class='hs-varop'>.</span><span class='hs-conid'>Approximate</span><span class='hs-varop'>.</span><span class='hs-conid'>Type</span>
-<a name="line-48"></a><span class='hs-keyword'>import</span>           <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Analytics</span><span class='hs-varop'>.</span><span class='hs-conid'>Bits</span>
-<a name="line-49"></a><span class='hs-keyword'>import</span>           <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Bits</span>
+<a name="line-48"></a><span class='hs-keyword'>import</span>           <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Bits</span>
+<a name="line-49"></a><span class='hs-keyword'>import</span>           <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Bits</span><span class='hs-varop'>.</span><span class='hs-conid'>Extras</span>
 <a name="line-50"></a><span class='hs-keyword'>import</span>           <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Hashable</span>
 <a name="line-51"></a><span class='hs-keyword'>import</span>           <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Proxy</span>
 <a name="line-52"></a><span class='hs-keyword'>import</span>           <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Semigroup</span>
@@ -80,16 +80,16 @@
 <a name="line-71"></a><a name="HyperLogLog"></a><span class='hs-comment'>--</span>
 <a name="line-72"></a><a name="HyperLogLog"></a><span class='hs-comment'>-- Initialize a new counter:</span>
 <a name="line-73"></a><a name="HyperLogLog"></a><span class='hs-comment'>--</span>
-<a name="line-74"></a><a name="HyperLogLog"></a><span class='hs-comment'>-- &gt;&gt;&gt; mempty :: HyperLogLog $(nat 3)</span>
+<a name="line-74"></a><a name="HyperLogLog"></a><span class='hs-comment'>-- &gt;&gt;&gt; mempty :: HyperLogLog $(3)</span>
 <a name="line-75"></a><a name="HyperLogLog"></a><span class='hs-comment'>-- HyperLogLog {runHyperLogLog = fromList [0,0,0,0,0,0,0,0]}</span>
 <a name="line-76"></a><a name="HyperLogLog"></a><span class='hs-comment'>--</span>
-<a name="line-77"></a><a name="HyperLogLog"></a><span class='hs-comment'>-- Please note how you specify a counter size with the @$(nat n)@</span>
+<a name="line-77"></a><a name="HyperLogLog"></a><span class='hs-comment'>-- Please note how you specify a counter size with the @$(n)@</span>
 <a name="line-78"></a><a name="HyperLogLog"></a><span class='hs-comment'>-- invocation. Sizes of up to 16 are valid, with 7 being a</span>
 <a name="line-79"></a><a name="HyperLogLog"></a><span class='hs-comment'>-- likely good minimum for decent accuracy.</span>
 <a name="line-80"></a><a name="HyperLogLog"></a><span class='hs-comment'>--</span>
 <a name="line-81"></a><a name="HyperLogLog"></a><span class='hs-comment'>-- Let's count a list of unique items and get the latest estimate:</span>
 <a name="line-82"></a><a name="HyperLogLog"></a><span class='hs-comment'>--</span>
-<a name="line-83"></a><a name="HyperLogLog"></a><span class='hs-comment'>-- &gt;&gt;&gt; size (foldr cons mempty [1..10] :: HyperLogLog $(nat 4))</span>
+<a name="line-83"></a><a name="HyperLogLog"></a><span class='hs-comment'>-- &gt;&gt;&gt; size (foldr cons mempty [1..10] :: HyperLogLog $(4))</span>
 <a name="line-84"></a><a name="HyperLogLog"></a><span class='hs-comment'>-- Approximate {_confidence = 0.9972, _lo = 2, _estimate = 11, _hi = 20}</span>
 <a name="line-85"></a><a name="HyperLogLog"></a><span class='hs-comment'>--</span>
 <a name="line-86"></a><a name="HyperLogLog"></a><span class='hs-comment'>-- Note how 'cons' can be used to add new observations to the</span>
