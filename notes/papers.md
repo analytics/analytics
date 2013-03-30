@@ -139,6 +139,7 @@ At ~4 meg leaves this actually fits pretty well with bzip2 window sizes.
 * [The Myriad Virtues of Wavelet Trees](http://people.unipmn.it/manzini/papers/icalp06.pdf) by Ferragina, Giancarlo, and Manzini
 * [Geometric Burrows-Wheeler Transform: Linking Range Searching and Text Indexing](http://www.ittc.ku.edu/~jsv/Papers/CHS08.geometricbw.pdf) builds on wavelet trees and lets us use the algorithms from
 * Space-efficient suffix trees by Munro, Raman and Rao (2001).
+* [Kernel-based Similarity Search in Massive Graph Databases with Wavelet Trees](http://siam.omnibooksonline.com/2011datamining/data/papers/168.pdf) talks a bit about rank-select structures.
 
 # Compressed Computation
 
