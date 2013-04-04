@@ -116,7 +116,7 @@ for Main Memory Column Stores](http://www.cs.uni-paderborn.de/fileadmin/Informat
 * [Cache-Oblivious String B-Trees](http://www.cs.stonybrook.edu/~bender/pub/PODS06-BFK.pdf) by Bender, Farach-Colton and Kuszmaul used centroid trees as part of their COSB-tree
 * [Compressed String Dictionaries](http://arxiv.org/pdf/1101.5506v1.pdf) by Brisaboa, Cánovas, Martínez-Prieto and Navarro uses a BWT-based transformation to get an efficient compressed string dictionary.
 * [Offline Dictionary-Based Compression](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.31.5097&rep=rep1&type=pdf) by Larsson and Moffat covers RE-PAIR, which has very slow encoding, but reasonable decoding performance.
-* [On Searching Compressed String Collections Cache-Obliviously](http://ita.ucsd.edu/workshop/08/files/paper/paper_283.pdf) by Ferragina, Grossi, Gupta, Shah and Vitter talks about "distribution aware" search in section 5 and uses the centroid path decomposition of a tree.
+* [On Searching Compressed String Collections Cache-Obliviously](http://ita.ucsd.edu/workshop/08/files/paper/paper_283.pdf) by Ferragina, Grossi, Gupta, Shah and Vitter talks about "distribution aware" search in section 5 and uses the centroid path decomposition of a tree. They also use the exact form of rear-coding we reinvented.
 
 # Logging and Metrics
 
