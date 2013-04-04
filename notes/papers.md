@@ -143,6 +143,7 @@ At ~4 meg leaves this actually fits pretty well with bzip2 window sizes.
 * [Broadword Implementation of Rank/Select Queries](http://sux.dsi.unimi.it/paper.pdf) by Vigna
 * [Succincter](http://people.csail.mit.edu/mip/papers/succinct/succinct.pdf) by Mihai Pătraşcu
 * [Dynamic Entropy Compressed Sequences and Full-Text Indices](http://www.cs.ucr.edu/~stelo/cpm/cpm06/25-makinen.pdf) by Mäkinen and Navarro
+* [Succinct Dictionary Matching With No Slowdown](http://arxiv.org/pdf/1001.2860.pdf)
 
 # Compressed Computation
 
