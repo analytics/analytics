@@ -142,6 +142,7 @@ At ~4 meg leaves this actually fits pretty well with bzip2 window sizes.
 * [Kernel-based Similarity Search in Massive Graph Databases with Wavelet Trees](http://siam.omnibooksonline.com/2011datamining/data/papers/168.pdf) talks a bit about rank-select structures.
 * [Broadword Implementation of Rank/Select Queries](http://sux.dsi.unimi.it/paper.pdf) by Vigna
 * [Succincter](http://people.csail.mit.edu/mip/papers/succinct/succinct.pdf) by Mihai Pătraşcu
+* [Dynamic Entropy Compressed Sequences and Full-Text Indices](http://www.cs.ucr.edu/~stelo/cpm/cpm06/25-makinen.pdf) by Mäkinen and Navarro
 
 # Compressed Computation
 
