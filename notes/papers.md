@@ -137,6 +137,7 @@ At ~4 meg leaves this actually fits pretty well with bzip2 window sizes.
 
 # Wavelet Trees and Succinct Data Structures
 * [The Myriad Virtues of Wavelet Trees](http://people.unipmn.it/manzini/papers/icalp06.pdf) by Ferragina, Giancarlo, and Manzini
+* [Wavelet Trees for All](http://www.dcc.uchile.cl/~gnavarro/ps/cpm12.pdf) by Navarro is an amazingly good overview of the uses of rank/select.
 * [Geometric Burrows-Wheeler Transform: Linking Range Searching and Text Indexing](http://www.ittc.ku.edu/~jsv/Papers/CHS08.geometricbw.pdf) builds on wavelet trees and lets us use the algorithms from
 * Space-efficient Suffix Trees by Munro, Raman and Rao (2001).
 * [Kernel-based Similarity Search in Massive Graph Databases with Wavelet Trees](http://siam.omnibooksonline.com/2011datamining/data/papers/168.pdf) talks a bit about rank-select structures.
