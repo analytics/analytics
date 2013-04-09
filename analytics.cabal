@@ -119,6 +119,7 @@ library
     Data.Analytics.Numeric.Tropical
     Data.Analytics.Reflection
     Data.Analytics.Sharing
+    Data.Analytics.Succinct.Rank.Class
     Data.Analytics.Succinct.Rank.Pop
     Data.Analytics.Task
     Data.Analytics.Task.Event
