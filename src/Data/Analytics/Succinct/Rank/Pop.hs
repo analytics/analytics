@@ -41,13 +41,22 @@ infixl 0 %!
 (%!) :: (a -> b) -> a -> b
 f %! (!x) = f x
 
+-- | log of the # of Word64's in a chunk.
+logChunkSize :: Int
+logChunkSize = 5
+
+-- | # of Word64's in a chunk
+chunkSize :: Int
+chunkSize = bit logChunkSize
+
+-- | Create a vector of bits enumerated from least significant bit of the 0th slot upward including a Rank structureazzza
 new :: Vector Word64 -> Pop
 new xs = Pop xs $ create $ do
     let !wds = Unboxed.length xs
-        !k = shiftR wds 5 + 2
+        !k = shiftR wds logChunkSize + 2
     counts <- M.replicate k 0
-    let go !p !o !c = M.write counts o c >> if p + 32 <= wds
-          then go %! p + 32 %! o + 1 %! c + Unboxed.foldl' (\a b -> a + popCount b) 0 (Unboxed.slice p 32 xs)
+    let go !p !o !c = M.write counts o c >> if p + chunkSize <= wds
+          then go %! p + chunkSize %! o + 1 %! c + Unboxed.foldl' (\a b -> a + popCount b) 0 (Unboxed.slice p chunkSize xs)
           else do
              let c' = c + Unboxed.foldl' (\a b -> a + popCount b) 0 (Unboxed.slice p (wds - p) xs)
              M.write counts %! o + 1 %! c'
@@ -59,7 +68,7 @@ instance Rank Bool Pop where
   rank x k (Pop xs counts) = flop $ case quotRem k 64 of
     (q,r)
       | q >= Unboxed.length xs -> Unboxed.last counts
-      | !block <- shiftR q 32, !start <- shiftL block 32 ->
+      | !block <- shiftR q chunkSize, !start <- shiftL block chunkSize ->
         (counts ! block)
       + Unboxed.foldl' (\a b -> a + popCount b) 0 (Unboxed.slice start (q - start) xs)
       + popCount (xs ! q) .&. (bit r - 1)
