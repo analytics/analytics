@@ -31,20 +31,17 @@ class Rank a t | t -> a where
   default rank :: (Foldable f, Eq a, t ~ f a) => a -> Int -> t -> Int
   rank x k = fst . Foldable.foldl' step (0,0) where
     step ij@(i,j) y
-      | j >= k = ij
-      | j' <- j + 1 = (i',j')
-      where
-        !j' = j + 1
-        !i' | x == y = i + 1
-            | otherwise = i
+      | j >= k    = ij
+      | !j' <- j + 1, !i' <- (if x == y then i + 1 else i) = (i',j')
   {-# INLINE rank #-}
 
 instance Eq a => Rank a [a] where
-  rank x k = go 0 where
-    go !acc (y:ys)
-      | x == y    = go (acc + 1) ys
-      | otherwise = go acc ys
-    go !acc [] = acc
+  rank x k0 = go 0 0 where
+    go !acc !p (y:ys)
+      | p >= k0   = acc
+      | x == y    = go (acc + 1) (p + 1) ys
+      | otherwise = go acc (p + 1) ys
+    go !acc _ [] = acc
 
 instance Eq a => Rank a (Seq a)
 
@@ -53,21 +50,13 @@ instance Eq a => Rank a (Vector.Vector a) where
 instance (Eq a, Unbox a) => Rank a (Unboxed.Vector a) where
   rank x k = fst . Unboxed.foldl' step (0,0) where
     step ij@(i,j) y
-      | j >= k = ij
-      | j' <- j + 1 = (i',j')
-      where
-        !j' = j + 1
-        !i' | x == y = i + 1
-            | otherwise = i
+      | j >= k    = ij
+      | !j' <- j + 1, !i' <- (if x == y then i + 1 else i) = (i',j')
   {-# INLINE rank #-}
 
 instance (Eq a, Storable a) => Rank a (Storable.Vector a) where
   rank x k = fst . Storable.foldl' step (0,0) where
     step ij@(i,j) y
-      | j >= k = ij
-      | j' <- j + 1 = (i',j')
-      where
-        !j' = j + 1
-        !i' | x == y = i + 1
-            | otherwise = i
+      | j >= k    = ij
+      | !j' <- j + 1, !i' <- (if x == y then i + 1 else i) = (i',j')
   {-# INLINE rank #-}
