@@ -7,6 +7,7 @@ I also own several potentially relevant domains:
 * rebase.org
 * columnbase.com
 * rowbase.com/net/org
+* waveletdb.com
 * scibase.org
 * dibase.org
 * zigbase.com
