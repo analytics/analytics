@@ -8,6 +8,7 @@ I also own several potentially relevant domains:
 * columnbase.com
 * rowbase.com/net/org
 * waveletdb.com
+* succinctdb.com
 * scibase.org
 * dibase.org
 * zigbase.com
