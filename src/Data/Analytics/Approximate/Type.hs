@@ -107,7 +107,7 @@ instance (Ord a, Num a) => Num (Approximate a) where
 
 exact :: Eq a => Prism' (Approximate a) a
 exact = prism pure $ \ s -> case s of
-  Approximate (Log lp) a b c | lp == 0 && a == c -> Right b
+  Approximate (Exp lp) a b c | lp == 0 && a == c -> Right b
   _ -> Left s
 {-# INLINE exact #-}
 
