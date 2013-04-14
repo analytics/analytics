@@ -121,6 +121,7 @@ library
     Data.Analytics.Sharing
     Data.Analytics.Succinct.Rank.Class
     Data.Analytics.Succinct.Rank.Pop
+    Data.Analytics.Succinct.Select.Class
     Data.Analytics.Task
     Data.Analytics.Task.Event
     Data.Analytics.Task.Monad
