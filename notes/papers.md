@@ -158,6 +158,9 @@ At ~4 meg leaves this actually fits pretty well with bzip2 window sizes.
 * [High Performance Cache Replacement Using Re-Reference Interval Prediction (RRIP)](http://www.jaleels.org/ajaleel/publications/isca2010-rrip.pdf) by Jaleel, Theobald, Steely and Emer provides a nice replacement for LRU policies for an explicit buffer cache with low overhead.
 * [Decoupled Dynamic Cache Segmentation](http://faculty.cse.tamu.edu/djimenez/pdfs/hpca2012_dist.pdf) by Khan, Wang and Jiminéz is resistant to both scanning and thrashing, but is also "decoupled" from the choice of replacement policy.
 
+# Succinct Tree Representations
+* [Fully-Functional Succinct Trees](http://www.dcc.uchile.cl/~gnavarro/ps/soda10.pdf) provide a nice leg-up from DFUDS and LOUDS in terms of additional functionality.
+
 # Scheduling and Work-Stealing
 
 * [The data locality of work stealing](http://citeseer.ist.psu.edu/viewdoc/summary?doi=10.1.1.129.9162) by Acar and Blelloch introduced the affinity scheduler now used by Intel's TBB.
