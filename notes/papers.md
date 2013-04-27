@@ -165,6 +165,7 @@ At ~4 meg leaves this actually fits pretty well with bzip2 window sizes.
 * [A Dynamic-Sized Nonblocking Work Stealing Deque](http://citeseerx.ist.psu.edu/showciting?cid=3884551) by Hendler et al.
 
 # Data Sets (for future demo / benchmarking)
+* [Flights Data Set](http://stat-computing.org/dataexpo/2009/the-data.html) might be a good benchmark
 
-* [Flights Data Set](http://stat-computing.org/dataexpo/2009/the-data.html) might be a "good" benchmark
-
+# Bloom Filters
+* [Don’t Thrash: How to Cache your Hash on Flash](http://static.usenix.org/event/fast11/posters_files/Bender.pdf) provides the notion of a Quotient Filter
