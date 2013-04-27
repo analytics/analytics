@@ -85,6 +85,7 @@ for Main Memory Column Stores](http://www.cs.uni-paderborn.de/fileadmin/Informat
 
 * [Fully Persistent B-Trees](http://cs.au.dk/~gerth/pub/soda12.html)
 * [Confluently Persistent Tries for Efficient Version Control](http://erikdemaine.org/papers/ConfluentTries_Algorithmica/paper.pdf) by Demaine, Langerman and Price is particularly interesting to me, because they provide O(log log n) movement time fully persistent hash table.
+* [Stratiﬁed B-trees and Versioned Dictionaries](http://static.usenix.org/event/hotstorage11/tech/final_files/Twigg.pdf) describes a technique for versioning that is consistent with the rest of the machinery in `analytics`.
 
 # Cache-Obliviousness
 * [Cache-Oblivious Algorithms](http://supertech.csail.mit.edu/papers/Prokop99.pdf) was Prokop's M.S. thesis and more or less started this whole field.
