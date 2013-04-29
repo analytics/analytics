@@ -35,7 +35,7 @@ for Main Memory Column Stores](http://www.cs.uni-paderborn.de/fileadmin/Informat
 
 ## Fat binary search and monotone perfect hashing
 * [Order Preserving Minimal Perfect Hash Functions and Information Retrieval](http://eprints.cs.vt.edu/archive/00000248/01/TR-91-01.pdf) by Fox, Chen, Daoud, and Heath max present a way to create still-order preserving hashing functions for categorical data with known categories.
-* [Fast Prefix Search in Little Space with Application](http://www.itu.dk/people/pagh/papers/prefix-slides.pdf)
+* [Fast Prefix Search in Little Space with Application](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.174.9262&rep=rep1&type=pdf) [(slides)](http://www.itu.dk/people/pagh/papers/prefix-slides.pdf) describes a nice trade-off that permits 'weak' rank over prefix queries provided at least one key matches the prefix in the dataset and provides a nice way to balance returning all of the records that match a given query when mixed in with the other storage tools at our disposal.
 
 # Formal Concept Analysis
 
