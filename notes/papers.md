@@ -104,7 +104,8 @@ for Main Memory Column Stores](http://www.cs.uni-paderborn.de/fileadmin/Informat
 * [Partially De-amortized Packed Memory Array](http://dhruvbird.com/pdpma.pdf) [(alt)](http://www.academia.edu/1766080/A_partially_deamortized_packed_memory_array) goes half-way to the Willard bounds with a lot less implementation effort.
 
 ## X-Fast, Y-Fast and Z-Fast Tries
-* [Predecessor search with distance-sensitive query time](http://arxiv.org/pdf/1209.5441.pdf) covers Z-Fast Trees, and unlike [the original](http://link.springer.com/chapter/10.1007%2F978-3-642-16321-0_15?LI=true#page-1) isn't behind a Springer pay-wall).
+* [Predecessor search with distance-sensitive query time](http://arxiv.org/pdf/1209.5441.pdf) covers Z-Fast Trees (and unlike [the original](http://link.springer.com/chapter/10.1007%2F978-3-642-16321-0_15?LI=true#page-1) isn't behind a Springer pay-wall).
+* [Boldi's slides from BISS2012](http://boldi.di.unimi.it/Corsi/BISS2012/mmph.pdf) give a good motivation for the fat binary search used in z-fast tries.
 
 ## Cache-Oblivious Databases
 
