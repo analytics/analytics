@@ -9,7 +9,7 @@ module Data.Analytics.Key.Program
 
 import Control.Applicative
 import Control.Lens
-import Data.Analytics.Approximate.Type
+import Data.Approximate.Type
 import Data.Analytics.Key.Schedule
 import Data.Analytics.Key.Interleaving
 import Data.Data

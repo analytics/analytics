@@ -31,7 +31,7 @@ module Data.Analytics.Key.Schedule
 
 import Control.Applicative
 import Control.Lens
-import Data.Analytics.Approximate.Type
+import Data.Approximate.Type
 import Data.Bits
 import Data.Hashable
 import Data.Int

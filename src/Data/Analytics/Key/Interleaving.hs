@@ -36,7 +36,7 @@ module Data.Analytics.Key.Interleaving
 
 import Control.Applicative
 import Control.Lens
-import Data.Analytics.Approximate.Type
+import Data.Approximate.Type
 import Data.Analytics.Key.Heap
 import Data.Analytics.Key.Node
 import Data.Analytics.Key.Schedule

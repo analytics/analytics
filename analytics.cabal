@@ -85,12 +85,6 @@ library
     cbits/storage.c
 
   exposed-modules:
-    Data.Analytics.Approximate
-    Data.Analytics.Approximate.HyperLogLog
-    Data.Analytics.Approximate.HyperLogLog.Config
-    Data.Analytics.Approximate.HyperLogLog.Type
-    Data.Analytics.Approximate.Mass
-    Data.Analytics.Approximate.Type
     Data.Analytics.Combinators
     Data.Analytics.Compression.Arithmetic
     Data.Analytics.Console
@@ -117,7 +111,6 @@ library
     Data.Analytics.Numeric.Fast
     Data.Analytics.Numeric.Moments
     Data.Analytics.Numeric.Tropical
-    Data.Analytics.Reflection
     Data.Analytics.Sharing
     Data.Analytics.Succinct.Rank.Class
     Data.Analytics.Succinct.Rank.Pop
@@ -135,6 +128,7 @@ library
     Paths_analytics
 
   build-depends:
+    approximate               >= 0.1     && < 1,
     array                     >= 0.4     && < 0.5,
     base                      >= 4.4     && < 5,
     binary                    >= 0.5     && < 0.8,
@@ -168,7 +162,7 @@ library
     prelude-extras            >= 0.3     && < 1,
     parallel                  >= 3.2     && < 3.4,
     profunctors               >= 3.3     && < 4,
-    reflection                >= 1.1.6   && < 2,
+    reflection                >= 1.3     && < 2,
     semigroupoids             == 3.*,
     semigroups                >= 0.9     && < 1,
     stm                       >= 2.3     && < 2.5,
