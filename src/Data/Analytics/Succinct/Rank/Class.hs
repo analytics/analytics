@@ -18,6 +18,7 @@ module Data.Analytics.Succinct.Rank.Class
   ) where
 
 import Data.Vector as Vector
+import Data.Vector.Primitive as Primitive
 import Data.Vector.Unboxed as Unboxed
 import Data.Vector.Storable as Storable
 import Data.Sequence as Seq
@@ -46,6 +47,13 @@ instance Eq a => Rank a [a] where
 instance Eq a => Rank a (Seq a)
 
 instance Eq a => Rank a (Vector.Vector a) where
+
+instance (Eq a, Prim a) => Rank a (Primitive.Vector a) where
+  rank x k = fst . Primitive.foldl' step (0,0) where
+    step ij@(i,j) y
+      | j >= k    = ij
+      | !j' <- j + 1, !i' <- (if x == y then i + 1 else i) = (i',j')
+  {-# INLINE rank #-}
 
 instance (Eq a, Unbox a) => Rank a (Unboxed.Vector a) where
   rank x k = fst . Unboxed.foldl' step (0,0) where
