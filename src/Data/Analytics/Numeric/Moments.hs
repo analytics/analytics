@@ -46,7 +46,6 @@ import qualified Data.Vector as V
 
 -- | The first few central moments and covariances
 
--- TODO: Consider storing intermediate results in compensated form for better precision
 data Moments a
   = NoMoments -- this has no shape information
   | Moments
