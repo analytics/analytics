@@ -153,6 +153,7 @@ At ~4 meg leaves this actually fits pretty well with bzip2 window sizes.
 * [Dynamic Entropy Compressed Sequences and Full-Text Indices](http://www.cs.ucr.edu/~stelo/cpm/cpm06/25-makinen.pdf) by Mäkinen and Navarro
 * [Succinct Dictionary Matching With No Slowdown](http://arxiv.org/pdf/1001.2860.pdf)
 * [The Pizza & Chili Corpus](http://pizzachili.dcc.uchile.cl/indexes.html) provides implementations for many succinct structures.
+* [X86-optimized Rank-Select Dictionaries for Bit Sequences](http://www.slideshare.net/maropu0804/a-x86optimized-rankselect-dictionary-for-bit-sequences)
 
 # Compressed Computation
 
