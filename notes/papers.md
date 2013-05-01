@@ -33,9 +33,11 @@ for Main Memory Column Stores](http://www.cs.uni-paderborn.de/fileadmin/Informat
 * [An Ideal-Security Protocol for Order-Preserving Encoding](http://eprint.iacr.org/2013/129.pdf) by Popa, Li, and Zeldovich covers a way to improve on the previous paper to leak nothing other than order by using "mutable cipher-text". This is currently realized in their [cryptdb](http://css.csail.mit.edu/cryptdb/) project.
 * [Fast string sorting using order-preserving compression](http://dl.acm.org/citation.cfm?id=1180611)
 
-## Fat binary search and monotone perfect hashing
+## Fat binary search and monotone minimal perfect hashing
 * [Order Preserving Minimal Perfect Hash Functions and Information Retrieval](http://eprints.cs.vt.edu/archive/00000248/01/TR-91-01.pdf) by Fox, Chen, Daoud, and Heath max present a way to create still-order preserving hashing functions for categorical data with known categories.
 * [Fast Prefix Search in Little Space with Application](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.174.9262&rep=rep1&type=pdf) [(slides)](http://www.itu.dk/people/pagh/papers/prefix-slides.pdf) describes a nice trade-off that permits 'weak' rank over prefix queries provided at least one key matches the prefix in the dataset and provides a nice way to balance returning all of the records that match a given query when mixed in with the other storage tools at our disposal.
+* [F. C. Botelho and N. Ziviani. External perfect hashing for very large key sets. In CIKM, pages 653–662, 2007.](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.88.2974&rep=rep1&type=pdf) provides a suite of techniques that are used to good effect in
+* [Theory and Practise of Monotone Minimal Perfect Hashing](http://www.itu.dk/people/pagh/papers/jea.pdf), which provides a good template for how to put monotone minimal perfect hashing to use.
 
 # Formal Concept Analysis
 
