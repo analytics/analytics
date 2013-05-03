@@ -85,7 +85,6 @@ library
 
   exposed-modules:
     Data.Analytics.Combinators
-    Data.Analytics.Compression.Arithmetic
     Data.Analytics.Console
     Data.Analytics.Console.Options
     Data.Analytics.Console.Unicode
