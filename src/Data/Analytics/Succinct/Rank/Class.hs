@@ -25,7 +25,7 @@ import Data.Sequence as Seq
 import Data.Foldable as Foldable
 
 class Rank a t | t -> a where
-  -- | @rank x i xs@ computes the number of occurrences of @x@ in @xs@ in positions @[0..i)@
+  -- | @'rank' x i xs@ computes the number of occurrences of @x@ in @xs@ in positions @[0..i)@
   --
   -- A default definition is supplied in terms of 'Foldable'.
   rank :: a -> Int -> t -> Int
@@ -35,6 +35,16 @@ class Rank a t | t -> a where
       | j >= k    = ij
       | !j' <- j + 1, !i' <- (if x == y then i + 1 else i) = (i',j')
   {-# INLINE rank #-}
+
+  -- | @deltaRank x i j xs@ computes the number of occurences of @x@ in @xs@ in the interval @[i..j)@.
+  --
+  -- The identity
+  --
+  -- @'deltaRank' a i j xs = 'rank' a j xs - 'rank' a i xs@
+  --
+  -- is expected to hold, but it can often be implemented more efficiently.
+  deltaRank :: a -> Int -> Int -> t -> Int
+  deltaRank a i j t = rank a j t - rank a i t
 
 instance Eq a => Rank a [a] where
   rank x k0 = go 0 0 where
