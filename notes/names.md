@@ -4,8 +4,9 @@ Sibyl - After the Trojan war, the successor to the Oracle at Delphi was the Delp
 
 I also own several potentially relevant domains:
 
-* lambdabase.com
+* coinductive.com
 * rebase.org
+* lambdabase.com
 * lambdb.com
 * columnbase.com
 * rowbase.com/net/org
