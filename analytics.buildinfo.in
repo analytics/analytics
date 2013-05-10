@@ -1,2 +1,0 @@
-cc-options: @CPPFLAGS@ @DEFS@ -Wno-implicit
-include-dirs: dist/build/autogen dist/build/autogen/include

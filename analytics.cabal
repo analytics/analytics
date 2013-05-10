@@ -15,10 +15,7 @@ description:
   A work in progress analytics engine for Haskell
   .
   <https://github.com/analytics/analytics/tree/master/examples>
-  .
-  <<overview.png>>
--- build-type:    Custom
-build-type: Simple
+build-type: Custom
 
 extra-source-files:
   .ghci
@@ -79,10 +76,6 @@ library
   if flag(ast)
     ghc-options: -O2 -fmax-simplifier-iterations=10 -fdicts-cheap
     cpp-options: -DSPECIALIZE_INSTANCES=1
-
-  include-dirs: . includes
-  -- c-sources: cbits/storage.c
-  -- exposed-modules: Data.Analytics.File
 
   exposed-modules:
     Data.Analytics.Combinators
