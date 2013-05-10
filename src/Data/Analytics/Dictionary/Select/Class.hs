@@ -15,3 +15,5 @@ module Data.Analytics.Succinct.Select.Class
 
 class Select a t | t -> a where
   select :: t -> a -> Int -> Int
+
+

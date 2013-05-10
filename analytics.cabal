@@ -99,9 +99,8 @@ library
     Data.Analytics.Numeric.Moments
     Data.Analytics.Numeric.Tropical
     Data.Analytics.Sharing
-    Data.Analytics.Succinct.Rank.Class
-    Data.Analytics.Succinct.Rank.Pop
-    Data.Analytics.Succinct.Select.Class
+    Data.Analytics.Dictionary.Class
+    Data.Analytics.Dictionary.Pop
     Data.Analytics.Task
     Data.Analytics.Task.Event
     Data.Analytics.Task.Monad

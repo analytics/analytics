@@ -15,7 +15,7 @@
 --
 -- <http://en.wikipedia.org/wiki/Succinct_data_structure>
 --------------------------------------------------------------------
-module Data.Analytics.Succinct.Rank.Pop
+module Data.Analytics.Dictionary.Pop
   ( Pop(..)
   , HasPop(..)
   , new
@@ -27,9 +27,9 @@ import Data.Bits
 import Data.Vector.Unboxed as Unboxed
 import qualified Data.Vector.Unboxed.Mutable as M
 import Data.Word
-import Data.Analytics.Succinct.Rank.Class
+import Data.Analytics.Dictionary.Class
 
--- | A very simple 'popCount'-based succinct 'Rank' structure.
+-- | A very simple 'popCount'-based succinct indexed dictionary.
 data Pop = Pop
   { _popBits    :: !(Vector Word64)
   , _popCounts  :: !(Vector Int)
@@ -64,8 +64,9 @@ new xs = Pop xs $ create $ do
     go 0 0 0
     return counts
 
-instance Rank Bool Pop where
-  rank x k (Pop xs counts) = flop $ case quotRem k 64 of
+instance Dictionary Bool Pop where
+  size (Pop xs _) = Unboxed.length xs * 64
+  rank x (Pop xs counts) k = flop $ case quotRem k 64 of
     (q,r)
       | q >= Unboxed.length xs -> Unboxed.last counts
       | !block <- shiftR q chunkSize, !start <- shiftL block chunkSize ->
@@ -75,3 +76,4 @@ instance Rank Bool Pop where
     where
       flop i | x == True = i
              | otherwise = min k (shiftL (Unboxed.length xs) 6) - i
+  select = undefined
