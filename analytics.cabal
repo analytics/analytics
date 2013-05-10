@@ -87,12 +87,6 @@ library
     Data.Analytics.Combinators
     Data.Analytics.File
     Data.Analytics.Instances
-    Data.Analytics.Key
-    Data.Analytics.Key.Node
-    Data.Analytics.Key.Heap
-    Data.Analytics.Key.Interleaving
-    Data.Analytics.Key.Program
-    Data.Analytics.Key.Schedule
     Data.Analytics.Sharing
     Data.Analytics.Dictionary.Class
     Data.Analytics.Dictionary.Pop
