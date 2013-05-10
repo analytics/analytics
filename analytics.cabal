@@ -80,7 +80,6 @@ library
   exposed-modules:
     Data.Analytics.Combinators
     Data.Analytics.Instances
-    Data.Analytics.Sharing
     Data.Analytics.Dictionary
     Data.Analytics.Dictionary.Pop
 
