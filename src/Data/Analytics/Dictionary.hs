@@ -28,7 +28,7 @@ import Data.Vector.Storable as Storable
 import Data.Sequence as Seq
 import Data.Word
 
--- | This class is used to model 'succinct indexable dictionaries' that support 'rank' and 'select' operations.
+-- | This class is used to model succinct indexable dictionaries that support 'rank' and 'select' operations.
 -- Since we can always implement one in terms of the other using galloping search if we know the 'size' of the structure,
 -- putting them together in one class seems appropriate.
 --
@@ -48,6 +48,7 @@ class Dictionary a t | t -> a where
   size :: t -> Int
   default size :: (Foldable f, t ~ f b) => t -> Int
   size = Foldable.foldl' (\n _ -> n + 1) 0
+  {-# INLINE size #-}
 
   -- | @'rank' x i xs@ computes the number of occurrences of @x@ in @xs@ in positions @[0..i)@
   --
@@ -74,6 +75,7 @@ class Dictionary a t | t -> a where
   -- The obvious default definition is supplied in terms of the identity with rank.
   deltaRank :: a -> t -> Int -> Int -> Int
   deltaRank a t i j = rank a t j - rank a t i
+  {-# INLINE deltaRank #-}
 
   -- @'select x i xs'@ returns the position of the @i@th occurence of @x@ in @xs@.
   --
@@ -90,22 +92,28 @@ class Dictionary a t | t -> a where
       | i == 0 = j
       | otherwise = go (i - 1) (j + 1) bs
     go _ _ _  = error "select: out of bounds"
+  {-# INLINE select #-}
 
+-- | /O(n)/ 'rank' and 'select'
 instance Eq a => Dictionary a [a] where
   size = Prelude.length
+  {-# INLINE size #-}
   rank x xs k0 = go 0 0 xs where
     go !acc !p (y:ys)
       | p >= k0   = acc
       | x == y    = go (acc + 1) (p + 1) ys
       | otherwise = go acc (p + 1) ys
     go !acc _ [] = acc
+  {-# INLINE rank #-}
   select a xs k = go k 0 xs where
     go !i !j (b:bs)
       | a /= b = go i j bs
       | i == 0 = j
       | otherwise = go (i - 1) (j + 1) bs
     go _ _ _  = error "select: out of bounds"
+  {-# INLINE select #-}
 
+-- | /O(n)/ 'rank' and 'select'
 instance Eq a => Dictionary a (Seq a)
 
 -- | This provides a valid definition for 'rank' in terms of 'popCount' for instances of 'Bits'
@@ -118,6 +126,7 @@ selectBits :: (Num a, Bits a) => Bool -> a -> Int -> Int
 selectBits = error "selectBits: TODO"
 {-# INLINE selectBits #-}
 
+-- | /O(1)/ 'rank' and 'select'
 instance Dictionary Bool Word64 where
   size _ = 64
   {-# INLINE size #-}
@@ -126,6 +135,7 @@ instance Dictionary Bool Word64 where
   select = selectBits
   {-# INLINE select #-}
 
+-- | /O(1)/ 'rank' and 'select'
 instance Dictionary Bool Word32 where
   size _ = 32
   {-# INLINE size #-}
@@ -134,6 +144,7 @@ instance Dictionary Bool Word32 where
   select = selectBits
   {-# INLINE select #-}
 
+-- | /O(1)/ 'rank' and 'select'
 instance Dictionary Bool Word16 where
   size _ = 16
   {-# INLINE size #-}
@@ -142,6 +153,7 @@ instance Dictionary Bool Word16 where
   select = selectBits
   {-# INLINE select #-}
 
+-- | /O(1)/ 'rank' and 'select'
 instance Dictionary Bool Word8 where
   size _ = 8
   {-# INLINE size #-}
@@ -150,8 +162,10 @@ instance Dictionary Bool Word8 where
   select = selectBits
   {-# INLINE select #-}
 
+-- | /O(n)/ 'rank' and 'select'
 instance Eq a => Dictionary a (Vector.Vector a)
 
+-- | /O(n)/ 'rank' and 'select'
 instance (Eq a, Prim a) => Dictionary a (Primitive.Vector a) where
   size = Primitive.length
   {-# INLINE size #-}
@@ -162,6 +176,7 @@ instance (Eq a, Prim a) => Dictionary a (Primitive.Vector a) where
   {-# INLINE rank #-}
   select = undefined
 
+-- | /O(n)/ 'rank' and 'select'
 instance (Eq a, Unbox a) => Dictionary a (Unboxed.Vector a) where
   size = Unboxed.length
   {-# INLINE size #-}
@@ -172,6 +187,7 @@ instance (Eq a, Unbox a) => Dictionary a (Unboxed.Vector a) where
   {-# INLINE rank #-}
   select = undefined
 
+-- | /O(n)/ 'rank' and 'select'
 instance (Eq a, Storable a) => Dictionary a (Storable.Vector a) where
   size = Storable.length
   {-# INLINE size #-}
