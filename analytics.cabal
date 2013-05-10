@@ -78,7 +78,6 @@ library
     cpp-options: -DSPECIALIZE_INSTANCES=1
 
   exposed-modules:
-    Data.Analytics.Combinators
     Data.Analytics.Dictionary
     Data.Analytics.Dictionary.Pop
 
