@@ -101,14 +101,6 @@ library
     Data.Analytics.Sharing
     Data.Analytics.Dictionary.Class
     Data.Analytics.Dictionary.Pop
-    Data.Analytics.Task
-    Data.Analytics.Task.Event
-    Data.Analytics.Task.Monad
-    Data.Analytics.Task.Observable
-    Data.Analytics.Task.Observer
-    Data.Analytics.Task.Promise
-    Data.Analytics.Task.STM
-    Data.Analytics.Task.Subscription
 
   other-modules:
     Paths_analytics
