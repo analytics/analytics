@@ -49,7 +49,7 @@ source-repository head
 -- cabal install -f-repl will disable the repl
 flag repl
   description: Build the REPL.
-  default:     True
+  default:     False
   manual:      True
 
 -- cabal install -fast will turn on painfully slow optimizations
