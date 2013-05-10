@@ -17,12 +17,14 @@ module Data.Analytics.Dictionary.Class
   ( Dictionary(..)
   ) where
 
+import Data.Bits
+import Data.Foldable as Foldable
 import Data.Vector as Vector
 import Data.Vector.Primitive as Primitive
 import Data.Vector.Unboxed as Unboxed
 import Data.Vector.Storable as Storable
 import Data.Sequence as Seq
-import Data.Foldable as Foldable
+import Data.Word
 
 -- | This class is used to model 'succinct indexable dictionaries' that support 'rank' and 'select' operations.
 -- Since we can always implement one in terms of the other using galloping search if we know the 'size' of the structure,
@@ -97,7 +99,13 @@ instance Eq a => Dictionary a [a] where
 
 instance Eq a => Dictionary a (Seq a)
 
-instance Eq a => Dictionary a (Vector.Vector a) where
+instance Dictionary Bool Word64 where
+  size _ = 64
+  rank True xs i  = popCount $ xs .&. (bit i - 1)
+  rank False xs i = i - rank True xs i
+  select = undefined
+
+instance Eq a => Dictionary a (Vector.Vector a)
 
 instance (Eq a, Prim a) => Dictionary a (Primitive.Vector a) where
   size = Primitive.length
