@@ -13,7 +13,7 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Data.Analytics.Dictionary.Class
+module Data.Analytics.Dictionary
   ( Dictionary(..)
   , rankBits
   , selectBits

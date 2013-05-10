@@ -17,7 +17,8 @@ description:
   <https://github.com/analytics/analytics/tree/master/examples>
   .
   <<overview.png>>
-build-type:    Custom
+-- build-type:    Custom
+build-type: Simple
 
 extra-source-files:
   .ghci
@@ -80,15 +81,14 @@ library
     cpp-options: -DSPECIALIZE_INSTANCES=1
 
   include-dirs: . includes
-  c-sources:
-    cbits/storage.c
+  -- c-sources: cbits/storage.c
+  -- exposed-modules: Data.Analytics.File
 
   exposed-modules:
     Data.Analytics.Combinators
-    Data.Analytics.File
     Data.Analytics.Instances
     Data.Analytics.Sharing
-    Data.Analytics.Dictionary.Class
+    Data.Analytics.Dictionary
     Data.Analytics.Dictionary.Pop
 
   other-modules:

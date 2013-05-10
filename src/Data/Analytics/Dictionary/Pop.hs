@@ -27,7 +27,7 @@ import Data.Bits
 import Data.Vector.Unboxed as Unboxed
 import qualified Data.Vector.Unboxed.Mutable as M
 import Data.Word
-import Data.Analytics.Dictionary.Class
+import Data.Analytics.Dictionary
 
 -- | A very simple 'popCount'-based succinct indexed dictionary.
 data Pop = Pop
