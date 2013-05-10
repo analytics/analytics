@@ -92,13 +92,19 @@ class Dictionary a t | t -> a where
     go _ _ _  = error "select: out of bounds"
 
 instance Eq a => Dictionary a [a] where
-  size = length
+  size = Prelude.length
   rank x xs k0 = go 0 0 xs where
     go !acc !p (y:ys)
       | p >= k0   = acc
       | x == y    = go (acc + 1) (p + 1) ys
       | otherwise = go acc (p + 1) ys
     go !acc _ [] = acc
+  select a xs k = go k 0 xs where
+    go !i !j (b:bs)
+      | a /= b = go i j bs
+      | i == 0 = j
+      | otherwise = go (i - 1) (j + 1) bs
+    go _ _ _  = error "select: out of bounds"
 
 instance Eq a => Dictionary a (Seq a)
 
@@ -148,6 +154,7 @@ instance Eq a => Dictionary a (Vector.Vector a)
 
 instance (Eq a, Prim a) => Dictionary a (Primitive.Vector a) where
   size = Primitive.length
+  {-# INLINE size #-}
   rank x xs k = fst $ Primitive.foldl' step (0,0) xs where
     step ij@(i,j) y
       | j >= k    = ij
@@ -157,6 +164,7 @@ instance (Eq a, Prim a) => Dictionary a (Primitive.Vector a) where
 
 instance (Eq a, Unbox a) => Dictionary a (Unboxed.Vector a) where
   size = Unboxed.length
+  {-# INLINE size #-}
   rank x xs k = fst $ Unboxed.foldl' step (0,0) xs where
     step ij@(i,j) y
       | j >= k    = ij
@@ -166,6 +174,7 @@ instance (Eq a, Unbox a) => Dictionary a (Unboxed.Vector a) where
 
 instance (Eq a, Storable a) => Dictionary a (Storable.Vector a) where
   size = Storable.length
+  {-# INLINE size #-}
   rank x xs k = fst $ Storable.foldl' step (0,0) xs where
     step ij@(i,j) y
       | j >= k    = ij
