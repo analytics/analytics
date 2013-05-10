@@ -93,8 +93,6 @@ library
     Data.Analytics.Key.Interleaving
     Data.Analytics.Key.Program
     Data.Analytics.Key.Schedule
-    Data.Analytics.Numeric.Moments
-    Data.Analytics.Numeric.Tropical
     Data.Analytics.Sharing
     Data.Analytics.Dictionary.Class
     Data.Analytics.Dictionary.Pop
