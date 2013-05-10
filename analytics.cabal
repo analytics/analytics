@@ -79,7 +79,6 @@ library
 
   exposed-modules:
     Data.Analytics.Combinators
-    Data.Analytics.Instances
     Data.Analytics.Dictionary
     Data.Analytics.Dictionary.Pop
 
