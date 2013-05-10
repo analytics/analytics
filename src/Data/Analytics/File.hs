@@ -9,7 +9,7 @@
 --
 --------------------------------------------------------------------
 module Data.Analytics.File
-  ( InsufficientDiskSpace
+  ( InsufficientDiskSpace(..)
   , AsInsufficientDiskSpace(..)
   , allocate
   , prefetch
@@ -73,5 +73,3 @@ sync h = do
 foreign import ccall c_fallocate :: Fd -> CSize -> IO Int
 foreign import ccall c_sync      :: Fd -> IO Int
 foreign import ccall c_prefetch  :: Fd -> CSize -> CSize -> IO Int
-
-
