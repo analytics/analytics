@@ -15,6 +15,8 @@
 --------------------------------------------------------------------
 module Data.Analytics.Dictionary.Class
   ( Dictionary(..)
+  , rankBits
+  , selectBits
   ) where
 
 import Data.Bits
@@ -90,6 +92,7 @@ class Dictionary a t | t -> a where
     go _ _ _  = error "select: out of bounds"
 
 instance Eq a => Dictionary a [a] where
+  size = length
   rank x xs k0 = go 0 0 xs where
     go !acc !p (y:ys)
       | p >= k0   = acc
@@ -99,11 +102,47 @@ instance Eq a => Dictionary a [a] where
 
 instance Eq a => Dictionary a (Seq a)
 
+-- | This provides a valid definition for 'rank' in terms of 'popCount' for instances of 'Bits'
+rankBits :: (Num a, Bits a) => Bool -> a -> Int -> Int
+rankBits True xs i = popCount $ xs .&. (bit i - 1)
+rankBits False xs i = i - popCount (xs .&. (bit i - 1))
+{-# INLINE rankBits #-}
+
+selectBits :: (Num a, Bits a) => Bool -> a -> Int -> Int
+selectBits = error "selectBits: TODO"
+{-# INLINE selectBits #-}
+
 instance Dictionary Bool Word64 where
   size _ = 64
-  rank True xs i  = popCount $ xs .&. (bit i - 1)
-  rank False xs i = i - rank True xs i
-  select = undefined
+  {-# INLINE size #-}
+  rank = rankBits
+  {-# INLINE rank #-}
+  select = selectBits
+  {-# INLINE select #-}
+
+instance Dictionary Bool Word32 where
+  size _ = 32
+  {-# INLINE size #-}
+  rank = rankBits
+  {-# INLINE rank #-}
+  select = selectBits
+  {-# INLINE select #-}
+
+instance Dictionary Bool Word16 where
+  size _ = 16
+  {-# INLINE size #-}
+  rank = rankBits
+  {-# INLINE rank #-}
+  select = selectBits
+  {-# INLINE select #-}
+
+instance Dictionary Bool Word8 where
+  size _ = 8
+  {-# INLINE size #-}
+  rank = rankBits
+  {-# INLINE rank #-}
+  select = selectBits
+  {-# INLINE select #-}
 
 instance Eq a => Dictionary a (Vector.Vector a)
 
