@@ -6,7 +6,7 @@ before_install:
   - mkdir lens
   - git clone https://github.com/ekmett/lens.git
   - cd lens
-  - travis/cabal-apt-install --constraint='hashable >= 1.2' --constraint='vector >= 0.10.0.1'
+  - travis/cabal-apt-install
   - cabal install
   - cd ..
   - travis/cabal-apt-install --enable-tests
