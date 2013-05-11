@@ -86,50 +86,6 @@ library
     unix                      >= 2.5     && < 2.7,
     vector                    >= 0.10    && < 0.11
 
-    -- generic-deriving          >= 1.4     && < 1.6,
-    -- tagged                    >= 0.4.4   && < 1,
-    -- transformers-compat       >= 0.1     && < 1,
-    -- comonad                   >= 3       && < 4,
-    -- contravariant             >= 0.4     && < 1,
-    -- data-default              >= 0.5     && < 0.6,
-    -- log-domain                >= 0.6     && < 1,
-    -- parallel                  >= 3.2     && < 3.4,
-    -- profunctors               >= 3.3     && < 4,
-    -- semigroupoids             == 3.*,
-    -- semigroups                >= 0.9     && < 1,
-    -- stm                       >= 2.3     && < 2.5,
-    -- compensated               >= 0.3     && < 1,
-    -- haskeline                 >= 0.7     && < 0.8,
-    -- configurator              >= 0.2.0.2 && < 0.3,
-    -- prelude-extras            >= 0.3     && < 1,
-    -- pointed                   >= 3       && < 4,
-    -- approximate               >= 0.1.1   && < 1,
-    -- unordered-containers      >= 0.2.1   && < 0.3,
-    -- void                      >= 0.5.10  && < 1
-    -- logict                    >= 0.6     && < 0.7,
-    -- lz4                       >= 0.2.2   && < 0.3,
-    -- MonadCatchIO-transformers >= 0.3     && < 0.4,
-executable analytics
-  main-is: Main.hs
-  other-modules:
-    Data.Analytics.Console
-    Data.Analytics.Console.Options
-    Data.Analytics.Console.Unicode
-  default-language: Haskell2010
-  hs-source-dirs: . src
-  ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N -with-rtsopts=-T -v0
-  if !flag(repl)
-    buildable: False
-  else
-    build-depends:
-      analytics                 >= 0.1,
-      base                                    < 5,
-      bytestring                >= 0.9.2   && < 0.11,
-      ekg                       >= 0.3.1.2 && < 0.4,
-      lens                      >= 3.9     && < 4,
-      MonadCatchIO-transformers >= 0.3     && < 0.4,
-      optparse-applicative      >= 0.5     && < 0.6
-
 test-suite doctests
   type:    exitcode-stdio-1.0
   main-is: doctests.hs
