@@ -27,20 +27,6 @@ extra-source-files:
   README.markdown
   travis/cabal-apt-install
   travis/config
-  Makefile.am
-  Makefile.in
-  aclocal.m4
-  analytics.buildinfo.in
-  configure
-  configure.ac
-  config.h.in
-  depcomp
-  install-sh
-  m4/*.m4
-  missing
-  man/Makefile.am
-  man/Makefile.in
-  man/analytics.1
 
 source-repository head
   type: git
