@@ -57,8 +57,8 @@ import Prelude hiding (length, null)
 import qualified Prelude
 
 data Bitmap = Bitmap
-  { _binWords  :: {-# UNPACK #-} !(ForeignPtr Word64) -- payload
-  , _binLength :: {-# UNPACK #-} !Int                 -- length in /bits/
+  { _bitmapWords  :: {-# UNPACK #-} !(ForeignPtr Word64) -- payload
+  , _bitmapLength :: {-# UNPACK #-} !Int                 -- length in /bits/
   } deriving Typeable
 
 makeClassy ''Bitmap
