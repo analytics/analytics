@@ -20,7 +20,6 @@
 module Data.Analytics.Bitmap
   ( Bitmap(..)
   , _Bitmap
-  , length
   , null
   , empty
   , HasBitmap(..)
@@ -38,6 +37,7 @@ import Control.DeepSeq
 import Control.Exception (assert)
 import Control.Lens
 
+import Data.Analytics.Dictionary
 import Data.Bits
 import Data.Bits.Lens
 import Data.Typeable
@@ -61,10 +61,10 @@ data Bitmap = Bitmap
   , _binLength :: {-# UNPACK #-} !Int                 -- length in /bits/
   } deriving Typeable
 
+makeClassy ''Bitmap
+
 fromForeignPtr :: ForeignPtr Word64 -> Int -> Bitmap
 fromForeignPtr = Bitmap
-
-makeClassy ''Bitmap
 
 instance Eq Bitmap where
   a@(Bitmap fp len) == b@(Bitmap fp' len')
@@ -87,11 +87,38 @@ instance Ord Bitmap where
             r1 -> case len2 .&. 63 of
               0 -> return $! compare len1 len2 -- no extra bits to compare, just compare remaining lengths
               r2 -> do
-               e1 <- peekElemOff p1 r1
-               e2 <- peekElemOff p2 r2
+               e1 <- peekElemOff p1 w1
+               e2 <- peekElemOff p2 w2
                let mask = bit (min r1 r2) - 1
                return $! compare (e1 .&. mask) (e2 .&. mask) <> compare len1 len2
           GT -> return GT
+
+-- | /O(n)/
+instance Dictionary Bool Bitmap where
+  size (Bitmap _ l) = l
+  {-# INLINE size #-}
+
+  rank True b o = rank1 b o
+  rank False b@(Bitmap _ l) o = min o l - rank1 b o
+  {-# INLINE rank #-}
+
+  select a b o = select a (b^._Bitmap) o
+  {-# INLINE select #-}
+
+rank1 :: Bitmap -> Int -> Int
+rank1 (Bitmap fp l) o
+  | m > 0 = inlinePerformIO $ withForeignPtr fp $ \p -> go 0 w p >>= \t ->
+    if b == 0
+    then return t
+    else peekElemOff p w >>= \e -> return $! t + popCount (e .&. mask)
+  | otherwise = 0
+  where
+    m = min o l
+    w = shiftR (m - 1) 6 -- # of /full/ words we need to count.
+    b = m .&. 63
+    mask = bit b - 1
+    go !acc 0  !_ = return acc
+    go !acc !r !p = peek p >>= \e -> go (acc + popCount e) (r - 1) (p `plusPtr` 1)
 
 instance NFData Bitmap
 
@@ -108,7 +135,7 @@ toList :: Bitmap -> [Bool]
 toList b = take l $ do
   i <- [ 0 .. wordsRequired l - 1 ]
   word i b ^.. bits
-  where l = length b
+  where l = size b
 {-# INLINE toList #-}
 
 -- | This isomorphism can be used to convert from a 'Bitmap' to a list of booleans (and back).
@@ -159,10 +186,6 @@ word o (Bitmap fp l)
 -- @'unsigned' o l@ should decode @l@ bits starting at offset @o@ as an unsigned @l@ bit number and return it.
 -- unsigned :: Int -> Int -> Bitmap -> Integer
 
--- | Return the length (in bits) of a given bit vector
-length :: Bitmap -> Int
-length (Bitmap _ l) = l
-{-# INLINE length #-}
 
 -- | Return whether or not a given bit vector is empty
 null :: Bitmap -> Bool
