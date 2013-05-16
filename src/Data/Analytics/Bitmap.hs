@@ -31,6 +31,7 @@ module Data.Analytics.Bitmap
   , (!)
   , (//)
   , word
+  , mmap
   ) where
 
 import Control.Applicative hiding (empty)
@@ -57,6 +58,8 @@ import GHC.IO (IO(..), unsafeDupablePerformIO)
 
 import Prelude hiding (length, null)
 import qualified Prelude
+
+import System.IO.MMap
 
 import Text.Read
 
@@ -287,3 +290,9 @@ foreign import ccall unsafe "string.h memcpy" c_memcpy :: Ptr a -> Ptr a -> CSiz
 
 memcpy :: Ptr a -> Ptr a -> Int -> IO ()
 memcpy p q s = c_memcpy p q (fromIntegral s) >> return ()
+
+-- | 'mmap' the contents of a file into memory as a 'Bitmap', automatically unmapping when this goes out of scope.
+mmap :: FilePath -> IO Bitmap
+mmap path = do
+  (fp,offset,sz) <- mmapFileForeignPtr path ReadOnly Nothing
+  assert (offset == 0) $ return $! Bitmap fp (sz*8)
