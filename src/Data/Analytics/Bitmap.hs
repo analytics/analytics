@@ -31,6 +31,7 @@ module Data.Analytics.Bitmap
   , (!)
   , (//)
   , word
+  , take
   , mmap
   ) where
 
@@ -56,7 +57,7 @@ import GHC.Base (realWorld#, nullAddr#)
 import GHC.ForeignPtr (ForeignPtr(ForeignPtr), mallocPlainForeignPtrBytes)
 import GHC.IO (IO(..), unsafeDupablePerformIO)
 
-import Prelude hiding (length, null)
+import Prelude hiding (length, null, take)
 import qualified Prelude
 
 import System.IO.MMap
@@ -150,7 +151,7 @@ fromList xs = unsafeCreate (Prelude.length xs) (go xs) where
 {-# INLINE fromList #-}
 
 toList :: Bitmap -> [Bool]
-toList b = take l $ do
+toList b = Prelude.take l $ do
   i <- [ 0 .. wordsRequired l - 1 ]
   word i b ^.. bits
   where l = size b
@@ -280,6 +281,12 @@ inlinePerformIO :: IO a -> a
 inlinePerformIO (IO m) = case m realWorld# of
   (# _, r #) -> r
 {-# INLINE inlinePerformIO #-}
+
+-- | /O(1)/ @take n b@ takes the first @n@ bits of @b@.
+take :: Int -> Bitmap -> Bitmap
+take n (Bitmap fp l)
+  | n > 0     = Bitmap fp (min (max n 0) l)
+  | otherwise = empty
 
 foreign import ccall unsafe "string.h memcmp" c_memcmp :: Ptr a -> Ptr a -> CSize -> IO CInt
 
