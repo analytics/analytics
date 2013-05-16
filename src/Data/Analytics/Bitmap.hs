@@ -162,6 +162,9 @@ type instance Index Bitmap = Int
 instance Applicative f => Each f Bitmap Bitmap Bool Bool where
   each = _Bitmap.traversed
 
+instance (Functor f, Contravariant f) => Contains f Bitmap where
+  contains = containsLength size
+
 type instance IxValue Bitmap = Bool
 instance (Applicative f, Contravariant f) => Ixed f Bitmap where
   ix o f b@(Bitmap fp l)
