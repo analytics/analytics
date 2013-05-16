@@ -40,6 +40,7 @@ import Control.Lens
 import Data.Analytics.Dictionary
 import Data.Bits
 import Data.Bits.Lens
+import Data.Foldable hiding (toList)
 import Data.Typeable
 import Data.Monoid
 import Data.Word
@@ -56,6 +57,8 @@ import GHC.IO (IO(..), unsafeDupablePerformIO)
 import Prelude hiding (length, null)
 import qualified Prelude
 
+import Text.Read
+
 data Bitmap = Bitmap
   { _bitmapWords  :: {-# UNPACK #-} !(ForeignPtr Word64) -- payload
   , _bitmapLength :: {-# UNPACK #-} !Int                 -- length in /bits/
@@ -65,6 +68,17 @@ makeClassy ''Bitmap
 
 fromForeignPtr :: ForeignPtr Word64 -> Int -> Bitmap
 fromForeignPtr = Bitmap
+
+instance Show Bitmap where
+  showsPrec d b = showParen (d > 8) $
+    showString "_Bitmap # " . showsPrec 8 (toList b)
+
+instance Read Bitmap where
+  readPrec = parens $ prec 8 $ do
+    Ident "_Bitmap" <- step lexP
+    Symbol "#" <- lexP
+    r <- step readPrec
+    return $! fromList r
 
 instance Eq Bitmap where
   a@(Bitmap fp len) == b@(Bitmap fp' len')
