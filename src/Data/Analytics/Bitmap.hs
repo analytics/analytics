@@ -29,6 +29,7 @@ module Data.Analytics.Bitmap
   , create'
   , unsafeCreate
   , (!)
+  , (//)
   , word
   ) where
 
@@ -175,7 +176,7 @@ instance (Applicative f, Contravariant f) => Ixed f Bitmap where
       w <- peekElemOff p (shiftR o 6)
       return $! coerce $ indexed f o (testBit w (o .&. 63))
 
--- Returns 'False' when indexing out of bounds
+-- | Returns 'False' when indexing out of bounds
 (!) :: Bitmap -> Int -> Bool
 (!) (Bitmap fp l) o
   | o < 0  = False
@@ -185,6 +186,20 @@ instance (Applicative f, Contravariant f) => Ixed f Bitmap where
     w <- peekElemOff p (shiftR o 6)
     return $! testBit w (o .&. 63)
 {-# INLINE (!) #-}
+
+(//) :: Bitmap -> [(Int, Bool)] -> Bitmap
+Bitmap fp l // os = inlinePerformIO $ withForeignPtr fp $ \p ->
+  create l $ \p' -> do
+    memcpy p' p l
+    for_ os $ \(i,b) ->
+      if 0 <= i && i < l
+      then do
+        let q = shiftR i 6
+            r = i .&. 63
+            p'' = plusPtr p' q
+        w <- peek p''
+        poke p'' (if b then setBit w r else clearBit w r :: Word64)
+      else return ()
 
 -- | Returns 0 when indexing out of bounds
 word :: Int -> Bitmap -> Word64
@@ -202,7 +217,6 @@ word o (Bitmap fp l)
 
 -- @'unsigned' o l@ should decode @l@ bits starting at offset @o@ as an unsigned @l@ bit number and return it.
 -- unsigned :: Int -> Int -> Bitmap -> Integer
-
 
 -- | Return whether or not a given bit vector is empty
 null :: Bitmap -> Bool
