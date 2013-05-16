@@ -43,8 +43,8 @@ import Control.Lens
 import Data.Analytics.Dictionary
 import Data.Bits
 import Data.Bits.Lens
+import Data.Data
 import Data.Foldable hiding (toList)
-import Data.Typeable
 import Data.Monoid
 import Data.Word
 
@@ -73,6 +73,22 @@ makeClassy ''Bitmap
 
 fromForeignPtr :: ForeignPtr Word64 -> Int -> Bitmap
 fromForeignPtr = Bitmap
+
+instance Data Bitmap where
+  gfoldl f z b = z fromList `f` (toList b)
+  toConstr _ = fromListConstr
+  gunfold k z c = case constrIndex c of
+    1 -> k (z fromList)
+    _ -> error "gunfold"
+  dataTypeOf _ = bitmapDataType
+
+fromListConstr :: Constr
+fromListConstr = mkConstr bitmapDataType "fromList" [] Prefix
+{-# NOINLINE fromListConstr #-}
+
+bitmapDataType :: DataType
+bitmapDataType = mkDataType "Data.Analytics.Bitmap.Bitmap" [fromListConstr]
+{-# NOINLINE bitmapDataType #-}
 
 instance Show Bitmap where
   showsPrec d b = showParen (d > 8) $
