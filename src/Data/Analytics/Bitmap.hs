@@ -22,7 +22,6 @@ module Data.Analytics.Bitmap
   , _Bitmap
   , null
   , empty
-  , HasBitmap(..)
   , fromForeignPtr
   , createAndTrim
   , create
@@ -65,11 +64,9 @@ import System.IO.MMap
 import Text.Read
 
 data Bitmap = Bitmap
-  { _bitmapWords  :: {-# UNPACK #-} !(ForeignPtr Word64) -- payload
-  , _bitmapLength :: {-# UNPACK #-} !Int                 -- length in /bits/
-  } deriving Typeable
-
-makeClassy ''Bitmap
+  {-# UNPACK #-} !(ForeignPtr Word64) -- payload
+  {-# UNPACK #-} !Int                 -- length in /bits/
+  deriving Typeable
 
 fromForeignPtr :: ForeignPtr Word64 -> Int -> Bitmap
 fromForeignPtr = Bitmap
