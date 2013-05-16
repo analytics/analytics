@@ -43,8 +43,10 @@ import Data.Analytics.Dictionary
 import Data.Bits
 import Data.Bits.Lens
 import Data.Binary as Binary
-import Data.Binary.Get as Binary
-import Data.Binary.Put as Binary
+import Data.Bytes.Serial as Bytes
+import Data.Bytes.Get as Bytes
+import Data.Bytes.Put as Bytes
+import Data.Serialize as Serial
 import Data.ByteString hiding (take, empty, null)
 import Data.ByteString.Internal (ByteString(..))
 import Data.Data
@@ -98,13 +100,21 @@ fromByteString bs@(PS fp o l)
 {-# INLINE fromByteString #-}
 
 instance Binary Bitmap where
-  get = do
-    l <- Binary.get
-    bs <- Binary.getByteString (shiftR (l + 7) 3)
+  get = deserialize
+  put = serialize
+
+instance Serialize Bitmap where
+  get = deserialize
+  put = serialize
+
+instance Serial Bitmap where
+  deserialize = do
+    l <- deserialize
+    bs <- Bytes.getByteString (shiftR (l + 7) 3)
     return $! take l (fromByteString bs)
-  put b = do
-    Binary.put (size b)
-    Binary.putByteString (toByteString b)
+  serialize b = do
+    serialize (size b)
+    Bytes.putByteString (toByteString b)
 
 fromListConstr :: Constr
 fromListConstr = mkConstr bitmapDataType "fromList" [] Prefix
