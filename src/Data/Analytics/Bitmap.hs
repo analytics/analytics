@@ -42,13 +42,17 @@ import Control.Lens
 import Data.Analytics.Dictionary
 import Data.Bits
 import Data.Bits.Lens
+import Data.Binary as Binary
+import Data.Binary.Get as Binary
+import Data.Binary.Put as Binary
+import Data.ByteString hiding (take, empty, null)
+import Data.ByteString.Internal (ByteString(..))
 import Data.Data
 import Data.Foldable hiding (toList)
 import Data.Monoid
-import Data.Word
 
 import Foreign.C.Types
-import Foreign.ForeignPtr (ForeignPtr, withForeignPtr)
+import Foreign.ForeignPtr (ForeignPtr, withForeignPtr, castForeignPtr)
 import Foreign.Ptr (Ptr, plusPtr)
 import Foreign.Storable
 
@@ -70,6 +74,7 @@ data Bitmap = Bitmap
 
 fromForeignPtr :: ForeignPtr Word64 -> Int -> Bitmap
 fromForeignPtr = Bitmap
+{-# INLINE fromForeignPtr #-}
 
 instance Data Bitmap where
   gfoldl f z b = z fromList `f` (toList b)
@@ -78,6 +83,28 @@ instance Data Bitmap where
     1 -> k (z fromList)
     _ -> error "gunfold"
   dataTypeOf _ = bitmapDataType
+
+-- | Generate a bytestring for all of the bits in a 'Bitmap'
+toByteString :: Bitmap -> ByteString
+toByteString (Bitmap fp l) = PS (castForeignPtr fp) 0 (shiftR (l + 7) 3)
+{-# INLINE toByteString #-}
+
+fromByteString :: ByteString -> Bitmap
+fromByteString bs@(PS fp o l)
+  | l .&. 8 == 0 && o == 0 = Bitmap (castForeignPtr fp) (shiftR l 3)
+  | otherwise = case copy bs of
+    PS fp' 0 _ -> Bitmap (castForeignPtr fp') (shiftR l 3)
+    _          -> error "Data.Analytics.Bitmap.fromByteString: copy failed to copy"
+{-# INLINE fromByteString #-}
+
+instance Binary Bitmap where
+  get = do
+    l <- Binary.get
+    bs <- Binary.getByteString (shiftR (l + 7) 3)
+    return $! take l (fromByteString bs)
+  put b = do
+    Binary.put (size b)
+    Binary.putByteString (toByteString b)
 
 fromListConstr :: Constr
 fromListConstr = mkConstr bitmapDataType "fromList" [] Prefix
@@ -157,7 +184,7 @@ instance NFData Bitmap
 fromList :: [Bool] -> Bitmap
 fromList xs = unsafeCreate (Prelude.length xs) (go xs) where
   go [] _ = return ()
-  go ys p = case splitAt 64 ys of -- this could be more efficient but this is at least obvious
+  go ys p = case Prelude.splitAt 64 ys of -- this could be more efficient but this is at least obvious
     (as,bs) -> do
       poke p (0 & partsOf bits .~ as)
       go bs (p `plusPtr` 1)
