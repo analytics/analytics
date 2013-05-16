@@ -167,14 +167,14 @@ instance (Functor f, Contravariant f) => Contains f Bitmap where
   contains = containsLength size
 
 type instance IxValue Bitmap = Bool
-instance (Applicative f, Contravariant f) => Ixed f Bitmap where
+instance Applicative f => Ixed f Bitmap where
   ix o f b@(Bitmap fp l)
     | o < 0  = pure b
     | o >= l = pure b
     | l == 0 = pure b
     | otherwise = inlinePerformIO $ withForeignPtr fp $ \p -> do
       w <- peekElemOff p (shiftR o 6)
-      return $! coerce $ indexed f o (testBit w (o .&. 63))
+      return $! indexed f o (testBit w (o .&. 63)) <&> \r -> b // [(o,r)]
 
 -- | Returns 'False' when indexing out of bounds
 (!) :: Bitmap -> Int -> Bool
