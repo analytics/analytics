@@ -58,6 +58,7 @@ library
 
   exposed-modules:
     Data.Analytics.Bitmap
+    Data.Analytics.Bits
     Data.Analytics.Dictionary
     Data.Analytics.Dictionary.Pop
 
