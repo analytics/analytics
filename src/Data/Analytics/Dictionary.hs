@@ -20,6 +20,7 @@ module Data.Analytics.Dictionary
   ) where
 
 import Data.Bits
+import Data.Analytics.Broadword
 import Data.Foldable as Foldable
 import Data.Vector as Vector
 import Data.Vector.Primitive as Primitive
@@ -132,7 +133,8 @@ instance Dictionary Bool Word64 where
   {-# INLINE size #-}
   rank = rankBits
   {-# INLINE rank #-}
-  select = selectBits
+  select True xs i = selectWord64 xs i
+  select False xs i = selectWord64 (complement xs) i
   {-# INLINE select #-}
 
 -- | /O(1)/ 'rank' and 'select'
