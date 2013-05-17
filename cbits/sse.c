@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <xmmintrin.h>
 
-uint64_t bswap64(uint64_t value) {
+uint64_t reverseBytes(uint64_t value) {
   return __builtin_bswap64(value);
 }
 
