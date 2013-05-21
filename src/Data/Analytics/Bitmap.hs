@@ -23,6 +23,7 @@ module Data.Analytics.Bitmap
   , null
   , empty
   , fromForeignPtr
+  , fromVector, toVector
   , createAndTrim
   , create
   , create'
@@ -52,6 +53,7 @@ import Data.ByteString.Internal (ByteString(..))
 import Data.Data
 import Data.Foldable hiding (toList)
 import Data.Monoid
+import qualified Data.Vector.Storable as Storable
 
 import Foreign.C.Types
 import Foreign.ForeignPtr (ForeignPtr, withForeignPtr, castForeignPtr)
@@ -71,12 +73,22 @@ import Text.Read
 
 data Bitmap = Bitmap
   {-# UNPACK #-} !(ForeignPtr Word64) -- payload
+  {-# UNPACK #-} !Int                 -- offset in 'Word64's
   {-# UNPACK #-} !Int                 -- length in /bits/
   deriving Typeable
 
-fromForeignPtr :: ForeignPtr Word64 -> Int -> Bitmap
+fromForeignPtr :: ForeignPtr Word64 -> Int -> Int -> Bitmap
 fromForeignPtr = Bitmap
 {-# INLINE fromForeignPtr #-}
+
+fromVector :: Storable.Vector Word64 -> Int -> Bitmap
+fromVector v i = case Storable.unsafeToForeignPtr v of
+  (fp, o, l) -> Bitmap fp o $ min i (shiftL l 6)
+{-# INLINE fromVector #-}
+
+toVector :: Bitmap -> Storable.Vector Word64
+toVector (Bitmap fp o l) = Storable.unsafeFromForeignPtr fp o $ shiftR (l + 7) 6
+{-# INLINE toVector #-}
 
 instance Data Bitmap where
   gfoldl f z b = z fromList `f` (toList b)
@@ -88,14 +100,14 @@ instance Data Bitmap where
 
 -- | Generate a bytestring for all of the bits in a 'Bitmap'
 toByteString :: Bitmap -> ByteString
-toByteString (Bitmap fp l) = PS (castForeignPtr fp) 0 (shiftR (l + 7) 3)
+toByteString (Bitmap fp o l) = PS (castForeignPtr fp) (shiftL o 3) $ shiftR (l + 7) 3
 {-# INLINE toByteString #-}
 
 fromByteString :: ByteString -> Bitmap
 fromByteString bs@(PS fp o l)
-  | l .&. 8 == 0 && o == 0 = Bitmap (castForeignPtr fp) (shiftR l 3)
+  | l .&. 8 == 0 && o .&. 8 == 0 = Bitmap (castForeignPtr fp) (shiftR o 3) (shiftL l 3)
   | otherwise = case copy bs of
-    PS fp' 0 _ -> Bitmap (castForeignPtr fp') (shiftR l 3)
+    PS fp' 0 _ -> Bitmap (castForeignPtr fp') 0 (shiftL l 3)
     _          -> error "Data.Analytics.Bitmap.fromByteString: copy failed to copy"
 {-# INLINE fromByteString #-}
 
@@ -136,58 +148,61 @@ instance Read Bitmap where
     return $! fromList r
 
 instance Eq Bitmap where
-  a@(Bitmap fp len) == b@(Bitmap fp' len')
-    | len /= len' = False
-    | fp == fp'   = True
-    | otherwise = compare a b == EQ
+  a@(Bitmap fp o len) == b@(Bitmap fp' o' len')
+    | len /= len'          = False
+    | fp == fp' && o == o' = True
+    | otherwise            = compare a b == EQ
   {-# INLINE (==) #-}
 
 instance Ord Bitmap where
-  compare (Bitmap _ 0) (Bitmap _ 0) = EQ
-  compare (Bitmap fp1 len1) (Bitmap fp2 len2) =
+  compare (Bitmap _ _ 0) (Bitmap _ _ 0) = EQ
+  compare (Bitmap fp1 o1 len1) (Bitmap fp2 o2 len2) =
     inlinePerformIO $
       withForeignPtr fp1 $ \p1 -> withForeignPtr fp2 $ \p2 -> let
           w1 = shiftR (len1 - 1) 6 -- # of /full/ words in a
           w2 = shiftR (len2 - 1) 6 -- # of /full/ words in b
-        in memcmp p1 p2 (min w1 w2 * 8) >>= \ i -> case compare i 0 of
+          q1 = plusPtr p1 o1
+          q2 = plusPtr p2 o2
+        in memcmp q1 q2 (min w1 w2 * 8) >>= \ i -> case compare i 0 of
           LT -> return LT
           EQ -> case len1 .&. 63 of
             0 -> return $! compare len1 len2 -- no extra bits to compare, just compare remaining lengths
             r1 -> case len2 .&. 63 of
               0 -> return $! compare len1 len2 -- no extra bits to compare, just compare remaining lengths
               r2 -> do
-               e1 <- peekElemOff p1 w1
-               e2 <- peekElemOff p2 w2
-               let mask = bit (min r1 r2) - 1
+               e1 <- peekElemOff q1 w1
+               e2 <- peekElemOff q2 w2
+               let mask :: Word64
+                   mask = bit (min r1 r2) - 1
                return $! compare (e1 .&. mask) (e2 .&. mask) <> compare len1 len2
           GT -> return GT
 
 -- | /O(n)/
 instance Dictionary Bool Bitmap where
-  size (Bitmap _ l) = l
+  size (Bitmap _ _ l) = l
   {-# INLINE size #-}
 
   rank True b o = rank1 b o
-  rank False b@(Bitmap _ l) o = min o l - rank1 b o
+  rank False b@(Bitmap _ _ l) o = min o l - rank1 b o
   {-# INLINE rank #-}
 
   select a b o = select a (b^._Bitmap) o
   {-# INLINE select #-}
 
 rank1 :: Bitmap -> Int -> Int
-rank1 (Bitmap fp l) o
-  | m > 0 = inlinePerformIO $ withForeignPtr fp $ \p -> go 0 w p >>= \t ->
+rank1 (Bitmap fp d l) o
+  | m > 0 = inlinePerformIO $ withForeignPtr fp $ \p -> let q = plusPtr p d in go 0 w q >>= \t ->
     if b == 0
     then return t
-    else peekElemOff p w >>= \e -> return $! t + popCount (e .&. mask)
+    else peekElemOff q (w + d) >>= \e -> return $! t + popCount (e .&. mask)
   | otherwise = 0
   where
     m = min o l
     w = shiftR (m - 1) 6 -- # of /full/ words we need to count.
     b = m .&. 63
-    mask = bit b - 1
+    mask = bit b - 1 :: Word64
     go !acc 0  !_ = return acc
-    go !acc !r !p = peek p >>= \e -> go (acc + popCount e) (r - 1) (p `plusPtr` 1)
+    go !acc !r !p = peek p >>= \e -> go (acc + popCount e) (r - 1) (plusPtr p 1)
 
 instance NFData Bitmap
 
@@ -197,7 +212,7 @@ fromList xs = unsafeCreate (Prelude.length xs) (go xs) where
   go ys p = case Prelude.splitAt 64 ys of -- this could be more efficient but this is at least obvious
     (as,bs) -> do
       poke p (0 & partsOf bits .~ as)
-      go bs (p `plusPtr` 1)
+      go bs (plusPtr p 1)
 {-# INLINE fromList #-}
 
 toList :: Bitmap -> [Bool]
@@ -222,29 +237,29 @@ instance (Functor f, Contravariant f) => Contains f Bitmap where
 
 type instance IxValue Bitmap = Bool
 instance Applicative f => Ixed f Bitmap where
-  ix o f b@(Bitmap fp l)
+  ix o f b@(Bitmap fp d l)
     | o < 0  = pure b
     | o >= l = pure b
     | l == 0 = pure b
     | otherwise = inlinePerformIO $ withForeignPtr fp $ \p -> do
-      w <- peekElemOff p (shiftR o 6)
-      return $! indexed f o (testBit w (o .&. 63)) <&> \r -> b // [(o,r)]
+      w <- peekElemOff (plusPtr p d) (shiftR o 6)
+      return $! indexed f o (testBit (w :: Word64) (o .&. 63)) <&> \r -> b // [(o,r)]
 
 -- | Returns 'False' when indexing out of bounds
 (!) :: Bitmap -> Int -> Bool
-(!) (Bitmap fp l) o
+(!) (Bitmap fp d l) o
   | o < 0  = False
   | o >= l = False
   | l == 0 = False
   | otherwise = inlinePerformIO $ withForeignPtr fp $ \p -> do
-    w <- peekElemOff p (shiftR o 6)
-    return $! testBit w (o .&. 63)
+    w <- peekElemOff (plusPtr p d) (shiftR o 6)
+    return $! testBit (w :: Word64) (o .&. 63)
 {-# INLINE (!) #-}
 
 (//) :: Bitmap -> [(Int, Bool)] -> Bitmap
-Bitmap fp l // os = inlinePerformIO $ withForeignPtr fp $ \p ->
+Bitmap fp d l // os = inlinePerformIO $ withForeignPtr fp $ \p ->
   create l $ \p' -> do
-    memcpy p' p l
+    memcpy p' (plusPtr p d) l
     for_ os $ \(i,b) ->
       if 0 <= i && i < l
       then do
@@ -257,13 +272,13 @@ Bitmap fp l // os = inlinePerformIO $ withForeignPtr fp $ \p ->
 
 -- | Returns 0 when indexing out of bounds
 word :: Int -> Bitmap -> Word64
-word o (Bitmap fp l)
+word o (Bitmap fp d l)
   | o < 0  = 0
   | l == 0 = 0
   | otherwise = case compare o m of
-    LT -> inlinePerformIO $ withForeignPtr fp $ \p -> peekElemOff p o
+    LT -> inlinePerformIO $ withForeignPtr fp $ \p -> peekElemOff p (o + d)
     EQ -> inlinePerformIO $ withForeignPtr fp $ \p -> do
-      r <- peekElemOff p o
+      r <- peekElemOff p (o + d)
       return $! r .&. (bit (l .&. 63) - 1)
     GT -> 0
   where m = shiftR (l + 63) 6 - 1
@@ -274,12 +289,12 @@ word o (Bitmap fp l)
 
 -- | Return whether or not a given bit vector is empty
 null :: Bitmap -> Bool
-null (Bitmap _ l) = l == 0
+null (Bitmap _ _ l) = l == 0
 {-# INLINE null #-}
 
 -- | The 'empty' bit vector.
 empty :: Bitmap
-empty = Bitmap nullForeignPtr 0
+empty = Bitmap nullForeignPtr 0 0
 
 -- | @'wordsRequired' n@ returns the number of bytes required to store a bit vector with @n@ bits.
 wordsRequired :: Int -> Int
@@ -296,7 +311,7 @@ create :: Int -> (Ptr Word64 -> IO ()) -> IO Bitmap
 create l f = do
   fp <- mallocPlainForeignPtrBytes (bytesRequired l) -- bits to bytes
   withForeignPtr fp f
-  return $! Bitmap fp l
+  return $! Bitmap fp 0 l
 {-# INLINE create #-}
 
 -- | @'create'' l f@ creates a bit vector of up to @l@ bytes and uses the action @f@ to fill it and obtain its true size.
@@ -304,7 +319,7 @@ create' :: Int -> (Ptr Word64 -> IO (Int, a)) -> IO (Bitmap, a)
 create' l f = do
     fp <- mallocPlainForeignPtrBytes (bytesRequired l)
     (l', res) <- withForeignPtr fp $ \p -> f p
-    assert (l' <= l) $ return $! (Bitmap fp l', res)
+    assert (l' <= l) $ return $! (Bitmap fp 0 l', res)
 {-# INLINE create' #-}
 
 createAndTrim :: Int -> (Ptr Word64 -> IO Int) -> IO Bitmap
@@ -315,7 +330,7 @@ createAndTrim l f = do
     l' <- f p
     let bl' = bytesRequired l'
     if assert (bl' <= bl) (bl' >= bl)
-      then return $! Bitmap fp l
+      then return $! Bitmap fp 0 l
       else create l' $ \p' -> memcpy p' p bl'
 {-# INLINE createAndTrim #-}
 
@@ -334,8 +349,8 @@ inlinePerformIO (IO m) = case m realWorld# of
 
 -- | /O(1)/ @take n b@ takes the first @n@ bits of @b@.
 take :: Int -> Bitmap -> Bitmap
-take n (Bitmap fp l)
-  | n > 0     = Bitmap fp (min (max n 0) l)
+take n (Bitmap fp o l)
+  | n > 0     = Bitmap fp o (min (max n 0) l)
   | otherwise = empty
 
 foreign import ccall unsafe "string.h memcmp" c_memcmp :: Ptr a -> Ptr a -> CSize -> IO CInt
@@ -352,4 +367,4 @@ memcpy p q s = c_memcpy p q (fromIntegral s) >> return ()
 mmap :: FilePath -> IO Bitmap
 mmap path = do
   (fp,offset,sz) <- mmapFileForeignPtr path ReadOnly Nothing
-  assert (offset == 0) $ return $! Bitmap fp (sz*8)
+  assert (offset .&. 64 == 0) $ return $! Bitmap fp (shiftR offset 3) (shiftL sz 3)
