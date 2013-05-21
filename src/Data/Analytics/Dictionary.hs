@@ -61,8 +61,9 @@ class Dictionary a t | t -> a where
 
   -- | @'rank' x i xs@ computes the number of occurrences of @x@ in @xs@ in positions @[0..i)@
   --
-  -- This provides legal answers for @i@ in @[0..'size' xs)@. Answers for indices outside of this
-  -- range are clamped to the range @[0..i]@
+  -- For @i@ in @[0..'size' xs)@, the answer should lie in the range @[0..i)@.
+  --
+  -- Answers for inputs outside of this range are 'undefined'.
   --
   -- An /O('select' cost * log n)/ default definition is supplied in terms of 'select'.
   rank :: a -> t -> Int -> Int
@@ -77,22 +78,19 @@ class Dictionary a t | t -> a where
   --
   -- is expected to hold, but it can often be implemented more efficiently.
   --
-  -- The obvious default definition is supplied in terms of the identity with rank.
+  -- The obvious default definition is supplied in terms of this identity.
   deltaRank :: a -> t -> Int -> Int -> Int
   deltaRank a t i j = rank a t j - rank a t i
   {-# INLINE deltaRank #-}
 
   -- @'select x xs i'@ returns the position of the @i@th occurence of @x@ in @xs@.
   --
-  -- This provides legal answers for @i@ in @[0..'rank' x xs ('size' xs))@. Answers for indices
-  -- outside of this range are clamped such that any indices requested below 0 return a result index 0
+  -- This provides legal answers for @i@ in @[0..'rank' x xs ('size' xs))@ in the range
+  -- @[i..size xs)@. For @i >= 'rank' xs ('size' xs)@, this will return @'size' xs@ instead.
   --
-  -- @select x xs n | n < 0 == 0@
+  -- @select x xs i | i >= 'rank' x xs ('size' xs) = 'size' xs@
   --
-  -- Moreover, attempting to select more than the number of occurences of a given element yields the
-  -- size of the array as a result.
-  --
-  -- @select x xs n | n >= 'rank' x xs ('size' xs) = 'size' xs@
+  -- This permits 'rank' to be easily implemented by binary search using 'select'.
   --
   -- An /O('rank' cost * log n)/ default definition is supplied in terms of 'rank'.
   select :: a -> t -> Int -> Int
@@ -173,6 +171,12 @@ instance (Eq a, Prim a) => Dictionary a (Primitive.Vector a) where
       | j >= k    = ij
       | !j' <- j + 1, !i' <- (if x == y then i + 1 else i) = (i',j')
   {-# INLINE rank #-}
+  select a xs k = go k 0 $ Primitive.toList xs where
+    go !i !j (b:bs)
+      | a /= b = go i (j + 1) bs
+      | i <= 0 = j
+      | otherwise = go (i - 1) (j + 1) bs
+    go _ j _ = j
 
 -- | /O(n)/ 'rank' and 'select'
 instance (Eq a, Unbox a) => Dictionary a (Unboxed.Vector a) where
@@ -183,6 +187,12 @@ instance (Eq a, Unbox a) => Dictionary a (Unboxed.Vector a) where
       | j >= k    = ij
       | !j' <- j + 1, !i' <- (if x == y then i + 1 else i) = (i',j')
   {-# INLINE rank #-}
+  select a xs k = go k 0 $ Unboxed.toList xs where
+    go !i !j (b:bs)
+      | a /= b = go i (j + 1) bs
+      | i <= 0 = j
+      | otherwise = go (i - 1) (j + 1) bs
+    go _ j _ = j
 
 -- | /O(n)/ 'rank' and 'select'
 instance (Eq a, Storable a) => Dictionary a (Storable.Vector a) where
@@ -193,20 +203,9 @@ instance (Eq a, Storable a) => Dictionary a (Storable.Vector a) where
       | j >= k    = ij
       | !j' <- j + 1, !i' <- (if x == y then i + 1 else i) = (i',j')
   {-# INLINE rank #-}
-
-{-
-data Drop t = Drop !Int t
-
-instance Functor Drop where
-  fmap f (Drop i a) = Drop i (f a)
-
-instance Foldable Drop where
-  foldMap f (Drop _ a) = f a
-
-instance Traversable Drop where
-  traverse f (Drop i a) = Drop i <$> f a
-
-instance Dictionary a t => Dictionary a (Drop t) where
-  rank a (Drop i xs) k = rank a xs (k + i)
-  select a (Drop i xs) k = select a xs (k + rank a xs i)
--}
+  select a xs k = go k 0 $ Storable.toList xs where
+    go !i !j (b:bs)
+      | a /= b = go i (j + 1) bs
+      | i <= 0 = j
+      | otherwise = go (i - 1) (j + 1) bs
+    go _ j _ = j
