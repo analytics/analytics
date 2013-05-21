@@ -15,9 +15,10 @@
 --------------------------------------------------------------------
 module Data.Analytics.Dictionary
   ( Dictionary(..)
-  , rankBits
-  , selectBits
+  , rankFoldable
+  , selectFoldable
   ) where
+
 
 import Data.Bits
 import Data.Analytics.Broadword
@@ -40,10 +41,17 @@ import Data.Word
 -- 'rank' x xs ('select' x xs i) ≡ i
 -- @
 --
--- There is a Galois connection between 'rank' and 'select'. In other words:
+-- There is a Galois connection between 'rank' and 'select'.
+--
+-- For @i@ and @j@ in @[0..'size' xs)@,
 --
 -- @'rank' x xs i <= j@ iff @i <= 'select' x xs j@
 --
+-- Minimum complete definition: One of
+--
+-- 1) 'size' and 'rank'
+--
+-- 2) 'size' and 'select'
 class Dictionary a t | t -> a where
   -- | An /O(n)/ default definition is supplied in terms of 'Foldable'.
   size :: t -> Int
@@ -54,15 +62,11 @@ class Dictionary a t | t -> a where
   -- | @'rank' x i xs@ computes the number of occurrences of @x@ in @xs@ in positions @[0..i)@
   --
   -- This provides legal answers for @i@ in @[0..'size' xs)@. Answers for indices outside of this
-  -- range are 'undefined'.
+  -- range are clamped to the range @[0..i]@
   --
-  -- An /O(n)/ default definition is supplied in terms of 'Foldable'.
+  -- An /O('select' cost * log n)/ default definition is supplied in terms of 'select'.
   rank :: a -> t -> Int -> Int
-  default rank :: (Foldable f, Eq a, t ~ f a) => a -> t -> Int -> Int
-  rank x xs k = fst $ Foldable.foldl' step (0,0) xs where
-    step ij@(i,j) y
-      | j >= k    = ij
-      | !j' <- j + 1, !i' <- (if x == y then i + 1 else i) = (i',j')
+  rank a t i = search (\j -> select a t j >= i) 0 i
   {-# INLINE rank #-}
 
   -- | @deltaRank x i j xs@ computes the number of occurences of @x@ in @xs@ in the interval @[i..j)@.
@@ -78,22 +82,38 @@ class Dictionary a t | t -> a where
   deltaRank a t i j = rank a t j - rank a t i
   {-# INLINE deltaRank #-}
 
-  -- @'select x i xs'@ returns the position of the @i@th occurence of @x@ in @xs@.
+  -- @'select x xs i'@ returns the position of the @i@th occurence of @x@ in @xs@.
   --
   -- This provides legal answers for @i@ in @[0..'rank' x xs ('size' xs))@. Answers for indices
-  -- outside of this range are 'undefined'.
+  -- outside of this range are clamped such that any indices requested below 0 return a result index 0
   --
-  -- An /O(n)/ default definition is supplied in terms of 'Foldable'.
+  -- @select x xs n | n < 0 == 0@
   --
+  -- Moreover, attempting to select more than the number of occurences of a given element yields the
+  -- size of the array as a result.
+  --
+  -- @select x xs n | n >= 'rank' x xs ('size' xs) = 'size' xs@
+  --
+  -- An /O('rank' cost * log n)/ default definition is supplied in terms of 'rank'.
   select :: a -> t -> Int -> Int
-  default select :: (Foldable f, Eq a, t ~ f a) => a -> t -> Int -> Int
-  select a xs k = go k 0 $ Foldable.toList xs where
-    go !i !j (b:bs)
-      | a /= b = go i j bs
-      | i == 0 = j
-      | otherwise = go (i - 1) (j + 1) bs
-    go _ _ _  = error "select: out of bounds"
+  select a t i = search (\j -> rank a t j >= i) i (size t)
   {-# INLINE select #-}
+
+selectFoldable :: (Foldable f, Eq a) => a -> f a -> Int -> Int
+selectFoldable a xs k = go k 0 $ Foldable.toList xs where
+    go !i !j (b:bs)
+      | a /= b = go i (j + 1) bs
+      | i <= 0 = j
+      | otherwise = go (i - 1) (j + 1) bs
+    go _ j _ = j
+{-# INLINE selectFoldable #-}
+
+rankFoldable :: (Foldable f, Eq a) => a -> f a -> Int -> Int
+rankFoldable x xs k = fst $ Foldable.foldl' step (0,0) xs where
+  step ij@(i,j) y
+    | j >= k = ij
+    | !j' <- j + 1, !i' <- (if x == y then i + 1 else i) = (i',j')
+{-# INLINE rankFoldable #-}
 
 -- | /O(n)/ 'rank' and 'select'
 instance Eq a => Dictionary a [a] where
@@ -108,60 +128,37 @@ instance Eq a => Dictionary a [a] where
   {-# INLINE rank #-}
   select a xs k = go k 0 xs where
     go !i !j (b:bs)
-      | a /= b = go i j bs
-      | i == 0 = j
+      | a /= b = go i (j + 1) bs
+      | i <= 0 = j
       | otherwise = go (i - 1) (j + 1) bs
-    go _ _ _  = error "select: out of bounds"
+    go _ j _  = j
   {-# INLINE select #-}
 
 -- | /O(n)/ 'rank' and 'select'
 instance Eq a => Dictionary a (Seq a)
 
--- | This provides a valid definition for 'rank' in terms of 'popCount' for instances of 'Bits'
-rankBits :: (Num a, Bits a) => Bool -> a -> Int -> Int
-rankBits True xs i = popCount $ xs .&. (bit i - 1)
-rankBits False xs i = i - popCount (xs .&. (bit i - 1))
-{-# INLINE rankBits #-}
-
-selectBits :: (Num a, Bits a) => Bool -> a -> Int -> Int
-selectBits = error "selectBits: TODO"
-{-# INLINE selectBits #-}
+search :: (Int -> Bool) -> Int -> Int -> Int
+search p l0 h0 = go l0 h0 where
+  go !l !h
+    | l >= h    = l
+    | p m       = go l m
+    | otherwise = go (m+1) h
+    where m = l + shiftR (h - l) 1
+{-# INLINE search #-}
 
 -- | /O(1)/ 'rank' and 'select'
 instance Dictionary Bool Word64 where
   size _ = 64
   {-# INLINE size #-}
-  rank = rankBits
+  rank True xs i
+    | i >= 64   = popCount xs
+    | otherwise = popCount $ xs .&. (bit i - 1)
+  rank False xs i
+    | i >= 64   = 64 - popCount xs
+    | otherwise = i  - popCount (xs .&. (bit i - 1))
   {-# INLINE rank #-}
-  select True xs i = selectWord64 xs i
+  select True  xs i = selectWord64 xs i
   select False xs i = selectWord64 (complement xs) i
-  {-# INLINE select #-}
-
--- | /O(1)/ 'rank' and 'select'
-instance Dictionary Bool Word32 where
-  size _ = 32
-  {-# INLINE size #-}
-  rank = rankBits
-  {-# INLINE rank #-}
-  select = selectBits
-  {-# INLINE select #-}
-
--- | /O(1)/ 'rank' and 'select'
-instance Dictionary Bool Word16 where
-  size _ = 16
-  {-# INLINE size #-}
-  rank = rankBits
-  {-# INLINE rank #-}
-  select = selectBits
-  {-# INLINE select #-}
-
--- | /O(1)/ 'rank' and 'select'
-instance Dictionary Bool Word8 where
-  size _ = 8
-  {-# INLINE size #-}
-  rank = rankBits
-  {-# INLINE rank #-}
-  select = selectBits
   {-# INLINE select #-}
 
 -- | /O(n)/ 'rank' and 'select'
@@ -176,7 +173,6 @@ instance (Eq a, Prim a) => Dictionary a (Primitive.Vector a) where
       | j >= k    = ij
       | !j' <- j + 1, !i' <- (if x == y then i + 1 else i) = (i',j')
   {-# INLINE rank #-}
-  select = undefined
 
 -- | /O(n)/ 'rank' and 'select'
 instance (Eq a, Unbox a) => Dictionary a (Unboxed.Vector a) where
@@ -187,7 +183,6 @@ instance (Eq a, Unbox a) => Dictionary a (Unboxed.Vector a) where
       | j >= k    = ij
       | !j' <- j + 1, !i' <- (if x == y then i + 1 else i) = (i',j')
   {-# INLINE rank #-}
-  select = undefined
 
 -- | /O(n)/ 'rank' and 'select'
 instance (Eq a, Storable a) => Dictionary a (Storable.Vector a) where
@@ -198,7 +193,6 @@ instance (Eq a, Storable a) => Dictionary a (Storable.Vector a) where
       | j >= k    = ij
       | !j' <- j + 1, !i' <- (if x == y then i + 1 else i) = (i',j')
   {-# INLINE rank #-}
-  select = undefined
 
 {-
 data Drop t = Drop !Int t
