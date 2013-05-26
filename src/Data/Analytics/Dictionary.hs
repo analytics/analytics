@@ -22,10 +22,6 @@ module Data.Analytics.Dictionary
 import Data.Bits
 import Data.Analytics.Broadword
 import Data.Foldable as Foldable
--- import Data.Vector as Vector
--- import Data.Vector.Primitive as Primitive
--- import Data.Vector.Unboxed as Unboxed
--- import Data.Vector.Storable as Storable
 import Data.Sequence as Seq
 import Data.Word
 
