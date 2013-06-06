@@ -24,6 +24,7 @@ module Data.Analytics.Bitmap
   , empty
   , fromForeignPtr
   , fromVector, toVector
+  , fromSeq, toSeq
   , createAndTrim
   , create
   , create'
@@ -47,11 +48,13 @@ import Data.Binary as Binary
 import Data.Bytes.Serial as Bytes
 import Data.Bytes.Get as Bytes
 import Data.Bytes.Put as Bytes
+import qualified Data.Sequence as Seq
+import Data.Sequence (Seq)
 import Data.Serialize as Serial
 import Data.ByteString hiding (take, empty, null)
 import Data.ByteString.Internal (ByteString(..))
 import Data.Data
-import Data.Foldable hiding (toList)
+import qualified Data.Foldable as Foldable
 import Data.Monoid
 import qualified Data.Vector.Storable as Storable
 
@@ -212,6 +215,28 @@ rank1 (Bitmap fp d l) o
 
 instance NFData Bitmap
 
+fromSeq :: Seq Bool -> Bitmap
+fromSeq xs = unsafeCreate (Seq.length xs) (go xs) where
+  go ys p
+    | Seq.null ys = return ()
+    | otherwise = case Seq.splitAt 64 ys of
+      (as,bs) -> do
+        poke p (0 & partsOf bits .~ Foldable.toList as)
+        go bs (plusPtr p 1)
+
+toSeq :: Bitmap -> Seq Bool
+toSeq xs = case Seq.replicateA (size xs) (El 1 (xs !)) of
+  El _ f -> f 0
+
+data El a = El {-# UNPACK #-} !Int (Int -> a)
+
+instance Functor El where
+  fmap f (El i g) = El i (f . g)
+
+instance Applicative El where
+  pure a = El 0 (const a)
+  El i f <*> El j g = El (i + j) $ \o -> f o $ g (o + i)
+
 fromList :: [Bool] -> Bitmap
 fromList xs = unsafeCreate (Prelude.length xs) (go xs) where
   go [] _ = return ()
@@ -266,7 +291,7 @@ instance Applicative f => Ixed f Bitmap where
 Bitmap fp d l // os = inlinePerformIO $ withForeignPtr fp $ \p ->
   create l $ \p' -> do
     memcpy p' (plusPtr p d) l
-    for_ os $ \(i,b) ->
+    Foldable.for_ os $ \(i,b) ->
       if 0 <= i && i < l
       then do
         let q = shiftR i 6
