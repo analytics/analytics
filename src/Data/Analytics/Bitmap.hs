@@ -90,6 +90,7 @@ toVector :: Bitmap -> Storable.Vector Word64
 toVector (Bitmap fp o l) = Storable.unsafeFromForeignPtr fp o $ shiftR (l + 7) 6
 {-# INLINE toVector #-}
 
+-- | Uses a virtual constructor to present the contents as '[Bool]'
 instance Data Bitmap where
   gfoldl f z b = z fromList `f` (toList b)
   toConstr _ = fromListConstr
@@ -98,11 +99,24 @@ instance Data Bitmap where
     _ -> error "gunfold"
   dataTypeOf _ = bitmapDataType
 
--- | Generate a bytestring for all of the bits in a 'Bitmap'
+fromListConstr :: Constr
+fromListConstr = mkConstr bitmapDataType "fromList" [] Prefix
+{-# NOINLINE fromListConstr #-}
+
+bitmapDataType :: DataType
+bitmapDataType = mkDataType "Data.Analytics.Bitmap.Bitmap" [fromListConstr]
+{-# NOINLINE bitmapDataType #-}
+
+-- | Generate a bytestring for all of the bits in a 'Bitmap'.
+--
+-- You may get garbage bits for bits in the last byte that are beyond the
+-- length of the 'Bitmap'.
 toByteString :: Bitmap -> ByteString
 toByteString (Bitmap fp o l) = PS (castForeignPtr fp) (shiftL o 3) $ shiftR (l + 7) 3
 {-# INLINE toByteString #-}
 
+-- | Construct a 'Bitmap' from a 'ByteString'. If the 'ByteString' isn't an even multiple
+-- of @8@ bytes and isn't 8-byte aligned, then it will be copied.
 fromByteString :: ByteString -> Bitmap
 fromByteString bs@(PS fp o l)
   | l .&. 8 == 0 && o .&. 8 == 0 = Bitmap (castForeignPtr fp) (shiftR o 3) (shiftL l 3)
@@ -127,14 +141,6 @@ instance Serial Bitmap where
   serialize b = do
     serialize (size b)
     Bytes.putByteString (toByteString b)
-
-fromListConstr :: Constr
-fromListConstr = mkConstr bitmapDataType "fromList" [] Prefix
-{-# NOINLINE fromListConstr #-}
-
-bitmapDataType :: DataType
-bitmapDataType = mkDataType "Data.Analytics.Bitmap.Bitmap" [fromListConstr]
-{-# NOINLINE bitmapDataType #-}
 
 instance Show Bitmap where
   showsPrec d b = showParen (d > 8) $
@@ -364,6 +370,9 @@ memcpy :: Ptr a -> Ptr a -> Int -> IO ()
 memcpy p q s = c_memcpy p q (fromIntegral s) >> return ()
 
 -- | 'mmap' the contents of a file into memory as a 'Bitmap', automatically unmapping when this goes out of scope.
+--
+-- This is somewhat risky in that if the contents of the file are edited while you have it open then the purity of your
+-- program is in jeopardy.
 mmap :: FilePath -> IO Bitmap
 mmap path = do
   (fp,offset,sz) <- mmapFileForeignPtr path ReadOnly Nothing
