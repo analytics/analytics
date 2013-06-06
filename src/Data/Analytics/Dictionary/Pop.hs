@@ -53,20 +53,21 @@ chunkWords = bit logChunkWords
 -- | Create a vector of bits enumerated from least significant bit of the 0th slot upward including a Rank structure
 new :: Bitmap -> Pop
 new ys = Pop ys $ Unboxed.create $ do
-    let !xs  = toVector ys
-        !wds = Storable.length xs
-        !k  = shiftR wds logChunkWords + 2
     counts <- UM.replicate k (0 :: Int)
-    let go !p !o !c = do
-          UM.write counts o c
-          if p + chunkWords <= wds
-            then go %! p + chunkWords %! o + 1 %! c + Storable.foldl' (\a b -> a + popCount b) 0 (Storable.slice p chunkWords xs)
-            else do
-              let c' = c + Storable.foldl' (\a b -> a + popCount b) 0 (Storable.slice p (wds - p) xs)
-              UM.write counts %! o + 1 %! c'
-              UM.write counts %! k - 1 %! c' -- ensure the last place in the counter array is full
-    go 0 0 0
+    go counts 0 0 0
     return counts
+  where
+    go counts !p !o !c = do
+      UM.write counts o c
+      if p + chunkWords <= wds
+        then go counts %! p + chunkWords %! o + 1 %! c + Storable.foldl' (\a b -> a + popCount b) 0 (Storable.slice p chunkWords xs)
+        else do
+          let c' = c + Storable.foldl' (\a b -> a + popCount b) 0 (Storable.slice p (wds - p) xs)
+          UM.write counts %! o + 1 %! c'
+          UM.write counts %! k - 1 %! c' -- ensure the last place in the counter array is full
+    !xs  = toVector ys
+    !wds = Storable.length xs
+    !k  = shiftR wds logChunkWords + 2
 
 instance Dictionary Bool Pop where
   size (Pop xs _) = size xs
