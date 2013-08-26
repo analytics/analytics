@@ -57,7 +57,7 @@ class Dictionary a t | t -> a where
   size = Foldable.foldl' (\n _ -> n + 1) 0
   {-# INLINE size #-}
 
-  -- | @'rank' x i xs@ computes the number of occurrences of @x@ in @xs@ in positions @[0..i)@
+  -- | @'rank' x xs i@ computes the number of occurrences of @x@ in @xs@ in positions @[0..i)@
   --
   -- If @i@ is larger than the length of the container, then every position past the end of the
   -- data set is considered to match. This simplifies the statement of the 'select' and 'rank' laws.
